@@ -1,0 +1,25 @@
+{
+  "name": "LapayGroup/RussianPost",
+  "description": "Russian Post API SDK",
+  "minimum-stability": "stable",
+  "license": "MIT",
+  "support": {
+    "issues": "https://github.com/lapaygroup/russianpost/issues",
+    "source": "https://github.com/lapaygroup/russianpost"
+  },
+  "authors": [
+    {
+      "name": "Nikolay Lapay",
+      "email": "support@lapaygroup.ru"
+    }
+  ],
+  "require": {
+    "php": ">=5.5.0",
+    "guzzlehttp/guzzle": "6.2.*"
+  },
+  "autoload": {
+    "psr-4": {
+      "LapayGroup\\RussianPost\\": "src/"
+    }
+  }
+}
