@@ -9,8 +9,64 @@ class Calculation
 
     function __construct()
     {
-        $this->url = 'http://tariff.russianpost.ru/tariff/v1/dictionary?jsontext';
+        $this->httpClient = new \GuzzleHttp\Client([
+            'base_uri'=>'http://tariff.russianpost.ru/tariff/v1/'
+        ]);
     }
 
-    
+    public function getCategoryList()
+    {
+        $response = $this->httpClient->request('GET', 'dictionary', [
+                         'query' => [
+                                     'jsontext' => true,
+                                     'category' => 'all'
+                                    ]
+                         ]);
+        return $this->parseResponse($response);
+    }
+
+    public function getCategoryDescription($category_id)
+    {
+        $response = $this->httpClient->request('GET', 'dictionary', [
+            'query' => [
+                'jsontext' => true,
+                'category' => $category_id
+            ]
+        ]);
+
+        return $this->parseResponse($response);
+    }
+
+    public function getTariff($object_id, $params, $services, $date=false)
+    {
+        if(empty($date)) $date = date('Y-m-d');
+
+        $params['object'] = $object_id;
+        $params['jsontext'] = true;
+        $params['service'] = implode(',', $services);
+        $params['date'] = $date;
+
+        $response = $this->httpClient->request('GET', 'calculate', [
+            'query' => [$params]
+        ]);
+        return $this->parseResponse($response);
+    }
+
+    public function getObjectInfo($object_id)
+    {
+        $response = $this->httpClient->request('GET', 'dictionary', [
+            'query' => [
+                'jsontext' => true,
+                'object' => $object_id
+            ]
+        ]);
+
+        return $this->parseResponse($response);
+    }
+
+    private function parseResponse($response)
+    {
+        $result = json_decode($response->getBody(), true);
+        return $result;
+    }
 }

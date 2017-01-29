@@ -1,5 +1,5 @@
 <?php
-namespace LapayGroup\RussianPost\Traits;
+namespace LapayGroup\RussianPost;
 
 trait Singleton {
     public static function getInstance() {
