@@ -8,23 +8,76 @@ class CategoryList
     use Singleton;
 
     private $Calculation = false;
+    private $subcategory = true;
+    private $description = false;
+    private $categoryDelete = [];
 
     function __construct()
     {
         $this->Calculation = Calculation::getInstance();
     }
 
-    public function parseToArray($subcategory=false, $description=false)
+    /**
+     * @param bool $subcategory
+     */
+    public function setSubcategory($subcategory)
+    {
+        $this->subcategory = $subcategory;
+    }
+
+    /**
+     * @param bool $description
+     */
+    public function setDescription($description)
+    {
+        $this->description = $description;
+    }
+
+    /**
+     * @param array $categoryDelete
+     */
+    public function setCategoryDelete($categoryDelete)
+    {
+        $this->categoryDelete = $categoryDelete;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getSubcategory()
+    {
+        return $this->subcategory;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getDescription()
+    {
+        return $this->description;
+    }
+
+    /**
+     * @return array
+     */
+    public function getCategoryDelete()
+    {
+        return $this->categoryDelete;
+    }
+
+    public function parseToArray()
     {
         $categoryList = [];
         $list = $this->Calculation->getCategoryList();
         foreach($list['category'] as $item) {
+            //Пропускаем категории, которые нужно пропустить
+            if(in_array($item['id'], $this->categoryDelete)) continue;
             $categoryItem = [];
 
             $categoryItem['id'] = $item['id'];
             $categoryItem['category'] = $item['name'];
 
-            if($description && !$subcategory) {
+            if($this->description && !$this->subcategory) {
                 $descriptionList = [];
                 $resultDescription = $this->Calculation->getCategoryDescription($categoryItem['id']);
                 foreach($resultDescription['category'] as $description) {
@@ -36,7 +89,7 @@ class CategoryList
                 $categoryItem['subcategory_list'][$childInfo['id']]['id'] = $childInfo['id'];
                 $categoryItem['subcategory_list'][$childInfo['id']]['subcategory'] = $childInfo['name'];
 
-                if($subcategory) {
+                if($this->subcategory) {
                     $objectInfo = $this->Calculation->getObjectInfo($childInfo['id']);
                     if(!empty($objectInfo)) {
                         //Получаем описание категории
@@ -58,7 +111,7 @@ class CategoryList
                     }
                 }
 
-                if($description && !$subcategory) {
+                if($this->description && !$this->subcategory) {
                     $categoryItem['subcategory_list'][$childInfo['id']]['description'] = $descriptionList[$childInfo['id']];
                 }
             }

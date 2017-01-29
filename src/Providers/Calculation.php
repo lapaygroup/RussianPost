@@ -37,17 +37,15 @@ class Calculation
         return $this->parseResponse($response);
     }
 
-    public function getTariff($object_id, $params, $services, $date=false)
+    public function getTariff($object_id, $params, $services)
     {
-        if(empty($date)) $date = date('Y-m-d');
-
         $params['object'] = $object_id;
         $params['jsontext'] = true;
-        $params['service'] = implode(',', $services);
-        $params['date'] = $date;
+        if(!empty($services))
+            $params['service'] = implode(',', $services);
 
         $response = $this->httpClient->request('GET', 'calculate', [
-            'query' => [$params]
+            'query' => $params
         ]);
         return $this->parseResponse($response);
     }
