@@ -107,7 +107,7 @@ class CalculateInfo
      */
     public function setTransportationName($transportationName)
     {
-        $this->transportationName = mb_ucfirst($transportationName);
+        $this->transportationName = self::mb_ucfirst($transportationName);
     }
 
     /**
@@ -172,5 +172,10 @@ class CalculateInfo
     public function addTariff(Tariff $tariff)
     {
         $this->tariffList[] = $tariff;
+    }
+
+    public static function mb_ucfirst($string)
+    {
+        return mb_strtoupper(mb_substr($string, 0, 1)).mb_strtolower(mb_substr($string, 1));
     }
 }
