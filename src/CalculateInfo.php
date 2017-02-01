@@ -107,7 +107,7 @@ class CalculateInfo
      */
     public function setTransportationName($transportationName)
     {
-        $this->transportationName = $transportationName;
+        $this->transportationName = ucfirst($transportationName);
     }
 
     /**
@@ -123,7 +123,7 @@ class CalculateInfo
      */
     public function setPay($pay)
     {
-        $this->pay = $pay / 100;
+        $this->pay =  number_format($pay / 100, 2, '.', '');
     }
 
     /**
@@ -139,7 +139,7 @@ class CalculateInfo
      */
     public function setPayNds($payNds)
     {
-        $this->payNds = $payNds / 100;
+        $this->payNds = number_format($payNds / 100, 2, '.', '');
     }
 
     /**
@@ -155,7 +155,7 @@ class CalculateInfo
      */
     public function setPayMark($payMark)
     {
-        $this->payMark = $payMark / 100;
+        $this->payMark = number_format($payMark / 100, 2, '.', '');
     }
 
     /**
