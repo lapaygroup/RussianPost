@@ -107,7 +107,7 @@ class CalculateInfo
      */
     public function setTransportationName($transportationName)
     {
-        $this->transportationName = ucfirst($transportationName);
+        $this->transportationName = mb_ucfirst($transportationName);
     }
 
     /**
