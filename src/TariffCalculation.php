@@ -30,14 +30,26 @@ class TariffCalculation
         $calculateInfo->setTransportationName($resultRaw['transname']);
         $calculateInfo->setPay($resultRaw['pay']);
         $calculateInfo->setPayNds($resultRaw['paynds']);
-        $paymark = !empty($resultRaw['paymark']) ? $resultRaw['paymark'] : 0.00;
+        $paymark = !empty($resultRaw['paymark']) ? $resultRaw['paymark'] : 0;
         $calculateInfo->setPayMark($paymark);
         $calculateInfo->setGround($resultRaw['ground']['val']);
         $calculateInfo->setGroundNds($resultRaw['ground']['valnds']);
-        $calculateInfo->setCover($resultRaw['cover']['val']);
-        $calculateInfo->setCoverNds($resultRaw['cover']['valnds']);
-        $calculateInfo->setService($resultRaw['service']['val']);
-        $calculateInfo->setServiceNds($resultRaw['service']['valnds']);
+
+        if(!empty($resultRaw['cover'])) {
+            $calculateInfo->setCover($resultRaw['cover']['val']);
+            $calculateInfo->setCoverNds($resultRaw['cover']['valnds']);
+        } else {
+            $calculateInfo->setCover(0);
+            $calculateInfo->setCoverNds(0);
+        }
+
+        if(!empty($resultRaw['service'])) {
+            $calculateInfo->setService($resultRaw['service']['val']);
+            $calculateInfo->setServiceNds($resultRaw['service']['valnds']);
+        } else {
+            $calculateInfo->setService(0);
+            $calculateInfo->setServiceNds(0);
+        }
 
         foreach($resultRaw['tariff'] as $tariffInfo) {
             foreach($tariffInfo as $key => $paramInfo) {
