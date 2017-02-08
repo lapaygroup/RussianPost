@@ -30,7 +30,8 @@ class TariffCalculation
         $calculateInfo->setTransportationName($resultRaw['transname']);
         $calculateInfo->setPay($resultRaw['pay']);
         $calculateInfo->setPayNds($resultRaw['paynds']);
-        $calculateInfo->setPayMark($resultRaw['paymark']);
+        $paymark = !empty($resultRaw['paymark']) ? $resultRaw['paymark'] : 0.00;
+        $calculateInfo->setPayMark($paymark);
         $calculateInfo->setGround($resultRaw['ground']['val']);
         $calculateInfo->setGroundNds($resultRaw['ground']['valnds']);
         $calculateInfo->setCover($resultRaw['cover']['val']);
