@@ -12,6 +12,12 @@ class CalculateInfo
     private $pay = 0.00; // Итого стоимоть без НДС
     private $payNds = 0.00; // Итого стоимость с НДС
     private $payMark = 0.00; // Итог остоимость при оплате марками
+    private $ground = 0.00; // Почтовый сбор
+    private $groundNds = 0.00; // Почтовый сбор c НДС
+    private $cover = 0.00; // Страхование
+    private $coverNds = 0.00; // Страхование с НДС
+    private $service = 0.00; // Дополнительные услуги
+    private $serviceNds = 0.00; // Дополнительные услуги с НДС
     private $tariffList = []; // Список тарифов
 
     /**
@@ -172,6 +178,102 @@ class CalculateInfo
     public function addTariff(Tariff $tariff)
     {
         $this->tariffList[] = $tariff;
+    }
+
+    /**
+     * @return float
+     */
+    public function getGround()
+    {
+        return $this->ground;
+    }
+
+    /**
+     * @param float $ground
+     */
+    public function setGround($ground)
+    {
+        $this->ground = number_format($ground / 100, 2, '.', '');
+    }
+
+    /**
+     * @return float
+     */
+    public function getGroundNds()
+    {
+        return $this->groundNds;
+    }
+
+    /**
+     * @param float $groundNds
+     */
+    public function setGroundNds($groundNds)
+    {
+        $this->groundNds = number_format($groundNds / 100, 2, '.', '');
+    }
+
+    /**
+     * @return float
+     */
+    public function getCover()
+    {
+        return $this->cover;
+    }
+
+    /**
+     * @param float $cover
+     */
+    public function setCover($cover)
+    {
+        $this->cover = number_format($cover / 100, 2, '.', '');
+    }
+
+    /**
+     * @return float
+     */
+    public function getCoverNds()
+    {
+        return $this->coverNds;
+    }
+
+    /**
+     * @param float $coverNds
+     */
+    public function setCoverNds($coverNds)
+    {
+        $this->coverNds = number_format($coverNds / 100, 2, '.', '');
+    }
+
+    /**
+     * @return float
+     */
+    public function getService()
+    {
+        return $this->service;
+    }
+
+    /**
+     * @param float $service
+     */
+    public function setService($service)
+    {
+        $this->service = number_format($service / 100, 2, '.', '');
+    }
+
+    /**
+     * @return float
+     */
+    public function getServiceNds()
+    {
+        return $this->serviceNds;
+    }
+
+    /**
+     * @param float $serviceNds
+     */
+    public function setServiceNds($serviceNds)
+    {
+        $this->serviceNds = number_format($serviceNds / 100, 2, '.', '');
     }
 
     public static function mb_ucfirst($string)

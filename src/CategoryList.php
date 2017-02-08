@@ -101,7 +101,7 @@ class CategoryList
                                 $itemInfo = [];
                                 $itemInfo['id'] = $objInfo['id'];
                                 $itemInfo['name'] = $objInfo['name'];
-                                $itemInfo['service_list'] = $objInfo['service'];
+                                $itemInfo['service_list'] = !empty($objInfo['service']) ? $objInfo['service'] : []
                                 $itemInfo['fields'] = $objInfo['params'];
                                 $categoryItem['subcategory_list'][$childInfo['id']]['items'][$objInfo['id']] = $itemInfo;
                             }
