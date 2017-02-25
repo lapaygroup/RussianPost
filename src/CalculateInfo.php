@@ -11,7 +11,7 @@ class CalculateInfo
     private $transportationName = 'Наземно'; // Способ пересылки
     private $pay = 0.00; // Итого стоимоть без НДС
     private $payNds = 0.00; // Итого стоимость с НДС
-    private $payMark = 0.00; // Итог остоимость при оплате марками
+    private $payMark = 0.00; // Итого стоимость при оплате марками
     private $ground = 0.00; // Почтовый сбор
     private $groundNds = 0.00; // Почтовый сбор c НДС
     private $cover = 0.00; // Страхование
