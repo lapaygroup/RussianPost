@@ -16,14 +16,14 @@ class TariffCalculation
      */
     public function calculate($object_id, $params, $services = [], $date=false)
     {
-        if(empty($date)) $date = date('Ymd');
+        if (empty($date)) $date = date('Ymd');
         $params['date'] = $date;
 
         $resultRaw = Calculation::getInstance()->getTariff($object_id, $params, $services);
 
         $calculateInfo = new CalculateInfo();
 
-        if(empty($resultRaw['error'])) {
+        if (empty($resultRaw['error'])) {
             $calculateInfo->setVersion($resultRaw['version']);
             $calculateInfo->setCategoryItemId($resultRaw['id']);
             $calculateInfo->setCategoryItemName($resultRaw['name']);
@@ -32,21 +32,28 @@ class TariffCalculation
             $calculateInfo->setTransportationName($resultRaw['transname']);
             $calculateInfo->setPay($resultRaw['pay']);
             $calculateInfo->setPayNds($resultRaw['paynds']);
-            $paymark = !empty($resultRaw['paymark']) ? $resultRaw['paymark'] : 0.00;
+            $paymark = ! empty($resultRaw['paymark']) ? $resultRaw['paymark'] : 0.00;
             $calculateInfo->setPayMark($paymark);
-            $calculateInfo->setGround($resultRaw['ground']['val']);
-            $calculateInfo->setGroundNds($resultRaw['ground']['valnds']);
-            $calculateInfo->setCover($resultRaw['cover']['val']);
-            $calculateInfo->setCoverNds($resultRaw['cover']['valnds']);
-            $calculateInfo->setService($resultRaw['service']['val']);
-            $calculateInfo->setServiceNds($resultRaw['service']['valnds']);
+            if (! empty($resultRaw['ground'])) {
+                $calculateInfo->setGround($resultRaw['ground']['val']);
+                $calculateInfo->setGroundNds($resultRaw['ground']['valnds']);
+            }
+            if (! empty($resultRaw['cover'])) {
+                $calculateInfo->setCover($resultRaw['cover']['val']);
+                $calculateInfo->setCoverNds($resultRaw['cover']['valnds']);
+            }
 
-            foreach($resultRaw['tariff'] as $tariffInfo) {
-                foreach($tariffInfo as $key => $paramInfo) {
-                    if(is_array($paramInfo)) {
-                        $valMark = !empty($tariffInfo[$key]['valmark']) ? $tariffInfo[$key]['valmark'] : 0;
-                        $val = !empty($tariffInfo[$key]['val']) ? $tariffInfo[$key]['val'] : 0;
-                        $valNds = !empty($tariffInfo[$key]['valnds']) ? $tariffInfo[$key]['valnds'] : 0;
+            if (! empty($resultRaw['service'])) {
+                $calculateInfo->setService($resultRaw['service']['val']);
+                $calculateInfo->setServiceNds($resultRaw['service']['valnds']);
+            }
+
+            foreach ($resultRaw['tariff'] as $tariffInfo) {
+                foreach ($tariffInfo as $key => $paramInfo) {
+                    if (is_array($paramInfo)) {
+                        $valMark = ! empty($tariffInfo[$key]['valmark']) ? $tariffInfo[$key]['valmark'] : 0;
+                        $val = ! empty($tariffInfo[$key]['val']) ? $tariffInfo[$key]['val'] : 0;
+                        $valNds = ! empty($tariffInfo[$key]['valnds']) ? $tariffInfo[$key]['valnds'] : 0;
                     }
                 }
 
