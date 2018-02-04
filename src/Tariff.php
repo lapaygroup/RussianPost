@@ -13,17 +13,9 @@ class Tariff
     {
         $this->id = $id; // ID тарифа
         $this->name = $name; // Название тарифа
-        
-        if ($id != 215) {
-            $this->value = number_format($value / 100, 2, '.', ''); // Стоимость без НДС
-            $this->valueNds = number_format($valueNds / 100, 2, '.', ''); // Стоимость с НДС
-            $this->valueMark = number_format($valueMark / 100, 2, '.', ''); // Стоимость при оплате марками
-        } else {
-            // Если плата за объявленную ценность, то передается в рублях
-            $this->value = number_format($value, 2, '.', ''); // Стоимость без НДС
-            $this->valueNds = number_format($valueNds, 2, '.', ''); // Стоимость с НДС
-            $this->valueMark = number_format($valueMark, 2, '.', ''); // Стоимость при оплате марками
-        }
+        $this->value = number_format($value / 100, 2, '.', ''); // Стоимость без НДС
+        $this->valueNds = number_format($valueNds / 100, 2, '.', ''); // Стоимость с НДС
+        $this->valueMark = number_format($valueMark / 100, 2, '.', ''); // Стоимость при оплате марками
     }
 
     /**
