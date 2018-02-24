@@ -85,7 +85,87 @@
 Дополнительные услуги: 66.64 (с НДС).  
 Итого сумма без НДС: 149.47.  
 Итого сумма с НДС 18%: 176.38.  
- 
+
+# Обработка данных
+Реализует функции [API](https://otpravka.pochta.ru/specification#/nogroup-normalization_adress) Почты России для работы с данными. 
+Для работы данных функций необходим [конфигурационный файл](config.yaml.example) с логином и паролем от сервиса Почты России.
+
+### Нормализация адреса
+Разделяет и помещает сущности переданных адресов (город, улица) в соответствующие поля возвращаемого объекта. 
+Параметр id (идентификатор записи) используется для установления соответствия переданных и полученных записей, 
+так как порядок сортировки возвращаемых записей не гарантируется. Метод автоматически ищет и возвращает индекс 
+близлежащего ОПС по указанному адресу.  
+
+**Адрес считается корректным к отправке, если в ответе запроса:**
+ - quality-code=GOOD, POSTAL_BOX, ON_DEMAND или UNDEF_05;
+ - validation-code=VALIDATED, OVERRIDDEN или CONFIRMED_MANUALLY.  
+
+**Пример вызова:**
+```php
+<?php
+  $addressList = new \LapayGroup\RussianPost\AddressList();
+  $addressList->add('115551 Кширское шоссе 94-1, 1');
+  $result = $OtpravkaApi->clearAddress($addressList);
+?>
+```
+**$addressList** - это объект класса *LapayGroup\RussianPost\AddressList* содержащий список адресов для нормализации.
+
+
+### Нормализация ФИО
+Очищает, разделяет и помещает значения ФИО в соответствующие поля возвращаемого объекта. 
+Параметр id (идентификатор записи) используется для установления соответствия переданных и полученных записей, 
+так как порядок сортировки возвращаемых записей не гарантируется.  
+
+**Пример вызова:**
+```php
+<?php
+  $fioList = new \LapayGroup\RussianPost\FioList();
+  $fioList->add('Иванов Петр игоревич');
+  $result = $OtpravkaApi->clearFio($fioList);
+?>
+```
+**$fioList** - это объект класса *LapayGroup\RussianPost\FioList* содержащий список ФИО для нормализации.
+
+
+### Нормализация телефона
+Принимает номера телефонов в неотформатированном виде, который может включать пробелы, символы: +-(). 
+Очищает, разделяет и помещает сущности телефона (код города, номер) в соответствующие поля возвращаемого объекта. 
+Параметр id (идентификатор записи) используется для установления соответствия переданных и полученных записей, 
+так как порядок сортировки возвращаемых записей не гарантируется.
+
+**Пример вызова:**
+```php
+<?php
+  $phoneList = new \LapayGroup\RussianPost\PhoneList();
+  $phoneList->add('9260120934');
+  $result = $OtpravkaApi->clearPhone($phoneList);
+?>
+```
+**$phoneList** - это объект класса *LapayGroup\RussianPost\PhoneList* содержащий список номеров телефлонов для нормализации.
+
+
+### Рассчет стоимости пересылки (Упрощенная версия)
+Рассчитывает стоимость пересылки в зависимости от указанных входных данных. Индекс ОПС точки отправления берется из профиля клиента. 
+Возвращаемые значения указываются в копейках.
+
+**Пример вызова:**
+```php
+<?php
+  $parcelInfo = new ParcelInfo();
+  $parcelInfo->setIndexTo(644015);
+  $parcelInfo->setMailCategory('ORDINARY'); // https://otpravka.pochta.ru/specification#/enums-base-mail-category
+  $parcelInfo->setMailType('POSTAL_PARCEL'); // https://otpravka.pochta.ru/specification#/enums-base-mail-type
+  $parcelInfo->setWeight(1000);
+  $parcelInfo->setFragile(true);
+
+  $tariffInfo = $OtpravkaApi->getDeliveryTariff($parcelInfo);
+  echo $tariffInfo->getTotalRate()/100 . ' руб.';
+?>
+```
+**$parcelInfo** - это объект класса *LapayGroup\RussianPost\ParcelInfo* содержащий данные по отправлению.
+**$tariffInfo** - это объект класса *LapayGroup\RussianPost\tariffInfo* содержащий данные по рассчитанному тарифу.
+
+
 # Трекинг почтовых отправлений (РПО)
-//TODO
+// Скоро!
 

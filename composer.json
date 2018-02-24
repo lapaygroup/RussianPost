@@ -10,12 +10,13 @@
   "authors": [
     {
       "name": "Nikolay Lapay",
-      "email": "support@lapaygroup.ru"
+      "email": "nl@wildtuna.pro"
     }
   ],
   "require": {
-    "php": ">=5.5.0",
-    "guzzlehttp/guzzle": "6.2.*"
+    "php": ">=5.5",
+    "guzzlehttp/guzzle": "6.3.*",
+    "symfony/yaml": "3.4.4"
   },
   "autoload": {
     "psr-4": {

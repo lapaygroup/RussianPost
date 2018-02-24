@@ -64,7 +64,7 @@ class Calculation
 
     private function parseResponse($response)
     {
-        $result = json_decode($response->getBody(), true);
+        $result = json_decode($response->getBody()->getContents(), true);
         return $result;
     }
 }

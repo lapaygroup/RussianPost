@@ -3,3 +3,4 @@ vendor/
 index.php
 composer.lock
 composer
+config.yaml

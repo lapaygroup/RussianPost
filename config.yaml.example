@@ -1,0 +1,8 @@
+auth:
+  otpravka:
+    token: otpravka_token
+    key: otpravka_key
+
+  tracking:
+    login: tracking_login
+    password: tracking_password
