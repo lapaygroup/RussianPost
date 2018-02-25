@@ -103,6 +103,11 @@
 **Пример вызова:**
 ```php
 <?php
+  use Symfony\Component\Yaml\Yaml;
+  use LapayGroup\RussianPost\Providers\OtpravkaApi;
+  
+  $OtpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+  
   $addressList = new \LapayGroup\RussianPost\AddressList();
   $addressList->add('115551 Кширское шоссе 94-1, 1');
   $result = $OtpravkaApi->clearAddress($addressList);
@@ -119,6 +124,11 @@
 **Пример вызова:**
 ```php
 <?php
+  use Symfony\Component\Yaml\Yaml;
+  use LapayGroup\RussianPost\Providers\OtpravkaApi;
+  
+  $OtpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+  
   $fioList = new \LapayGroup\RussianPost\FioList();
   $fioList->add('Иванов Петр игоревич');
   $result = $OtpravkaApi->clearFio($fioList);
@@ -136,6 +146,11 @@
 **Пример вызова:**
 ```php
 <?php
+  use Symfony\Component\Yaml\Yaml;
+  use LapayGroup\RussianPost\Providers\OtpravkaApi;
+  
+  $OtpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+  
   $phoneList = new \LapayGroup\RussianPost\PhoneList();
   $phoneList->add('9260120934');
   $result = $OtpravkaApi->clearPhone($phoneList);
@@ -151,6 +166,12 @@
 **Пример вызова:**
 ```php
 <?php
+  use Symfony\Component\Yaml\Yaml;
+  use LapayGroup\RussianPost\Providers\OtpravkaApi;
+  use LapayGroup\RussianPost\ParcelInfo;
+  
+  $OtpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+  
   $parcelInfo = new ParcelInfo();
   $parcelInfo->setIndexTo(644015);
   $parcelInfo->setMailCategory('ORDINARY'); // https://otpravka.pochta.ru/specification#/enums-base-mail-category
