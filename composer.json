@@ -15,8 +15,8 @@
   ],
   "require": {
     "php": ">=5.5",
-    "guzzlehttp/guzzle": "6.3.*",
-    "symfony/yaml": "3.4.4"
+    "guzzlehttp/guzzle": "^6.3",
+    "symfony/yaml": ">=3.4.4"
   },
   "autoload": {
     "psr-4": {
