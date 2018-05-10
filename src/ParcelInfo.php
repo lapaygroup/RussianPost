@@ -10,6 +10,7 @@ class ParcelInfo
     private $width = 0; // Линейная ширина (сантиметры)
     private $fragile = false; // Отметка 'Осторожно/Хрупко'
     private $indexTo = 101000; // Индекс места назначения (по умолчанию Москва)
+    private $indexFrom = 101000; // Индекс места отправления (по умолчанию Москва)
     private $mailCategory = 'SIMPLE'; // Категория РПО https://otpravka.pochta.ru/specification#/enums-base-mail-category
     private $mailType = 'POSTAL_PARCEL'; // Вид РПО https://otpravka.pochta.ru/specification#/enums-base-mail-type
     private $weight = 0; // Вес отправления в граммах
@@ -32,6 +33,7 @@ class ParcelInfo
             $array['dimension']['width']  = $this->getWidth();
         }
         $array['fragile'] = $this->isFragile();
+        $array['index-from'] = $this->getIndexFrom();
         $array['index-to'] = $this->getIndexTo();
         $array['mail-category'] = $this->getMailCategory();
         $array['mail-type'] = $this->getMailType();
@@ -153,6 +155,22 @@ class ParcelInfo
     public function setIndexTo($indexTo)
     {
         $this->indexTo = $indexTo;
+    }
+    
+    /**
+     * @return int
+     */
+    public function getIndexFrom()
+    {
+        return $this->indexFrom;
+    }
+
+    /**
+     * @param int $indexFrom
+     */
+    public function setIndexFrom($indexFrom)
+    {
+        $this->indexFrom = $indexFrom;
     }
 
     /**
