@@ -1,3 +1,7 @@
+[![Latest Stable Version](https://poser.pugx.org/lapaygroup/russianpost/v/stable)](https://packagist.org/packages/lapaygroup/russianpost)
+[![Total Downloads](https://poser.pugx.org/lapaygroup/russianpost/downloads) (https://packagist.org/packages/lapaygroup/russianpost)
+[![License](https://poser.pugx.org/lapaygroup/russianpost/license)](https://packagist.org/packages/lapaygroup/russianpost)
+
 # Changelog
 - 0.2.0 - Расчет стоимости отправки тарификатором Почты России  
 - 0.3.0 - Нормализация данных, упрощенный расчет стоимости отправки  
