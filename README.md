@@ -1,5 +1,5 @@
 [![Latest Stable Version](https://poser.pugx.org/lapaygroup/russianpost/v/stable)](https://packagist.org/packages/lapaygroup/russianpost)
-[![Total Downloads](https://poser.pugx.org/lapaygroup/russianpost/downloads) (https://packagist.org/packages/lapaygroup/russianpost)
+[![Total Downloads](https://poser.pugx.org/lapaygroup/russianpost/downloads)](https://packagist.org/packages/lapaygroup/russianpost)
 [![License](https://poser.pugx.org/lapaygroup/russianpost/license)](https://packagist.org/packages/lapaygroup/russianpost)
 
 # Changelog
