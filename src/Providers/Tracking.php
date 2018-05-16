@@ -206,6 +206,7 @@ class Tracking
             foreach ($item as &$operation) {
                 $statusInfo = $statusList->getInfo($operation->OperTypeID, $operation->OperCtgID);
                 $operation->OperCtgName = $statusInfo['substatusName'];
+                $operation->isFinal = $statusInfo['isFinal'];
             }
 
             $result[$rpo] = $item;

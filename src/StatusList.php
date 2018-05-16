@@ -401,12 +401,14 @@ class StatusList
                             ];
 
     /**
-     * Возвращает массив конечных статусов
-     * @return array
+     * Проверяет признак конечного статуса
+     * @return bool
      */
-    public function getFinalList()
+    public function isFinal($statusId, $substatusId = 0)
     {
-        return [
+        if (!$substatusId) $substatusId = 0;
+
+        $finalList = [
             2 => [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,13],
             5 => [1, 2],
             15 => [0],
@@ -414,6 +416,8 @@ class StatusList
             17 => [0],
             18 => [0]
         ];
+
+        return isset($finalList[$statusId][$substatusId]);
     }
 
     /**
@@ -440,6 +444,7 @@ class StatusList
 
         $result['statusName'] = $statusName;
         $result['statusId'] = $statusId;
+        $result['isFinal'] = $this->isFinal($statusId, $substatusId);
 
         if (isset($substatusId)) {
             $result['substatusId'] = $substatusId;
