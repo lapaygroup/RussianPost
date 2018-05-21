@@ -1,6 +1,6 @@
 {
   "name": "lapaygroup/russianpost",
-  "description": "Russian Post API SDK",
+  "description": "SDK для работы с API Почты России (pochta.ru)",
   "minimum-stability": "stable",
   "license": "MIT",
   "support": {
