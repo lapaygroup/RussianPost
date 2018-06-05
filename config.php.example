@@ -1,0 +1,9 @@
+<?php
+$otpravkaAuth['token'] = 'otpravka_token';
+$otpravkaAuth['key']   = 'otpravka_key';
+
+$trackingAuth['login'] = 'tracking_login';
+$trackingAuth['password'] = 'tracking_password';
+
+$authParams['auth']['otpravka'] = $otpravkaAuth;
+$authParams['auth']['tracking'] = $trackingAuth;
