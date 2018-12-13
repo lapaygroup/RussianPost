@@ -433,7 +433,7 @@ class StatusList
             18 => [0]
         ];
 
-        return isset($finalList[$statusId][$substatusId]);
+        return isset($finalList[$statusId]) && in_array($substatusId, $finalList[$statusId]);
     }
 
     /**
