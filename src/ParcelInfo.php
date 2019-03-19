@@ -15,9 +15,11 @@ class ParcelInfo
     private $mailType = 'POSTAL_PARCEL'; // Вид РПО https://otpravka.pochta.ru/specification#/enums-base-mail-type
     private $weight = 0; // Вес отправления в граммах
     private $paymentMethod = 'CASHLESS'; // Способ оплаты https://otpravka.pochta.ru/specification#/enums-payment-methods
+    private $smsNoticeRecipient = null; // Отметка 'SMS уведомления'
+    private $transportType = null; // Вид транспортировки https://otpravka.pochta.ru/specification#/enums-base-transport-type
     private $notify = false; // Отметка 'С заказным уведомлением'
     private $simpleNotify = false; // Отметка 'С простым уведомлением'
-
+  
     /**
      * Возвращает данные по отправлению в виде массива для API ПРФ
      * @return array
@@ -41,6 +43,14 @@ class ParcelInfo
         $array['payment-method'] = $this->getPaymentMethod();
         $array['with-order-of-notice'] = $this->isNotify();
         $array['with-simple-notice'] = $this->isSimpleNotify();
+
+        if (null !== $smsNotice = $this->getSmsNoticeRecipient()) {
+            $array['sms-notice-recipient'] = (int)$smsNotice;
+        }
+        
+        if (null !== $transportType = $this->getTransportType()) {
+            $array['transport-type'] = $transportType;
+        }
 
         return $array;
     }
@@ -267,5 +277,37 @@ class ParcelInfo
     public function setSimpleNotify($simpleNotify)
     {
         $this->simpleNotify = $simpleNotify;
+    }
+
+    /**
+     * @return null|bool
+     */
+    public function getSmsNoticeRecipient()
+    {
+        return $this->smsNoticeRecipient;
+    }
+
+    /**
+     * @param null|bool $smsNoticeRecipient
+     */
+    public function setSmsNoticeRecipient($smsNoticeRecipient)
+    {
+        $this->smsNoticeRecipient = $smsNoticeRecipient;
+    }
+
+    /**
+     * @return null|string
+     */
+    public function getTransportType()
+    {
+        return $this->transportType;
+    }
+
+    /**
+     * @param null|string $transportType
+     */
+    public function setTransportType($transportType)
+    {
+        $this->transportType = $transportType;
     }
 }
