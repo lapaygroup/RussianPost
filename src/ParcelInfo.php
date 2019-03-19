@@ -17,6 +17,7 @@ class ParcelInfo
     private $paymentMethod = 'CASHLESS'; // Способ оплаты https://otpravka.pochta.ru/specification#/enums-payment-methods
     private $notify = false; // Отметка 'С заказным уведомлением'
     private $simpleNotify = false; // Отметка 'С простым уведомлением'
+    private $smsNoticeRecipient = null; // Отметка 'SMS уведомления'
 
     /**
      * Возвращает данные по отправлению в виде массива для API ПРФ
@@ -41,6 +42,11 @@ class ParcelInfo
         $array['payment-method'] = $this->getPaymentMethod();
         $array['with-order-of-notice'] = $this->isNotify();
         $array['with-simple-notice'] = $this->isSimpleNotify();
+
+        $smsNotice = $this->getSmsNoticeRecipient();
+        if (!is_null($smsNotice)) {
+            $array['sms-notice-recipient'] = (int)$smsNotice;
+        }
 
         return $array;
     }
@@ -268,4 +274,22 @@ class ParcelInfo
     {
         $this->simpleNotify = $simpleNotify;
     }
+
+    /**
+     * @return null|bool
+     */
+    public function getSmsNoticeRecipient()
+    {
+        return $this->smsNoticeRecipient;
+    }
+
+    /**
+     * @param null|bool $smsNoticeRecipient
+     */
+    public function setSmsNoticeRecipient($smsNoticeRecipient)
+    {
+        $this->smsNoticeRecipient = $smsNoticeRecipient;
+    }
+
+
 }
