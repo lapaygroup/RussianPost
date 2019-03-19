@@ -1,6 +1,7 @@
 [![Latest Stable Version](https://poser.pugx.org/lapaygroup/russianpost/v/stable)](https://packagist.org/packages/lapaygroup/russianpost)
 [![Total Downloads](https://poser.pugx.org/lapaygroup/russianpost/downloads)](https://packagist.org/packages/lapaygroup/russianpost)
 [![License](https://poser.pugx.org/lapaygroup/russianpost/license)](https://packagist.org/packages/lapaygroup/russianpost)
+[![Telegram Chat](https://img.shields.io/badge/telegram-chat-blue.svg?logo=telegram)](https://t.me/phppochtarusdk)
 
 # Содержание    
 [Changelog](#changelog)  
@@ -19,7 +20,8 @@
 - 0.4.6 - Было принято решение исключить зависимость с [symfony/yaml](https://packagist.org/packages/symfony/yaml) и понизить требуемую версию PHP до 5.5+. Подробнее в разделе [Конфигурация](#configfile);
 - 0.4.7 - Актуализация списка статусов;
 - 0.4.8 - Изменен адрес калькулятора Почты России, старый будет отключен 01.01.2019;
-- 0.4.9 - Исправлена ошибка выставления флага isFinal в пакетном трекинге отправлений, за обнаружение спасибо [Dmitry Sobchenko](https://github.com/sharpensteel). 
+- 0.4.9 - Исправлена ошибка выставления флага isFinal в пакетном трекинге отправлений, за обнаружение спасибо [Dmitry Sobchenko](https://github.com/sharpensteel);  
+- 0.4.10 - Актуализирован расчет стоимости пересылки (Упрощенная версия), за актуализацию спасибо [rik43](https://github.com/rik43).
 
 
 # Установка  
@@ -112,11 +114,12 @@
 Итого сумма с НДС 18%: 176.38.  
 
 
-<a name="configfile"><h1>Конфигураия</h1></a>  
+<a name="configfile"><h1>Конфигурация</h1></a>  
 
 Для использования сервисов Почты России, не считая [тарификатор](#tariffs), необходимы аутентификационные данные.
-Их можно хранить в [ассоциативном массиве](config.php.example) или [yaml-файле](config.yaml.example). В примерах ниже я буду использовать yaml-файл, 
-а парсить его с помощью [symfony/yaml](https://packagist.org/packages/symfony/yaml).
+Их можно хранить в [ассоциативном массиве](config.php.example) или [yaml-файле](config.yaml.example). В примерах ниже я буду использовать yaml-файл, а парсить его с помощью [symfony/yaml](https://packagist.org/packages/symfony/yaml).    
+
+Информацию о аутентификационных данных можно получить [здесь](https://otpravka.pochta.ru/specification#/authorization-token) и [здесь](https://otpravka.pochta.ru/specification#/authorization-key).  
 
 
 <a name="parsedata"><h1>Обработка данных</h1></a>  
