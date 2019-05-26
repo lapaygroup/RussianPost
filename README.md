@@ -3,6 +3,10 @@
 [![License](https://poser.pugx.org/lapaygroup/russianpost/license)](https://packagist.org/packages/lapaygroup/russianpost)
 [![Telegram Chat](https://img.shields.io/badge/telegram-chat-blue.svg?logo=telegram)](https://t.me/phppochtarusdk)
 
+# SDK для интеграции с программным комплексом [Почты России](https://www.pochta.ru/support/business/api).  
+
+Посмотреть все проекты или поддержать автора можно [тут](https://lapay.group/opensource).  
+
 # Содержание    
 - [Changelog](#changelog)  
 - [Тарификатор Почты России](#tariffs)    
