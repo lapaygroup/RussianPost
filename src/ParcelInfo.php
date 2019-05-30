@@ -27,20 +27,30 @@ class ParcelInfo
     public function getArray()
     {
         $array = [];
-        $array['courier'] = $this->isCourier();
-        $array['declared-value'] = $this->getDeclaredValue();
+        if ($this->courier)
+            $array['courier'] = $this->isCourier();
+
+        if ($this->declaredValue)
+            $array['declared-value'] = $this->getDeclaredValue();
+
         if ($this->getHeight() > 0) {
             $array['dimension']['height'] = $this->getHeight();
             $array['dimension']['length'] = $this->getLength();
             $array['dimension']['width']  = $this->getWidth();
         }
-        $array['fragile'] = $this->isFragile();
+
+        if ($this->fragile)
+            $array['fragile'] = $this->isFragile();
+
         $array['index-from'] = $this->getIndexFrom();
         $array['index-to'] = $this->getIndexTo();
         $array['mail-category'] = $this->getMailCategory();
         $array['mail-type'] = $this->getMailType();
         $array['mass'] = $this->getWeight();
-        $array['payment-method'] = $this->getPaymentMethod();
+
+        if ($this->paymentMethod)
+            $array['payment-method'] = $this->getPaymentMethod();
+
         $array['with-order-of-notice'] = $this->isNotify();
         $array['with-simple-notice'] = $this->isSimpleNotify();
 

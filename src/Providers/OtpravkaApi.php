@@ -83,6 +83,17 @@ class OtpravkaApi
         return $this->parseResponse($response);
     }
 
+    /**
+     * Текущие точки сдачи отправлений
+     * @return mixed
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    public function shippingPoints()
+    {
+        $response = $this->httpClient->request('GET', '/'.self::VERSION.'/user-shipping-points');
+        return $this->parseResponse($response);
+    }
+
     private function parseResponse($response)
     {
         $result = json_decode($response->getBody()->getContents(), true);
