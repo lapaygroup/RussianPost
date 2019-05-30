@@ -227,6 +227,18 @@
 Расчитывает стоимость пересылки в зависимости от указанных входных данных. Индекс ОПС точки отправления берется из профиля клиента. 
 Возвращаемые значения указываются в копейках.
 
+**Важно! Индекс отправления должен быть указан одного из пунктов сдачи, иначе будет возвращена ошибка 1001!**  
+
+**Пример получения списка пунктов сдачи отправлений:**
+```php
+use Symfony\Component\Yaml\Yaml;
+use LapayGroup\RussianPost\Providers\OtpravkaApi;
+use LapayGroup\RussianPost\ParcelInfo;
+
+$OtpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+$list = $OtpravkaApi->shippingPoints();
+```
+
 **Пример вызова:**
 ```php
 <?php
@@ -237,6 +249,7 @@
   $OtpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
   
   $parcelInfo = new ParcelInfo();
+  $parcelInfo->setIndexFrom($list[0]['operator-postcode']); // Индекс пункта сдачи из функции $OtpravkaApi->shippingPoints()
   $parcelInfo->setIndexTo(644015);
   $parcelInfo->setMailCategory('ORDINARY'); // https://otpravka.pochta.ru/specification#/enums-base-mail-category
   $parcelInfo->setMailType('POSTAL_PARCEL'); // https://otpravka.pochta.ru/specification#/enums-base-mail-type
