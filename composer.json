@@ -16,7 +16,8 @@
   "require": {
     "php": ">=5.5",
     "guzzlehttp/guzzle": "^6.3",
-    "ext-soap": "*"
+    "ext-soap": "*",
+    "ext-json": "*"
   },
   "autoload": {
     "psr-4": {

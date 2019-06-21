@@ -1,7 +1,9 @@
 <?php
 namespace LapayGroup\RussianPost\Providers;
 
+use GuzzleHttp\Client;
 use LapayGroup\RussianPost\AddressList;
+use LapayGroup\RussianPost\Exceptions\RussianPostException;
 use LapayGroup\RussianPost\FioList;
 use LapayGroup\RussianPost\PhoneList;
 use LapayGroup\RussianPost\Singleton;
@@ -12,91 +14,169 @@ class OtpravkaApi
 {
     use Singleton;
     const VERSION = '1.0';
+    const DELIVERY_VERSION = 'v1';
 
-    function __construct($config)
+    /** @var \GuzzleHttp\Client  */
+    private $otpravkaClient;
+
+    /** @var \GuzzleHttp\Client  */
+    private $deliveryClient;
+
+    function __construct($config, $timeout = 60)
     {
-        $this->httpClient = new \GuzzleHttp\Client([
-            'base_uri' => 'https://otpravka-api.pochta.ru',
+        $this->otpravkaClient = new \GuzzleHttp\Client([
+            'base_uri' => 'https://otpravka-api.pochta.ru/'.self::VERSION.'/',
             'headers' => ['Authorization' => 'AccessToken '. $config['auth']['otpravka']['token'],
                           'X-User-Authorization' => 'Basic '.$config['auth']['otpravka']['key'],
                           'Content-Type' => 'application/json',
                           'Accept' => 'application/json;charset=UTF-8'
-            ]
+            ],
+            'timeout' => $timeout,
+            'http_errors' => false
         ]);
+
+        $this->deliveryClient = new \GuzzleHttp\Client([
+            'base_uri'=>'https://delivery.pochta.ru/delivery/'.self::DELIVERY_VERSION.'/',
+            'timeout' => $timeout,
+            'http_errors' => false
+        ]);
+    }
+
+    /**
+     * Инициализирует вызов к API
+     *
+     * @param $method
+     * @param $params
+     * @return array
+     * @throws RussianPostException
+     */
+    private function callApi($type, $method, $params = [], $endpoint = false)
+    {
+
+        switch ($endpoint) {
+            case 'otpravka':
+                $client = $this->otpravkaClient;
+                break;
+
+            case 'delivery':
+                $client = $this->deliveryClient;
+                break;
+
+            default:
+                $client = $this->otpravkaClient;
+        }
+
+        switch ($type) {
+            case 'GET':
+                $response = $client->get($method, ['query' => $params]);
+                break;
+            case 'POST':
+                $response = $client->post($method, ['json' => $params]);
+                break;
+        }
+
+        if ($response->getStatusCode() != 200 && $response->getStatusCode() != 404)
+            throw new RussianPostException('Неверный код ответа от сервера Почты России при вызове метода '.$method.': ' . $response->getStatusCode(), $response->getStatusCode(), $response->getBody()->getContents());
+
+        $resp = json_decode($response->getBody()->getContents(), true);
+
+        if (empty($resp))
+            throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' пришел пустой ответ', $response->getStatusCode(), $response->getBody()->getContents());
+
+        if ($response->getStatusCode() == 404 && !empty($resp['code']))
+            throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' получена ошибка: '.$resp['sub-code'] . " (".$resp['code'].")", $response->getStatusCode(), $response->getBody()->getContents());
+
+        return $resp;
     }
 
     /**
      * Расчет стоимости пересылки
+     *
      * @param ParcelInfo $parcelInfo
      * @return TariffInfo
+     * @throws RussianPostException
      */
     public function getDeliveryTariff(ParcelInfo $parcelInfo)
     {
-        $response = $this->httpClient->request('POST', '/'.self::VERSION.'/tariff', [
-            'json' => $parcelInfo->getArray(),
-        ]);
-
-        $rawResult = $this->parseResponse($response);
-        return new TariffInfo($rawResult);
+        $response = $this->callApi('POST', 'tariff', $parcelInfo->getArray());
+        return new TariffInfo($response);
     }
-
 
     /**
      * Нормализация адресов
+     *
      * @param AddressList $addressList - адреса для нормализации
      * @return array ответ API ПРФ
+     * @throws RussianPostException
      */
     public function clearAddress(AddressList $addressList)
     {
-        $response = $this->httpClient->request('POST', '/'.self::VERSION.'/clean/address', [
-            'json' => $addressList->get(),
-        ]);
-
-        return $this->parseResponse($response);
+        return $this->callApi('POST', 'clean/address',  $addressList->get());
     }
 
     /**
      * Нормализация ФИО
+     *
      * @param FioList $fioList
      * @return array ответ API ПРФ
+     * @throws RussianPostException
      */
     public function clearFio(FioList $fioList)
     {
-        $response = $this->httpClient->request('POST', '/'.self::VERSION.'/clean/physical', [
-            'json' => $fioList->get(),
-        ]);
-
-        return $this->parseResponse($response);
+        return $this->callApi('POST', 'clean/physical',  $fioList->get());
     }
 
     /**
      * Нормализация телефона
+     *
      * @param PhoneList $phoneList
      * @return array ответ API ПРФ
+     * @throws RussianPostException
      */
     public function clearPhone(PhoneList $phoneList)
     {
-        $response = $this->httpClient->request('POST', '/'.self::VERSION.'/clean/phone', [
-            'json' => $phoneList->get(),
-        ]);
-
-        return $this->parseResponse($response);
+        return $this->callApi('POST', 'clean/phone',  $phoneList->get());
     }
 
     /**
      * Текущие точки сдачи отправлений
+     *
      * @return mixed
-     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @throws RussianPostException
      */
     public function shippingPoints()
     {
-        $response = $this->httpClient->request('GET', '/'.self::VERSION.'/user-shipping-points');
-        return $this->parseResponse($response);
+        return $this->callApi('GET', 'user-shipping-points');
     }
 
-    private function parseResponse($response)
+    /**
+     * Получение баланса
+     *
+     * @return mixed
+     * @throws RussianPostException
+     */
+    public function getBalance()
     {
-        $result = json_decode($response->getBody()->getContents(), true);
-        return $result;
+        return $this->callApi('GET', 'counterpart/balance');
+    }
+
+    /**
+     * Расчет периода доставки
+     *
+     * @param $post_type
+     * @param $index_prom
+     * @param $index_to
+     * @return array
+     * @throws RussianPostException
+     */
+    public function getDeliveryPeriod($post_type, $index_from, $index_to)
+    {
+        $params = [];
+        $params['jsontext'] = true;
+        $params['posttype'] = $post_type;
+        $params['from'] = $index_from;
+        $params['to'] = $index_to;
+
+        return $this->callApi('GET', 'calculate', $params, 'delivery');
     }
 }

@@ -13,8 +13,15 @@
 - [Changelog](#changelog)  
 - [Тарификатор Почты России](#tariffs)    
 - [Конфигурация](#configfile)  
-- [Обработка данных](#parsedata)  
 - [Трекинг почтовых отправлений (РПО)](#tracking)  
+- [Данные](#data)
+  - [Нормализация адреса](#clean_address)  
+  - [Нормализация ФИО](#clean_fio)  
+  - [Нормализация телефона](#clean_phone)  
+  - [Расчет стоимости пересылки (Упрощенная версия)](#calc_delivery_tariff) 
+  - [Расчет сроков доставки](#calc_delivery_period)  
+  - [Отображение баланса](#show_balance)   
+  - [Неблагонадёжный получатель](#untrustworthy_recipient)    
 - [Заказы](#orders)  
   - [Создание заказа](#create_order)  
   - [Редактирование заказа](#edit_order)   
@@ -152,121 +159,6 @@
 Информацию о аутентификационных данных можно получить [здесь](https://otpravka.pochta.ru/specification#/authorization-token) и [здесь](https://otpravka.pochta.ru/specification#/authorization-key).  
 
 
-<a name="parsedata"><h1>Обработка данных</h1></a>  
-
-Реализует функции [API](https://otpravka.pochta.ru/specification#/nogroup-normalization_adress) Почты России для работы с данными. 
-Для работы данных функций необходимы аутентификационные данные. Подробнее в разделе [Конфигурация](#configfile).
-
-### Нормализация адреса
-Разделяет и помещает сущности переданных адресов (город, улица) в соответствующие поля возвращаемого объекта. 
-Параметр id (идентификатор записи) используется для установления соответствия переданных и полученных записей, 
-так как порядок сортировки возвращаемых записей не гарантируется. Метод автоматически ищет и возвращает индекс 
-близлежащего ОПС по указанному адресу.  
-
-**Адрес считается корректным к отправке, если в ответе запроса:**
- - quality-code=GOOD, POSTAL_BOX, ON_DEMAND или UNDEF_05;
- - validation-code=VALIDATED, OVERRIDDEN или CONFIRMED_MANUALLY.  
-
-**Пример вызова:**
-```php
-<?php
-  use Symfony\Component\Yaml\Yaml;
-  use LapayGroup\RussianPost\Providers\OtpravkaApi;
-  
-  $OtpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
-  
-  $addressList = new \LapayGroup\RussianPost\AddressList();
-  $addressList->add('115551 Кширское шоссе 94-1, 1');
-  $result = $OtpravkaApi->clearAddress($addressList);
-?>
-```
-**$addressList** - это объект класса *LapayGroup\RussianPost\AddressList* содержащий список адресов для нормализации.
-
-
-### Нормализация ФИО
-Очищает, разделяет и помещает значения ФИО в соответствующие поля возвращаемого объекта. 
-Параметр id (идентификатор записи) используется для установления соответствия переданных и полученных записей, 
-так как порядок сортировки возвращаемых записей не гарантируется.  
-
-**Пример вызова:**
-```php
-<?php
-  use Symfony\Component\Yaml\Yaml;
-  use LapayGroup\RussianPost\Providers\OtpravkaApi;
-  
-  $OtpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
-  
-  $fioList = new \LapayGroup\RussianPost\FioList();
-  $fioList->add('Иванов Петр игоревич');
-  $result = $OtpravkaApi->clearFio($fioList);
-?>
-```
-**$fioList** - это объект класса *LapayGroup\RussianPost\FioList* содержащий список ФИО для нормализации.
-
-
-### Нормализация телефона
-Принимает номера телефонов в неотформатированном виде, который может включать пробелы, символы: +-(). 
-Очищает, разделяет и помещает сущности телефона (код города, номер) в соответствующие поля возвращаемого объекта. 
-Параметр id (идентификатор записи) используется для установления соответствия переданных и полученных записей, 
-так как порядок сортировки возвращаемых записей не гарантируется.
-
-**Пример вызова:**
-```php
-<?php
-  use Symfony\Component\Yaml\Yaml;
-  use LapayGroup\RussianPost\Providers\OtpravkaApi;
-  
-  $OtpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
-  
-  $phoneList = new \LapayGroup\RussianPost\PhoneList();
-  $phoneList->add('9260120934');
-  $result = $OtpravkaApi->clearPhone($phoneList);
-?>
-```
-**$phoneList** - это объект класса *LapayGroup\RussianPost\PhoneList* содержащий список номеров телефлонов для нормализации.
-
-
-### Расчет стоимости пересылки (Упрощенная версия)
-Расчитывает стоимость пересылки в зависимости от указанных входных данных. Индекс ОПС точки отправления берется из профиля клиента. 
-Возвращаемые значения указываются в копейках.
-
-**Важно! Индекс отправления должен быть указан одного из пунктов сдачи, иначе будет возвращена ошибка 1001!**  
-
-**Пример получения списка пунктов сдачи отправлений:**
-```php
-use Symfony\Component\Yaml\Yaml;
-use LapayGroup\RussianPost\Providers\OtpravkaApi;
-use LapayGroup\RussianPost\ParcelInfo;
-
-$OtpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
-$list = $OtpravkaApi->shippingPoints();
-```
-
-**Пример вызова:**
-```php
-<?php
-  use Symfony\Component\Yaml\Yaml;
-  use LapayGroup\RussianPost\Providers\OtpravkaApi;
-  use LapayGroup\RussianPost\ParcelInfo;
-  
-  $OtpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
-  
-  $parcelInfo = new ParcelInfo();
-  $parcelInfo->setIndexFrom($list[0]['operator-postcode']); // Индекс пункта сдачи из функции $OtpravkaApi->shippingPoints()
-  $parcelInfo->setIndexTo(644015);
-  $parcelInfo->setMailCategory('ORDINARY'); // https://otpravka.pochta.ru/specification#/enums-base-mail-category
-  $parcelInfo->setMailType('POSTAL_PARCEL'); // https://otpravka.pochta.ru/specification#/enums-base-mail-type
-  $parcelInfo->setWeight(1000);
-  $parcelInfo->setFragile(true);
-
-  $tariffInfo = $OtpravkaApi->getDeliveryTariff($parcelInfo);
-  echo $tariffInfo->getTotalRate()/100 . ' руб.';
-?>
-```
-**$parcelInfo** - это объект класса *LapayGroup\RussianPost\ParcelInfo* содержащий данные по отправлению.
-**$tariffInfo** - это объект класса *LapayGroup\RussianPost\tariffInfo* содержащий данные по расчитанному тарифу.
-
-
 <a name="tracking"><h1>Трекинг почтовых отправлений (РПО)</h1></a>  
 
 Реализует функции [API]( https://tracking.pochta.ru/specification) Почты России для работы с отправлениями.
@@ -386,6 +278,281 @@ Array
 
 ```
 
+<a name="data"><h1>Данные</h1></a>  
+
+Реализует функции [API](https://otpravka.pochta.ru/specification#/nogroup-normalization_adress) Почты России для работы с данными. 
+Для работы данных функций необходимы аутентификационные данные. Подробнее в разделе [Конфигурация](#configfile).
+
+В случае возникновеня ошибок при обмене выбрасывает исключение *\LapayGroup\RussianPost\Exceptions\RussianPostException*
+в котором будет текст и код ошибки от API Почты России и дамп сырого ответа с HTTP-кодом.  
+
+<a name="clean_address"><h3>Нормализация адреса</h3></a>  
+
+Разделяет и помещает сущности переданных адресов (город, улица) в соответствующие поля возвращаемого объекта. 
+Параметр id (идентификатор записи) используется для установления соответствия переданных и полученных записей, 
+так как порядок сортировки возвращаемых записей не гарантируется. Метод автоматически ищет и возвращает индекс 
+близлежащего ОПС по указанному адресу.  
+
+**Адрес считается корректным к отправке, если в ответе запроса:**
+ - quality-code=GOOD, POSTAL_BOX, ON_DEMAND или UNDEF_05;
+ - validation-code=VALIDATED, OVERRIDDEN или CONFIRMED_MANUALLY.  
+
+**Пример вызова:**
+```php
+<?php
+  use Symfony\Component\Yaml\Yaml;
+  use LapayGroup\RussianPost\Providers\OtpravkaApi;
+  
+  $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+  
+  $addressList = new \LapayGroup\RussianPost\AddressList();
+  $addressList->add('115551 Кширское шоссе 94-1, 1');
+  $result = $otpravkaApi->clearAddress($addressList);
+  
+  /*
+  Array
+  (
+      [0] => Array
+          (
+              [address-type] => DEFAULT
+              [corpus] => 1
+              [house] => 94
+              [id] => 0
+              [index] => 115551
+              [original-address] => 115551 Кширское шоссе 94-1, 1
+              [place] => г. Москва
+              [quality-code] => GOOD
+              [region] => г. Москва
+              [room] => 1
+              [street] => шоссе Каширское
+              [validation-code] => VALIDATED
+          )
+  
+  )
+ */
+?>
+```
+**$addressList** - это объект класса *LapayGroup\RussianPost\AddressList* содержащий список адресов для нормализации.
+
+
+<a name="clean_fio"><h3>Нормализация ФИО</h3></a>  
+
+Очищает, разделяет и помещает значения ФИО в соответствующие поля возвращаемого объекта. 
+Параметр id (идентификатор записи) используется для установления соответствия переданных и полученных записей, 
+так как порядок сортировки возвращаемых записей не гарантируется.  
+
+**Пример вызова:**
+```php
+<?php
+  use Symfony\Component\Yaml\Yaml;
+  use LapayGroup\RussianPost\Providers\OtpravkaApi;
+  
+  $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+  
+  $fioList = new \LapayGroup\RussianPost\FioList();
+  $fioList->add('Иванов Петр игоревич');
+  $result = $otpravkaApi->clearFio($fioList);
+  
+  /*
+   Array
+   (
+       [0] => Array
+           (
+               [id] => 0
+               [middle-name] => Игоревич
+               [name] => Петр
+               [original-fio] => Иванов Петр игоревич
+               [quality-code] => EDITED
+               [surname] => Иванов
+           )
+   
+   )
+   */
+?>
+```
+**$fioList** - это объект класса *LapayGroup\RussianPost\FioList* содержащий список ФИО для нормализации.
+
+
+<a name="clean_phone"><h3>Нормализация телефона</h3></a>  
+
+Принимает номера телефонов в неотформатированном виде, который может включать пробелы, символы: +-(). 
+Очищает, разделяет и помещает сущности телефона (код города, номер) в соответствующие поля возвращаемого объекта. 
+Параметр id (идентификатор записи) используется для установления соответствия переданных и полученных записей, 
+так как порядок сортировки возвращаемых записей не гарантируется.
+
+**Пример вызова:**
+```php
+<?php
+  use Symfony\Component\Yaml\Yaml;
+  use LapayGroup\RussianPost\Providers\OtpravkaApi;
+  
+  $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+  
+  $phoneList = new \LapayGroup\RussianPost\PhoneList();
+  $phoneList->add('9260120935');
+  $result = $otpravkaApi->clearPhone($phoneList);
+  
+  /*
+   Array
+     (
+         [0] => Array
+             (
+                 [id] => 0
+                 [original-phone] => 9260120935
+                 [phone-city-code] => 926
+                 [phone-country-code] => 7
+                 [phone-extension] =>
+                 [phone-number] => 0120935
+                 [quality-code] => GOOD
+             )
+     
+     )
+   */
+?>
+```
+**$phoneList** - это объект класса *LapayGroup\RussianPost\PhoneList* содержащий список номеров телефлонов для нормализации.
+
+
+<a name="calc_delivery_tariff"><h3>Расчет стоимости пересылки (Упрощенная версия)</h3></a>  
+
+Расчитывает стоимость пересылки в зависимости от указанных входных данных. Индекс ОПС точки отправления берется из профиля клиента. 
+Возвращаемые значения указываются в копейках.
+
+**Важно! Индекс отправления должен быть указан одного из пунктов сдачи, иначе будет возвращена ошибка 1001!**  
+
+**Пример получения списка пунктов сдачи отправлений:**
+```php
+use Symfony\Component\Yaml\Yaml;
+use LapayGroup\RussianPost\Providers\OtpravkaApi;
+use LapayGroup\RussianPost\ParcelInfo;
+
+$OtpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+$list = $OtpravkaApi->shippingPoints();
+```
+
+**Пример вызова:**
+```php
+<?php
+  use Symfony\Component\Yaml\Yaml;
+  use LapayGroup\RussianPost\Providers\OtpravkaApi;
+  use LapayGroup\RussianPost\ParcelInfo;
+  
+  $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+  
+  $parcelInfo = new ParcelInfo();
+  $parcelInfo->setIndexFrom($list[0]['operator-postcode']); // Индекс пункта сдачи из функции $OtpravkaApi->shippingPoints()
+  $parcelInfo->setIndexTo(644015);
+  $parcelInfo->setMailCategory('ORDINARY'); // https://otpravka.pochta.ru/specification#/enums-base-mail-category
+  $parcelInfo->setMailType('POSTAL_PARCEL'); // https://otpravka.pochta.ru/specification#/enums-base-mail-type
+  $parcelInfo->setWeight(1000);
+  $parcelInfo->setFragile(true);
+
+  $tariffInfo = $otpravkaApi->getDeliveryTariff($parcelInfo);
+  echo $tariffInfo->getTotalRate()/100 . ' руб.';
+  
+  /*
+   LapayGroup\RussianPost\TariffInfo Object
+   (
+       [totalRate:LapayGroup\RussianPost\TariffInfo:private] => 30658
+       [totalNds:LapayGroup\RussianPost\TariffInfo:private] => 6132
+       [aviaRate:LapayGroup\RussianPost\TariffInfo:private] => 0
+       [aviaNds:LapayGroup\RussianPost\TariffInfo:private] => 0
+       [deliveryMinDays:LapayGroup\RussianPost\TariffInfo:private] => 1
+       [deliveryMaxDays:LapayGroup\RussianPost\TariffInfo:private] => 3
+       [fragileRate:LapayGroup\RussianPost\TariffInfo:p rivate] => 7075
+       [fragileNds:LapayGroup\RussianPost\TariffInfo:private] => 1415
+       [groundRate:LapayGroup\RussianPost\TariffInfo:private] => 30658
+       [groundNds:LapayGroup\RussianPost\TariffInfo:private] => 6132
+       [insuranceRate:LapayGroup\RussianPost\TariffInfo:private] => 0
+       [insuranceNds:LapayGroup\RussianPost\TariffInfo:private] => 0
+       [noticeRate:LapayGroup\RussianPost\TariffInfo:private] => 0
+       [noticeNds:LapayGroup\RussianPost\TariffInfo:private] => 0
+       [oversizeRate:LapayGroup\RussianPost\TariffInfo:private] => 0
+       [oversizeNds:LapayGroup\RussianPost\TariffInfo:private] => 0
+   )
+   */
+?>
+```
+**$parcelInfo** - это объект класса *LapayGroup\RussianPost\ParcelInfo* содержащий данные по отправлению.
+**$tariffInfo** - это объект класса *LapayGroup\RussianPost\tariffInfo* содержащий данные по расчитанному тарифу.
+
+
+<a name="calc_delivery_period"><h3>Расчет сроков доставки</h3></a>  
+
+Расчитывает сроки доставки по типам отправлений используя [API доставки Почты России](https://delivery.pochta.ru/)
+
+**Пример вызова:**
+```php
+<?php
+  use Symfony\Component\Yaml\Yaml;
+  use LapayGroup\RussianPost\Providers\OtpravkaApi;
+  
+  $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+  $res = $otpravkaApi->getDeliveryPeriod(\LapayGroup\RussianPost\PostType::EMS, 115551, 115551);
+  
+  /*
+   Array
+   (
+       [version] => 1.2.10.28
+       [date] => 20190621
+       [datefirst] => 20190411
+       [posttype] => 7
+       [posttypename] => EMS
+       [from] => 115551
+       [fromname] => МОСКВА 551
+       [to] => 115551
+       [toname] => МОСКВА 551
+       [route] => 43-45000000-45000000
+       [routename] => МОСКВА 551-МОСКВА 551
+       [delivery] => Array
+           (
+               [min] => 1
+               [max] => 1
+           )
+   
+   )
+   */
+?>
+```
+
+<a name="show_balance"><h3>Отображение баланса</h3></a>  
+
+Отображает баланс расчетного счета. Возвращаемые значения указываются в копейках.
+
+**Пример вызова:**
+```php
+<?php
+  use Symfony\Component\Yaml\Yaml;
+  use LapayGroup\RussianPost\Providers\OtpravkaApi;
+  
+  $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+  $result = $otpravkaApi->getBalance();
+  
+  /*
+   Array
+   (
+       [balance] => 0
+       [balance-date] => 2019-06-21
+       [work-with-balance] => 1
+   )
+   */
+?>
+```
+
+<a name="untrustworthy_recipient"><h3>Неблагонадёжный получатель</h3></a>  
+
+Актуально для отправлений с наложенным платежом. Определяет, является ли получатель благонадёжным, есть ли прецеденты невыкупа.  
+
+**Пример вызова:**
+```php
+<?php
+  use Symfony\Component\Yaml\Yaml;
+  use LapayGroup\RussianPost\Providers\OtpravkaApi;
+  
+  $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+  
+?>
+```
+
 <a name="orders"><h1>Заказы</h1></a>  
 
-Функционал появится в мае 2019.
