@@ -128,4 +128,22 @@ class Calculation
 
         return $this->callApi('GET', 'dictionary', $params);
     }
+
+    /**
+     * Список стран
+     *
+     * @return array
+     * @throws RussianPostException
+     */
+    public function getCountryList()
+    {
+        $params = [
+            'json' => true,
+            'country' => false
+        ];
+
+        $result = $this->callApi('GET', 'dictionary', $params);
+
+        return !empty($result['country']) ? $result['country'] : [];
+    }
 }
