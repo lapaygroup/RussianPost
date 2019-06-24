@@ -303,33 +303,43 @@ Array
   use Symfony\Component\Yaml\Yaml;
   use LapayGroup\RussianPost\Providers\OtpravkaApi;
   
-  $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
-  
-  $addressList = new \LapayGroup\RussianPost\AddressList();
-  $addressList->add('115551 Кширское шоссе 94-1, 1');
-  $result = $otpravkaApi->clearAddress($addressList);
-  
-  /*
-  Array
-  (
-      [0] => Array
-          (
-              [address-type] => DEFAULT
-              [corpus] => 1
-              [house] => 94
-              [id] => 0
-              [index] => 115551
-              [original-address] => 115551 Кширское шоссе 94-1, 1
-              [place] => г. Москва
-              [quality-code] => GOOD
-              [region] => г. Москва
-              [room] => 1
-              [street] => шоссе Каширское
-              [validation-code] => VALIDATED
-          )
-  
-  )
- */
+  try {
+      $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+      
+      $addressList = new \LapayGroup\RussianPost\AddressList();
+      $addressList->add('115551 Кширское шоссе 94-1, 1');
+      $result = $otpravkaApi->clearAddress($addressList);
+      
+      /*
+      Array
+      (
+          [0] => Array
+              (
+                  [address-type] => DEFAULT
+                  [corpus] => 1
+                  [house] => 94
+                  [id] => 0
+                  [index] => 115551
+                  [original-address] => 115551 Кширское шоссе 94-1, 1
+                  [place] => г. Москва
+                  [quality-code] => GOOD
+                  [region] => г. Москва
+                  [room] => 1
+                  [street] => шоссе Каширское
+                  [validation-code] => VALIDATED
+              )
+      
+      )
+     */
+  }
+              
+  catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
+      // Обработка ошибочного ответа от API ПРФ
+  }
+      
+  catch (\Exception $e) {
+      // Обработка нештатной ситуации
+  }
 ?>
 ```
 **$addressList** - это объект класса *LapayGroup\RussianPost\AddressList* содержащий список адресов для нормализации.
@@ -347,27 +357,37 @@ Array
   use Symfony\Component\Yaml\Yaml;
   use LapayGroup\RussianPost\Providers\OtpravkaApi;
   
-  $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
-  
-  $fioList = new \LapayGroup\RussianPost\FioList();
-  $fioList->add('Иванов Петр игоревич');
-  $result = $otpravkaApi->clearFio($fioList);
-  
-  /*
-   Array
-   (
-       [0] => Array
-           (
-               [id] => 0
-               [middle-name] => Игоревич
-               [name] => Петр
-               [original-fio] => Иванов Петр игоревич
-               [quality-code] => EDITED
-               [surname] => Иванов
-           )
-   
-   )
-   */
+  try {
+      $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+      
+      $fioList = new \LapayGroup\RussianPost\FioList();
+      $fioList->add('Иванов Петр игоревич');
+      $result = $otpravkaApi->clearFio($fioList);
+      
+      /*
+       Array
+       (
+           [0] => Array
+               (
+                   [id] => 0
+                   [middle-name] => Игоревич
+                   [name] => Петр
+                   [original-fio] => Иванов Петр игоревич
+                   [quality-code] => EDITED
+                   [surname] => Иванов
+               )
+       
+       )
+       */
+  }
+              
+  catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
+      // Обработка ошибочного ответа от API ПРФ
+  }
+      
+  catch (\Exception $e) {
+      // Обработка нештатной ситуации
+  }
 ?>
 ```
 **$fioList** - это объект класса *LapayGroup\RussianPost\FioList* содержащий список ФИО для нормализации.
@@ -386,28 +406,38 @@ Array
   use Symfony\Component\Yaml\Yaml;
   use LapayGroup\RussianPost\Providers\OtpravkaApi;
   
-  $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
-  
-  $phoneList = new \LapayGroup\RussianPost\PhoneList();
-  $phoneList->add('9260120935');
-  $result = $otpravkaApi->clearPhone($phoneList);
-  
-  /*
-   Array
-     (
-         [0] => Array
-             (
-                 [id] => 0
-                 [original-phone] => 9260120935
-                 [phone-city-code] => 926
-                 [phone-country-code] => 7
-                 [phone-extension] =>
-                 [phone-number] => 0120935
-                 [quality-code] => GOOD
-             )
-     
-     )
-   */
+  try {
+      $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+      
+      $phoneList = new \LapayGroup\RussianPost\PhoneList();
+      $phoneList->add('9260120935');
+      $result = $otpravkaApi->clearPhone($phoneList);
+      
+      /*
+       Array
+         (
+             [0] => Array
+                 (
+                     [id] => 0
+                     [original-phone] => 9260120935
+                     [phone-city-code] => 926
+                     [phone-country-code] => 7
+                     [phone-extension] =>
+                     [phone-number] => 0120935
+                     [quality-code] => GOOD
+                 )
+         
+         )
+       */
+  }
+            
+  catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
+      // Обработка ошибочного ответа от API ПРФ
+  }
+    
+  catch (\Exception $e) {
+      // Обработка нештатной ситуации
+  }
 ?>
 ```
 **$phoneList** - это объект класса *LapayGroup\RussianPost\PhoneList* содержащий список номеров телефлонов для нормализации.
@@ -437,40 +467,50 @@ $list = $OtpravkaApi->shippingPoints();
   use LapayGroup\RussianPost\Providers\OtpravkaApi;
   use LapayGroup\RussianPost\ParcelInfo;
   
-  $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+  try {
+      $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+      
+      $parcelInfo = new ParcelInfo();
+      $parcelInfo->setIndexFrom($list[0]['operator-postcode']); // Индекс пункта сдачи из функции $OtpravkaApi->shippingPoints()
+      $parcelInfo->setIndexTo(644015);
+      $parcelInfo->setMailCategory('ORDINARY'); // https://otpravka.pochta.ru/specification#/enums-base-mail-category
+      $parcelInfo->setMailType('POSTAL_PARCEL'); // https://otpravka.pochta.ru/specification#/enums-base-mail-type
+      $parcelInfo->setWeight(1000);
+      $parcelInfo->setFragile(true);
+    
+      $tariffInfo = $otpravkaApi->getDeliveryTariff($parcelInfo);
+      echo $tariffInfo->getTotalRate()/100 . ' руб.';
+      
+      /*
+       LapayGroup\RussianPost\TariffInfo Object
+       (
+           [totalRate:LapayGroup\RussianPost\TariffInfo:private] => 30658
+           [totalNds:LapayGroup\RussianPost\TariffInfo:private] => 6132
+           [aviaRate:LapayGroup\RussianPost\TariffInfo:private] => 0
+           [aviaNds:LapayGroup\RussianPost\TariffInfo:private] => 0
+           [deliveryMinDays:LapayGroup\RussianPost\TariffInfo:private] => 1
+           [deliveryMaxDays:LapayGroup\RussianPost\TariffInfo:private] => 3
+           [fragileRate:LapayGroup\RussianPost\TariffInfo:p rivate] => 7075
+           [fragileNds:LapayGroup\RussianPost\TariffInfo:private] => 1415
+           [groundRate:LapayGroup\RussianPost\TariffInfo:private] => 30658
+           [groundNds:LapayGroup\RussianPost\TariffInfo:private] => 6132
+           [insuranceRate:LapayGroup\RussianPost\TariffInfo:private] => 0
+           [insuranceNds:LapayGroup\RussianPost\TariffInfo:private] => 0
+           [noticeRate:LapayGroup\RussianPost\TariffInfo:private] => 0
+           [noticeNds:LapayGroup\RussianPost\TariffInfo:private] => 0
+           [oversizeRate:LapayGroup\RussianPost\TariffInfo:private] => 0
+           [oversizeNds:LapayGroup\RussianPost\TariffInfo:private] => 0
+       )
+       */
+  }
+          
+  catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
+      // Обработка ошибочного ответа от API ПРФ
+  }
   
-  $parcelInfo = new ParcelInfo();
-  $parcelInfo->setIndexFrom($list[0]['operator-postcode']); // Индекс пункта сдачи из функции $OtpravkaApi->shippingPoints()
-  $parcelInfo->setIndexTo(644015);
-  $parcelInfo->setMailCategory('ORDINARY'); // https://otpravka.pochta.ru/specification#/enums-base-mail-category
-  $parcelInfo->setMailType('POSTAL_PARCEL'); // https://otpravka.pochta.ru/specification#/enums-base-mail-type
-  $parcelInfo->setWeight(1000);
-  $parcelInfo->setFragile(true);
-
-  $tariffInfo = $otpravkaApi->getDeliveryTariff($parcelInfo);
-  echo $tariffInfo->getTotalRate()/100 . ' руб.';
-  
-  /*
-   LapayGroup\RussianPost\TariffInfo Object
-   (
-       [totalRate:LapayGroup\RussianPost\TariffInfo:private] => 30658
-       [totalNds:LapayGroup\RussianPost\TariffInfo:private] => 6132
-       [aviaRate:LapayGroup\RussianPost\TariffInfo:private] => 0
-       [aviaNds:LapayGroup\RussianPost\TariffInfo:private] => 0
-       [deliveryMinDays:LapayGroup\RussianPost\TariffInfo:private] => 1
-       [deliveryMaxDays:LapayGroup\RussianPost\TariffInfo:private] => 3
-       [fragileRate:LapayGroup\RussianPost\TariffInfo:p rivate] => 7075
-       [fragileNds:LapayGroup\RussianPost\TariffInfo:private] => 1415
-       [groundRate:LapayGroup\RussianPost\TariffInfo:private] => 30658
-       [groundNds:LapayGroup\RussianPost\TariffInfo:private] => 6132
-       [insuranceRate:LapayGroup\RussianPost\TariffInfo:private] => 0
-       [insuranceNds:LapayGroup\RussianPost\TariffInfo:private] => 0
-       [noticeRate:LapayGroup\RussianPost\TariffInfo:private] => 0
-       [noticeNds:LapayGroup\RussianPost\TariffInfo:private] => 0
-       [oversizeRate:LapayGroup\RussianPost\TariffInfo:private] => 0
-       [oversizeNds:LapayGroup\RussianPost\TariffInfo:private] => 0
-   )
-   */
+  catch (\Exception $e) {
+      // Обработка нештатной ситуации
+  }
 ?>
 ```
 **$parcelInfo** - это объект класса *LapayGroup\RussianPost\ParcelInfo* содержащий данные по отправлению.
@@ -487,31 +527,41 @@ $list = $OtpravkaApi->shippingPoints();
   use Symfony\Component\Yaml\Yaml;
   use LapayGroup\RussianPost\Providers\OtpravkaApi;
   
-  $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
-  $res = $otpravkaApi->getDeliveryPeriod(\LapayGroup\RussianPost\PostType::EMS, 115551, 115551);
+  try {
+      $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+      $res = $otpravkaApi->getDeliveryPeriod(\LapayGroup\RussianPost\PostType::EMS, 115551, 115551);
+      
+      /*
+       Array
+       (
+           [version] => 1.2.10.28
+           [date] => 20190621
+           [datefirst] => 20190411
+           [posttype] => 7
+           [posttypename] => EMS
+           [from] => 115551
+           [fromname] => МОСКВА 551
+           [to] => 115551
+           [toname] => МОСКВА 551
+           [route] => 43-45000000-45000000
+           [routename] => МОСКВА 551-МОСКВА 551
+           [delivery] => Array
+               (
+                   [min] => 1
+                   [max] => 1
+               )
+       
+       )
+       */
+  }
+          
+  catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
+      // Обработка ошибочного ответа от API ПРФ
+  }
   
-  /*
-   Array
-   (
-       [version] => 1.2.10.28
-       [date] => 20190621
-       [datefirst] => 20190411
-       [posttype] => 7
-       [posttypename] => EMS
-       [from] => 115551
-       [fromname] => МОСКВА 551
-       [to] => 115551
-       [toname] => МОСКВА 551
-       [route] => 43-45000000-45000000
-       [routename] => МОСКВА 551-МОСКВА 551
-       [delivery] => Array
-           (
-               [min] => 1
-               [max] => 1
-           )
-   
-   )
-   */
+  catch (\Exception $e) {
+      // Обработка нештатной ситуации
+  }
 ?>
 ```
 
@@ -522,20 +572,30 @@ $list = $OtpravkaApi->shippingPoints();
 **Пример вызова:**
 ```php
 <?php
+
   use Symfony\Component\Yaml\Yaml;
   use LapayGroup\RussianPost\Providers\OtpravkaApi;
-  
-  $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
-  $result = $otpravkaApi->getBalance();
-  
-  /*
-   Array
-   (
-       [balance] => 0
-       [balance-date] => 2019-06-21
-       [work-with-balance] => 1
-   )
-   */
+  try {
+      $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+      $result = $otpravkaApi->getBalance();
+      
+      /*
+       Array
+       (
+           [balance] => 0
+           [balance-date] => 2019-06-21
+           [work-with-balance] => 1
+       )
+       */
+    }
+        
+    catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
+        // Обработка ошибочного ответа от API ПРФ
+    }
+    
+    catch (\Exception $e) {
+        // Обработка нештатной ситуации
+    }
 ?>
 ```
 
@@ -551,6 +611,67 @@ $list = $OtpravkaApi->shippingPoints();
   
   $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
   
+  $recepient = new \LapayGroup\RussianPost\Entity\Recipient();
+  $recepient->setAddress('650905 ЯГУНОВСКИЙ, КЕМЕРОВСКАЯ ОБЛАСТЬ, УЛ БЕЛОЗЕРНАЯ, ДОМ 21,КВ 1');
+  $recepient->setName('Иванов Петр Николаевич');
+  $recepient->setPhone('79260112367');
+  
+  try {
+      $res = $otpravkaApi->untrustworthyRecipient($recepient);
+      /*
+       Array
+       (  
+           [raw-address] => 650905 ЯГУНОВСКИЙ, КЕМЕРОВСКАЯ ОБЛАСТЬ, УЛ БЕЛОЗЕРНАЯ,ДОМ 21,КВ 1
+           [raw-full-name] => Иванов Петр Николаевич
+           [raw-telephone] => 79260112367
+           [unreliability] => RELIABLE
+       )
+       */
+  }
+  
+  catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
+      // Обработка ошибочного ответа от API ПРФ
+  }
+  
+  catch (\Exception $e) {
+      // Обработка нештатной ситуации
+  }
+  
+  
+  // Обработка списка получателей
+  $recepients[0] = $recepient;
+  $recepients[1] = $recepient;
+  
+  try {
+        $res = $otpravkaApi->untrustworthyRecipients($recepients);
+        /*
+         Array
+         (
+             [0] => Array
+                 (
+                     [raw-address] => 650905 ЯГУНОВСКИЙ, КЕМЕРОВСКАЯ ОБЛАСТЬ, УЛ БЕЛОЗЕРНАЯ,ДОМ 21,КВ 1
+                     [raw-full-name] => Иванов Петр Николаевич
+                     [raw-telephone] => 79260112367
+                     [unreliability] => RELIABLE
+                 ),
+             [1] => Array
+                  (
+                      [raw-address] => 650905 ЯГУНОВСКИЙ, КЕМЕРåОВСКАЯ ОБЛАСТЬ, УЛ БЕЛОЗЕРНАЯ,ДОМ 21,КВ 1
+                      [raw-full-name] => Иванов Петр Николаевич
+                      [raw-telephone] => 79260112367
+                      [unreliability] => RELIABLE
+                  )
+         )
+         */
+    }
+    
+    catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
+        // Обработка ошибочного ответа от API ПРФ
+    }
+    
+    catch (\Exception $e) {
+        // Обработка нештатной ситуации
+    }
 ?>
 ```
 

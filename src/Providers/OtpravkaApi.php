@@ -3,6 +3,7 @@ namespace LapayGroup\RussianPost\Providers;
 
 use GuzzleHttp\Client;
 use LapayGroup\RussianPost\AddressList;
+use LapayGroup\RussianPost\Entity\Recipient;
 use LapayGroup\RussianPost\Exceptions\RussianPostException;
 use LapayGroup\RussianPost\FioList;
 use LapayGroup\RussianPost\PhoneList;
@@ -75,7 +76,7 @@ class OtpravkaApi
                 break;
         }
 
-        if ($response->getStatusCode() != 200 && $response->getStatusCode() != 404)
+        if ($response->getStatusCode() != 200 && $response->getStatusCode() != 404 && $response->getStatusCode() != 400)
             throw new RussianPostException('Неверный код ответа от сервера Почты России при вызове метода '.$method.': ' . $response->getStatusCode(), $response->getStatusCode(), $response->getBody()->getContents());
 
         $resp = json_decode($response->getBody()->getContents(), true);
@@ -85,6 +86,9 @@ class OtpravkaApi
 
         if ($response->getStatusCode() == 404 && !empty($resp['code']))
             throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' получена ошибка: '.$resp['sub-code'] . " (".$resp['code'].")", $response->getStatusCode(), $response->getBody()->getContents());
+
+        if ($response->getStatusCode() == 400 && !empty($resp['error']))
+            throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' получена ошибка: '.$resp['error'] . " (".$resp['status'].")", $response->getStatusCode(), $response->getBody()->getContents());
 
         return $resp;
     }
@@ -178,5 +182,36 @@ class OtpravkaApi
         $params['to'] = $index_to;
 
         return $this->callApi('GET', 'calculate', $params, 'delivery');
+    }
+
+    /**
+     * Взвращает информацию о благонадежности получателя
+     *
+     * @param Recipient $recipient
+     * @return array
+     * @throws RussianPostException
+     */
+    public function untrustworthyRecipient($recipient)
+    {
+        $params[] = $recipient->getParams();
+        return $this->callApi('POST', 'unreliable-recipient', $params);
+    }
+
+
+    /**
+     * Взвращает информацию о благонадежности списка получателей
+     *
+     * @param array $recipients - массив объектов Recipient
+     * @return array
+     * @throws RussianPostException
+     */
+    public function untrustworthyRecipients($recipients)
+    {
+        $params = [];
+        foreach ($recipients as $recipient) {
+            $params[] = $recipient->getParams();
+        }
+
+        return $this->callApi('POST', 'unreliable-recipient', $params);
     }
 }
