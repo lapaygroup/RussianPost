@@ -173,10 +173,14 @@ class OtpravkaApi
      * @return array
      * @throws RussianPostException
      */
-    public function getDeliveryPeriod($post_type, $index_from, $index_to)
+    public function getDeliveryPeriod($post_type, $index_from, $index_to, $as_html = false)
     {
         $params = [];
-        $params['jsontext'] = true;
+        if (!$as_html)
+            $params['jsontext'] = true;
+        else
+            $params['html'] = true;
+
         $params['posttype'] = $post_type;
         $params['from'] = $index_from;
         $params['to'] = $index_to;
