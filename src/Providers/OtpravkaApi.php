@@ -48,7 +48,7 @@ class OtpravkaApi
      *
      * @param $method
      * @param $params
-     * @return array
+     * @return array | string
      * @throws RussianPostException
      */
     private function callApi($type, $method, $params = [], $endpoint = false)
@@ -76,10 +76,16 @@ class OtpravkaApi
                 break;
         }
 
+        $response_contents = $response->getBody()->getContents();
+
         if ($response->getStatusCode() != 200 && $response->getStatusCode() != 404 && $response->getStatusCode() != 400)
             throw new RussianPostException('Неверный код ответа от сервера Почты России при вызове метода '.$method.': ' . $response->getStatusCode(), $response->getStatusCode(), $response->getBody()->getContents());
 
-        $resp = json_decode($response->getBody()->getContents(), true);
+        $resp = json_decode($response_contents, true);
+
+        if (empty($resp) && $endpoint == 'delivery' && json_last_error() == JSON_ERROR_SYNTAX) {
+            return $response_contents;
+        }
 
         if (empty($resp))
             throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' пришел пустой ответ', $response->getStatusCode(), $response->getBody()->getContents());
