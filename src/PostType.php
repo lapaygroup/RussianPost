@@ -31,7 +31,7 @@ class PostType
     const HEAVY_MAILING = 21; // Тяжеловесное почтовое отправление
     const OVPO_CARD = 22; // ОВПО - карточка
     const POSILKA_ONLINE = 23; // Посылка онлайн
-    const COURIER_ONLIME = 24; // Курьер онлайн
+    const COURIER_ONLINE = 24; // Курьер онлайн
     const DEPARTURE_DM = 25; // Отправление ДМ
     const PACKAGE_DM = 26; // Пакет ДМ
     const POSILKA_STANDART = 27; // Посылка стандарт
