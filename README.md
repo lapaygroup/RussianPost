@@ -13,6 +13,7 @@
 - [Changelog](#changelog)  
 - [Тарификатор Почты России](#tariffs)    
 - [Конфигурация](#configfile)  
+- [Отладка](#debugging)  
 - [Трекинг почтовых отправлений (РПО)](#tracking)  
 - [Данные](#data)
   - [x] [Нормализация адреса](#clean_address)  
@@ -61,7 +62,8 @@
 - 0.4.12 - Скорректировано описание упрощенной версии расчета тарифов, добавлен метод получения списка точек сдачи;
 - 0.5.0 - Описание можно посмотреть [тут](https://github.com/lapaygroup/RussianPost/releases/tag/0.5.0);
 - 0.5.1 - Описание можно посмотреть [тут](https://github.com/lapaygroup/RussianPost/releases/tag/0.5.1);
-- 0.5.2 - Исправлена ошибка получения информации о сроках доставки в формате HTML.
+- 0.5.2 - Исправлена ошибка получения информации о сроках доставки в формате HTML;
+- 0.5.3 - Описание можно посмотреть [тут](https://github.com/lapaygroup/RussianPost/releases/tag/0.5.3);
 
 
 # Установка  
@@ -75,7 +77,7 @@
 Для получения списка категорий нужно вызвать метод **parseToArray** класса **\LapayGroup\RussianPost\CategoryList**
 ```php
 <?php
-  $CategoryList = \LapayGroup\RussianPost\CategoryList::getInstance();
+  $CategoryList = \LapayGroup\RussianPost\CategoryList();
   $categoryList = $CategoryList->parseToArray();
 ?>
 ```
@@ -84,7 +86,7 @@
 Если нужно исключить категории из выборки, то перед вызовом **parseToArray** вызываем метод **setCategoryDelete** и передаем ему массий ID категорий, которые нужно исключить.
 ```php
 <?php
-  $CategoryList = \LapayGroup\RussianPost\CategoryList::getInstance();
+  $CategoryList = \LapayGroup\RussianPost\CategoryList();
   $CategoryList->setCategoryDelete([100,200,300]);
   $categoryList = $CategoryList->parseToArray();
 ?>
@@ -104,9 +106,9 @@
   // Список ID дополнительных услуг 
   // 2 - Заказное уведомление о вручении 
   // 21 - СМС-уведомление о вручении
-  $service = [2,21];
+  $services = [2,21];
 
-  $TariffCalculation = LapayGroup\RussianPost\TariffCalculation::getInstance();
+  $TariffCalculation = LapayGroup\RussianPost\TariffCalculation();
   $calcInfo = $TariffCalculation->calculate($objectId, $params, $services);
 ?>
 ```
@@ -161,6 +163,52 @@
 
 Информацию о аутентификационных данных можно получить [здесь](https://otpravka.pochta.ru/specification#/authorization-token) и [здесь](https://otpravka.pochta.ru/specification#/authorization-key).  
 
+
+<a name="debugging"><h1>Отладка</h1></a>  
+
+Для логирования запросов и ответов используется [стандартный PSR-3 логгер](https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-3-logger-interface.md). 
+Рассмотрим пример логирования используя [Monolog](https://github.com/Seldaek/monolog).  
+
+```php
+<?php
+    use Monolog\Logger;
+    use Monolog\Handler\StreamHandler;
+    
+    $log = new Logger('name');
+    $log->pushHandler(new StreamHandler('log.txt', Logger::INFO));
+    
+    // Логирование расчета тарифа
+    $tariffCalculation = new \LapayGroup\RussianPost\TariffCalculation();
+    $tariffCalculation->setLogger($log);
+    
+    $res = $tariffCalculation->calculate(23030, ['from' => 101000, 'to' => 101000, 'weight' => 100, 'sumoc' => 0]);
+    
+    
+    // Логирования API отправки
+    $otpravkaApi = new \LapayGroup\RussianPost\Providers\OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $otpravkaApi->setLogger($log);
+    
+    $addressList = new \LapayGroup\RussianPost\AddressList();
+    $addressList->add('115551 Кширское шоссе 94-1, 1');
+    $result = $otpravkaApi->clearAddress($addressList);
+    
+    
+    // Логирование API трекинга
+    $config['auth']['tracking']['login'] = 'login';
+    $config['auth']['tracking']['password'] = 'password';
+    
+    $Tracking = new \LapayGroup\RussianPost\Providers\Tracking('single', $config);
+    $Tracking->setLogger($log);
+    
+    $result = $Tracking->getOperationsByRpo('10944022440321');
+```
+
+Лог в файле выглядит так:
+```
+[2019-07-19 11:59:50] name.INFO: Russian Post Tariff API request: from=101000&to=101000&weight=100&sumoc=0&date=20190719&object=23030&jsontext=1 [] []
+[2019-07-19 11:59:51] name.INFO: Russian Post Tariff API response: {"caption": "Ошибки тарификации", "version": "1.10.30.323", "data": {"id": 23030, "typ": 23, "cat": 3, "dir": 0, "name": "Посылка онлайн обыкновенная", "seq": 50, "date": 20190719, "date-first": 20190101}, "error": ["Услуга \"Посылка онлайн обыкновенная\" не оказывается. Плата за доставку посылки онлайн (тариф 163): в 101000 МОСКВА не осуществляется (маршруты nt101000 и nt1000000001045). (1372)"], "errors": [{"msg":"Услуга \"Посылка онлайн обыкновенная\" не оказывается. Плата за доставку посылки онлайн (тариф 163): в 101000 МОСКВА не осуществляется (маршруты nt101000 и nt1000000001045).","code":1372}]} [] []
+[2019-07-19 12:14:10] name.INFO: Russian Post Tracking API request:   <?xml version="1.0" encoding="UTF-8"?> <env:Envelope xmlns:env="http://www.w3.org/2003/05/soap-envelope" xmlns:ns1="http://russianpost.org/operationhistory/data" xmlns:ns2="http://russianpost.org/operationhistory"><env:Body><ns2:getOperationHistory><ns1:OperationHistoryRequest><ns1:Barcode>10944022440321</ns1:Barcode><ns1:MessageType>0</ns1:MessageType><ns1:Language>RUS</ns1:Language></ns1:OperationHistoryRequest><ns1:AuthorizationHeader><ns1:login>login</ns1:login><ns1:password>password</ns1:password></ns1:AuthorizationHeader></ns2:getOperationHistory></env:Body></env:Envelope>  [] []
+```
 
 <a name="tracking"><h1>Трекинг почтовых отправлений (РПО)</h1></a>  
 

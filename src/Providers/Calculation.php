@@ -1,13 +1,15 @@
 <?php
 namespace LapayGroup\RussianPost\Providers;
 
-use GuzzleHttp\Psr7\Response;
 use LapayGroup\RussianPost\Exceptions\RussianPostException;
 use LapayGroup\RussianPost\Singleton;
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerAwareTrait;
 
-class Calculation
+class Calculation implements LoggerAwareInterface
 {
     use Singleton;
+    use LoggerAwareTrait;
 
     private $httpClient;
     const VERSION = 'v1';
@@ -33,9 +35,15 @@ class Calculation
     {
         switch ($type) {
             case 'GET':
+                if ($this->logger) {
+                    $this->logger->info('Russian Post Tariff API request: '.http_build_query($params));
+                }
                 $response = $this->httpClient->get($method, ['query' => $params]);
                 break;
             case 'POST':
+                if ($this->logger) {
+                    $this->logger->info('Russian Post Tariff API request: '.json_encode($params));
+                }
                 $response = $this->httpClient->post($method, ['json' => $params]);
                 break;
         }
@@ -43,7 +51,13 @@ class Calculation
         if ($response->getStatusCode() != 200 && $response->getStatusCode() != 404 && $response->getStatusCode() != 400)
             throw new RussianPostException('Неверный код ответа от сервера Почты России при вызове метода '.$method.': ' . $response->getStatusCode(), $response->getStatusCode(), $response->getBody()->getContents());
 
-        $resp = json_decode($response->getBody()->getContents(), true);
+        $json = $response->getBody()->getContents();
+
+        if ($this->logger) {
+            $this->logger->info('Russian Post Tariff API response: '.$json);
+        }
+
+        $resp = json_decode($json, true);
 
         if (empty($resp))
             throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' пришел пустой ответ', $response->getStatusCode(), $response->getBody()->getContents());

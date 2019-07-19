@@ -1,7 +1,6 @@
 <?php
 namespace LapayGroup\RussianPost\Providers;
 
-use GuzzleHttp\Client;
 use LapayGroup\RussianPost\AddressList;
 use LapayGroup\RussianPost\Entity\Recipient;
 use LapayGroup\RussianPost\Exceptions\RussianPostException;
@@ -10,10 +9,14 @@ use LapayGroup\RussianPost\PhoneList;
 use LapayGroup\RussianPost\Singleton;
 use LapayGroup\RussianPost\TariffInfo;
 use LapayGroup\RussianPost\ParcelInfo;
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerAwareTrait;
 
-class OtpravkaApi
+class OtpravkaApi implements LoggerAwareInterface
 {
     use Singleton;
+    use LoggerAwareTrait;
+
     const VERSION = '1.0';
     const DELIVERY_VERSION = 'v1';
 
@@ -69,17 +72,27 @@ class OtpravkaApi
 
         switch ($type) {
             case 'GET':
+                if ($this->logger) {
+                    $this->logger->info('Russian Post Otpravka API request: '.http_build_query($params));
+                }
                 $response = $client->get($method, ['query' => $params]);
                 break;
             case 'POST':
+                if ($this->logger) {
+                    $this->logger->info('Russian Post Otpravka API request: '.json_encode($params));
+                }
                 $response = $client->post($method, ['json' => $params]);
                 break;
         }
 
         $response_contents = $response->getBody()->getContents();
 
+        if ($this->logger) {
+            $this->logger->info('Russian Post Tariff API response: '.$response_contents);
+        }
+
         if ($response->getStatusCode() != 200 && $response->getStatusCode() != 404 && $response->getStatusCode() != 400)
-            throw new RussianPostException('Неверный код ответа от сервера Почты России при вызове метода '.$method.': ' . $response->getStatusCode(), $response->getStatusCode(), $response->getBody()->getContents());
+            throw new RussianPostException('Неверный код ответа от сервера Почты России при вызове метода '.$method.': ' . $response->getStatusCode(), $response->getStatusCode(), $response_contents);
 
         $resp = json_decode($response_contents, true);
 
@@ -88,13 +101,13 @@ class OtpravkaApi
         }
 
         if (empty($resp))
-            throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' пришел пустой ответ', $response->getStatusCode(), $response->getBody()->getContents());
+            throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' пришел пустой ответ', $response->getStatusCode(), $response_contents);
 
         if ($response->getStatusCode() == 404 && !empty($resp['code']))
-            throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' получена ошибка: '.$resp['sub-code'] . " (".$resp['code'].")", $response->getStatusCode(), $response->getBody()->getContents());
+            throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' получена ошибка: '.$resp['sub-code'] . " (".$resp['code'].")", $response->getStatusCode(), $response_contents);
 
         if ($response->getStatusCode() == 400 && !empty($resp['error']))
-            throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' получена ошибка: '.$resp['error'] . " (".$resp['status'].")", $response->getStatusCode(), $response->getBody()->getContents());
+            throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' получена ошибка: '.$resp['error'] . " (".$resp['status'].")", $response->getStatusCode(), $response_contents);
 
         return $resp;
     }

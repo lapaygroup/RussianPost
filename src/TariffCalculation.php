@@ -2,10 +2,13 @@
 namespace LapayGroup\RussianPost;
 
 use LapayGroup\RussianPost\Providers\Calculation;
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerAwareTrait;
 
-class TariffCalculation
+class TariffCalculation implements LoggerAwareInterface
 {
     use Singleton;
+    use LoggerAwareTrait;
 
     /**
      * @param int $object_id - ID типа почтового отправления
@@ -13,17 +16,27 @@ class TariffCalculation
      * @param array $services - массив ID услуг
      * @param string $date - дата расчета тарифа (необязательный параметр)
      * @return CalculateInfo результат расчета тарифа
+     * @throws Exceptions\RussianPostException
+     * @throws \GuzzleHttp\Exception\GuzzleException
      */
     public function calculate($object_id, $params, $services = [], $date=false)
     {
         if (empty($date)) $date = date('Ymd');
         $params['date'] = $date;
 
-        $resultRaw = Calculation::getInstance()->getTariff($object_id, $params, $services);
+        $calculation = new Calculation();
+        if ($this->logger) {
+            $calculation->setLogger($this->logger);
+        }
+
+        $resultRaw = $calculation->getTariff($object_id, $params, $services);
 
         $calculateInfo = new CalculateInfo();
 
         if (empty($resultRaw['error'])) {
+            if (empty($resultRaw['transid'])) $resultRaw['transid'] = Null;
+            if (empty($resultRaw['transname'])) $resultRaw['transname'] = Null;
+
             $calculateInfo->setVersion($resultRaw['version']);
             $calculateInfo->setCategoryItemId($resultRaw['id']);
             $calculateInfo->setCategoryItemName($resultRaw['name']);
