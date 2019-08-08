@@ -77,7 +77,7 @@
 Для получения списка категорий нужно вызвать метод **parseToArray** класса **\LapayGroup\RussianPost\CategoryList**
 ```php
 <?php
-  $CategoryList = \LapayGroup\RussianPost\CategoryList();
+  $CategoryList = new \LapayGroup\RussianPost\CategoryList();
   $categoryList = $CategoryList->parseToArray();
 ?>
 ```
