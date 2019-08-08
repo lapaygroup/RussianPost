@@ -86,7 +86,7 @@
 Если нужно исключить категории из выборки, то перед вызовом **parseToArray** вызываем метод **setCategoryDelete** и передаем ему массий ID категорий, которые нужно исключить.
 ```php
 <?php
-  $CategoryList = \LapayGroup\RussianPost\CategoryList();
+  $CategoryList = new \LapayGroup\RussianPost\CategoryList();
   $CategoryList->setCategoryDelete([100,200,300]);
   $categoryList = $CategoryList->parseToArray();
 ?>
@@ -108,7 +108,7 @@
   // 21 - СМС-уведомление о вручении
   $services = [2,21];
 
-  $TariffCalculation = LapayGroup\RussianPost\TariffCalculation();
+  $TariffCalculation = new \LapayGroup\RussianPost\TariffCalculation();
   $calcInfo = $TariffCalculation->calculate($objectId, $params, $services);
 ?>
 ```
