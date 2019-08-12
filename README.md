@@ -64,7 +64,7 @@
 - [Долгосрочное хранение](#warehouse)
   - [ ] [Запрос данных о заказах в архиве](#)  
 - [Настройки](#settings)  
-  - [ ] [Текущие точки сдачи](#settings_shipping_points)  
+  - [x] [Текущие точки сдачи](#settings_shipping_points)  
   - [ ] [Текущие настройки пользователя](#)  
 
 <a name="links"><h1>Changelog</h1></a>
@@ -747,9 +747,59 @@ $list = $OtpravkaApi->shippingPoints();
 ```
 
 <a name="orders"><h1>Заказы</h1></a>   
+Реализует функции [API](https://otpravka.pochta.ru/specification#/orders-creating_order) Почты России для работы с данными. 
+Для работы данных функций необходимы аутентификационные данные. Подробнее в разделе [Конфигурация](#configfile).
+
+В случае возникновеня ошибок при обмене выбрасывает исключение *\LapayGroup\RussianPost\Exceptions\RussianPostException*
+в котором будет текст и код ошибки от API Почты России и дамп сырого ответа с HTTP-кодом.  
+
+
+<a name="party"><h1>Партии</h1></a>   
+Реализует функции [API](https://otpravka.pochta.ru/specification#/batches-create_batch_from_N_orders) Почты России для работы с данными. 
+Для работы данных функций необходимы аутентификационные данные. Подробнее в разделе [Конфигурация](#configfile).
+
+В случае возникновеня ошибок при обмене выбрасывает исключение *\LapayGroup\RussianPost\Exceptions\RussianPostException*
+в котором будет текст и код ошибки от API Почты России и дамп сырого ответа с HTTP-кодом.  
+
+
+<a name="documents"><h1>Документы</h1></a>   
+Реализует функции [API](https://otpravka.pochta.ru/specification#/orders-creating_order) Почты России для работы с данными. 
+Для работы данных функций необходимы аутентификационные данные. Подробнее в разделе [Конфигурация](#configfile).
+
+В случае возникновеня ошибок при обмене выбрасывает исключение *\LapayGroup\RussianPost\Exceptions\RussianPostException*
+в котором будет текст и код ошибки от API Почты России и дамп сырого ответа с HTTP-кодом.  
+
+
+<a name="archive"><h1>Архив</h1></a>   
+Реализует функции [API](https://otpravka.pochta.ru/specification#/documents-create_all_docs) Почты России для работы с данными. 
+Для работы данных функций необходимы аутентификационные данные. Подробнее в разделе [Конфигурация](#configfile).
+
+В случае возникновеня ошибок при обмене выбрасывает исключение *\LapayGroup\RussianPost\Exceptions\RussianPostException*
+в котором будет текст и код ошибки от API Почты России и дамп сырого ответа с HTTP-кодом.  
+
+
+<a name="ops_search"><h1>Поиск ОПС</h1></a>   
+Реализует функции [API](https://otpravka.pochta.ru/specification#/services-postoffice) Почты России для работы с данными. 
+Для работы данных функций необходимы аутентификационные данные. Подробнее в разделе [Конфигурация](#configfile).
+
+В случае возникновеня ошибок при обмене выбрасывает исключение *\LapayGroup\RussianPost\Exceptions\RussianPostException*
+в котором будет текст и код ошибки от API Почты России и дамп сырого ответа с HTTP-кодом.  
+
+
+<a name="warehouse"><h1>Долгосрочное хранение</h1></a>   
+Реализует функции [API](https://otpravka.pochta.ru/specification#/long-term-archive-search_shipments) Почты России для работы с данными. 
+Для работы данных функций необходимы аутентификационные данные. Подробнее в разделе [Конфигурация](#configfile).
+
+В случае возникновеня ошибок при обмене выбрасывает исключение *\LapayGroup\RussianPost\Exceptions\RussianPostException*
+в котором будет текст и код ошибки от API Почты России и дамп сырого ответа с HTTP-кодом.  
 
 
 <a name="settings"><h1>Настройки</h1></a>  
+Реализует функции [API](https://otpravka.pochta.ru/specification#/settings-shipping_points) Почты России для работы с данными. 
+Для работы данных функций необходимы аутентификационные данные. Подробнее в разделе [Конфигурация](#configfile).
+
+В случае возникновеня ошибок при обмене выбрасывает исключение *\LapayGroup\RussianPost\Exceptions\RussianPostException*
+в котором будет текст и код ошибки от API Почты России и дамп сырого ответа с HTTP-кодом.  
 
 <a name="settings_shipping_points"><h3>Текущие точки сдачи</h3></a> 
 Возвращает список текущих точек сдачи.  
