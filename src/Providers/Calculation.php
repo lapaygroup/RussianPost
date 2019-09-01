@@ -8,7 +8,6 @@ use Psr\Log\LoggerAwareTrait;
 
 class Calculation implements LoggerAwareInterface
 {
-    use Singleton;
     use LoggerAwareTrait;
 
     private $httpClient;

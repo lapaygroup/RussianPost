@@ -14,7 +14,6 @@ use Psr\Log\LoggerAwareTrait;
 
 class OtpravkaApi implements LoggerAwareInterface
 {
-    use Singleton;
     use LoggerAwareTrait;
 
     const VERSION = '1.0';
@@ -78,10 +77,13 @@ class OtpravkaApi implements LoggerAwareInterface
                 $response = $client->get($method, ['query' => $params]);
                 break;
             case 'POST':
+            case 'PUT':
                 if ($this->logger) {
                     $this->logger->info('Russian Post Otpravka API request: '.json_encode($params));
                 }
-                $response = $client->post($method, ['json' => $params]);
+
+                $response = $client->{strtolower($type)}($method, ['json' => $params]);
+
                 break;
         }
 
@@ -217,7 +219,8 @@ class OtpravkaApi implements LoggerAwareInterface
     public function untrustworthyRecipient($recipient)
     {
         $params[] = $recipient->getParams();
-        return $this->callApi('POST', 'unreliable-recipient', $params);
+        $result = $this->callApi('POST', 'unreliable-recipient', $params);
+        return array_shift($result);
     }
 
 
