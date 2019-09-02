@@ -3,20 +3,110 @@ namespace LapayGroup\RussianPost\Entity;
 
 Class CustomsDeclarationItem
 {
-    /** @var string|null  */
-    private $certificate_number = null; // Сертификаты, сопровождающие отправление
+    /** @var int  */
+    private $amount = 0; // Количество
+    /** @var int  */
+    private $country_code = 643; // Код страны https://otpravka.pochta.ru/specification#/dictionary-countries
     /** @var string  */
-    private $currency = 'RUB'; // Код валюты https://otpravka.pochta.ru/specification#/dictionary-currencies
-    private $entries_type = 'GIFT'; // Категория вложения https://otpravka.pochta.ru/specification#/enums-base-entries-type
-    /** @var string|null  */
-    private $invoice_number = null; // Счет (номер счета-фактуры)
-    private $license_number = null; // Лицензии, сопровождающие отправление
-    /** @var boolean|null  */
-    private $with_certificate = null; // Приложенные документы: сертификат
-    /** @var boolean|null  */
-    private $with_invoice = null; // Приложенные документы: счет-фактура
-    /** @var boolean|null  */
-    private $with_license = null; // Приложенные документы: лицензия
-    /** @var array */
-    private $customs_entries = []; // Список вложений
+    private $description = ''; // Наименование товара
+    private $tnved_code = ''; // Код ТНВЭД
+    private $weight = 0; // Вес вложения в граммах
+    /** @var int|null  */
+    private $value = null; // Цена товара (вкл. НДС) в копейках
+
+    /**
+     * @return int
+     */
+    public function getAmount()
+    {
+        return $this->amount;
+    }
+
+    /**
+     * @param int $amount
+     */
+    public function setAmount($amount)
+    {
+        $this->amount = $amount;
+    }
+
+    /**
+     * @return int
+     */
+    public function getCountryCode()
+    {
+        return $this->country_code;
+    }
+
+    /**
+     * @param int $country_code
+     */
+    public function setCountryCode($country_code)
+    {
+        $this->country_code = $country_code;
+    }
+
+    /**
+     * @return string
+     */
+    public function getDescription()
+    {
+        return $this->description;
+    }
+
+    /**
+     * @param string $description
+     */
+    public function setDescription($description)
+    {
+        $this->description = $description;
+    }
+
+    /**
+     * @return string
+     */
+    public function getTnvedCode()
+    {
+        return $this->tnved_code;
+    }
+
+    /**
+     * @param string $tnved_code
+     */
+    public function setTnvedCode($tnved_code)
+    {
+        $this->tnved_code = $tnved_code;
+    }
+
+    /**
+     * @return int
+     */
+    public function getWeight()
+    {
+        return $this->weight;
+    }
+
+    /**
+     * @param int $weight
+     */
+    public function setWeight($weight)
+    {
+        $this->weight = $weight;
+    }
+
+    /**
+     * @return int|null
+     */
+    public function getValue()
+    {
+        return $this->value;
+    }
+
+    /**
+     * @param int|null $value
+     */
+    public function setValue($value)
+    {
+        $this->value = $value;
+    }
 }

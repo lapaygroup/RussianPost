@@ -2,11 +2,11 @@
 namespace LapayGroup\RussianPost\Providers;
 
 use LapayGroup\RussianPost\AddressList;
+use LapayGroup\RussianPost\Entity\Order;
 use LapayGroup\RussianPost\Entity\Recipient;
 use LapayGroup\RussianPost\Exceptions\RussianPostException;
 use LapayGroup\RussianPost\FioList;
 use LapayGroup\RussianPost\PhoneList;
-use LapayGroup\RussianPost\Singleton;
 use LapayGroup\RussianPost\TariffInfo;
 use LapayGroup\RussianPost\ParcelInfo;
 use Psr\Log\LoggerAwareInterface;
@@ -90,7 +90,7 @@ class OtpravkaApi implements LoggerAwareInterface
         $response_contents = $response->getBody()->getContents();
 
         if ($this->logger) {
-            $this->logger->info('Russian Post Tariff API response: '.$response_contents);
+            $this->logger->info('Russian Post Otpravka API response: '.$response_contents);
         }
 
         if ($response->getStatusCode() != 200 && $response->getStatusCode() != 404 && $response->getStatusCode() != 400)
@@ -121,7 +121,7 @@ class OtpravkaApi implements LoggerAwareInterface
      * @return TariffInfo
      * @throws RussianPostException
      */
-    public function getDeliveryTariff(ParcelInfo $parcelInfo)
+    public function getDeliveryTariff($parcelInfo)
     {
         $response = $this->callApi('POST', 'tariff', $parcelInfo->getArray());
         return new TariffInfo($response);
@@ -134,7 +134,7 @@ class OtpravkaApi implements LoggerAwareInterface
      * @return array ответ API ПРФ
      * @throws RussianPostException
      */
-    public function clearAddress(AddressList $addressList)
+    public function clearAddress($addressList)
     {
         return $this->callApi('POST', 'clean/address',  $addressList->get());
     }
@@ -146,7 +146,7 @@ class OtpravkaApi implements LoggerAwareInterface
      * @return array ответ API ПРФ
      * @throws RussianPostException
      */
-    public function clearFio(FioList $fioList)
+    public function clearFio($fioList)
     {
         return $this->callApi('POST', 'clean/physical',  $fioList->get());
     }
@@ -239,5 +239,17 @@ class OtpravkaApi implements LoggerAwareInterface
         }
 
         return $this->callApi('POST', 'unreliable-recipient', $params);
+    }
+
+    /**
+     * Создание заказа
+     *
+     * @param Order $order
+     * @return array|string
+     * @throws RussianPostException
+     */
+    public function createOrder($orders)
+    {
+        return $this->callApi('PUT', 'user/backlog', $orders);
     }
 }

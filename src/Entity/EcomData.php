@@ -15,6 +15,8 @@ Class EcomData
     private $delivery_rate = 0; // Стоимость доставки для получателя (вкл. НДС) в копейках
     /** @var int  */
     private $delivery_vat_rate = -1; // Ставка НДС: Без НДС(-1), 0, 10, 20
+    /** @var array|null  */
+    private $services = null; // Сервисы ЕКОМ https://otpravka.pochta.ru/specification#/enums-ecom-services
 
     /**
      * @return string|null
@@ -62,5 +64,21 @@ Class EcomData
     public function setDeliveryVatRate($delivery_vat_rate)
     {
         $this->delivery_vat_rate = $delivery_vat_rate;
+    }
+
+    /**
+     * @return array|null
+     */
+    public function getServices()
+    {
+        return $this->services;
+    }
+
+    /**
+     * @param array|null $services
+     */
+    public function setServices($services)
+    {
+        $this->services = $services;
     }
 }

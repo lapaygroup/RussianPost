@@ -13,8 +13,6 @@ Class Order
     private $post_office_code = null; // Индекс места приема
     /** @var string */
     private $address_type_to = 'DEFAULT'; // * Тип адреса https://otpravka.pochta.ru/specification#/enums-base-address-type
-    /** @var string|null  */
-    private $raw_address = null; // Необработанный адрес получателя
     /** @var int|null  */
     private $index_to = null; // Почтовый индекс получателя
     /** @var string|null  */
@@ -83,9 +81,11 @@ Class Order
     /** @var boolean|null  */
     private $inventory = null; // Наличие описи вложения
     /** @var string  */
-    private $mail_category = 'SIMPLE'; // * Категория РПО https://otpravka.pochta.ru/specification#/enums-base-mail-category
+    private $mail_category = 'ORDINARY'; // * Категория РПО https://otpravka.pochta.ru/specification#/enums-base-mail-category
     /** @var int  */
     private $mail_direct = 643; // * Код страны https://otpravka.pochta.ru/specification#/dictionary-countries
+    /** @var string  */
+    private $mail_type = 'POSTAL_PARCEL'; // * Вид РПО https://otpravka.pochta.ru/specification#/enums-base-mail-type
     /** @var int  */
     private $mass = 0; // Вес РПО в граммах
     /** @var string  */
@@ -121,9 +121,251 @@ Class Order
     /** @var boolean|null  */
     private $wo_mail_rank = null; // Отметка "Без разряда"
 
+    /**
+     * Возвращает массив параметров заказа для запроса
+     * @return array
+     */
     public function asArr()
     {
-        // TODO подготовка запроса
+        $request = [];
+        $request['address-type-to'] = $this->getAddressTypeTo();
+        $request['fragile'] = $this->isFragile();
+        $request['given-name'] = $this->getGivenName();
+        $request['house-to'] = $this->getHouseTo();
+        $request['mail-category'] = $this->getMailCategory();
+        $request['mail-direct'] = $this->getMailDirect();
+        $request['mail-type'] = $this->getMailType();
+        $request['mass'] = $this->getMass();
+        $request['order-num'] = $this->getOrderNum();
+        $request['place-to'] = $this->getPlaceTo();
+        $request['recipient-name'] = $this->getRecipientName();
+        $request['region-to'] = $this->getRegionTo();
+        $request['street-to'] = $this->getStreetTo();
+        $request['surname'] = $this->getSurname();
+
+        // Проверяем заполненность полей
+        foreach (array_keys($request) as $key) {
+            if ($key == 'fragile') continue;
+
+            if (empty($request[$key]))
+                throw new \InvalidArgumentException('Параметр '.$key.' не может быть пустым!');
+        }
+
+
+        if (!is_null($this->getAreaTo()))
+            $request['area-to'] = $this->getAreaTo();
+
+        if (!is_null($this->getBranchName()))
+            $request['branch-name'] = $this->getBranchName();
+
+        if (!is_null($this->getBuildingTo()))
+            $request['building-to'] = $this->getBuildingTo();
+
+        if (!is_null($this->getCompletenessChecking()))
+            $request['completeness-checking'] = $this->getCompletenessChecking();
+
+        if (!is_null($this->getCompulsoryPayment()))
+            $request['compulsory-payment'] = $this->getCompulsoryPayment();
+
+        if (!is_null($this->getCorpusTo()))
+            $request['corpus-to'] = $this->getCorpusTo();
+
+        if (!is_null($this->getCourier()))
+            $request['courier'] = $this->getCourier();
+
+        if (!is_null($this->getDeliveryWithCod()))
+            $request['delivery-with-cod'] = $this->getDeliveryWithCod();
+
+        if (!is_null($this->getHeight()))
+            $request['dimension']['height'] = $this->getHeight();
+
+        if (!is_null($this->getLength()))
+            $request['dimension']['length'] = $this->getLength();
+
+        if (!is_null($this->getWidth()))
+            $request['dimension']['width'] = $this->getWidth();
+
+        if (!is_null($this->getDimensionType()))
+            $request['dimension-type'] = $this->getDimensionType();
+
+        if (!is_null($this->getEasyReturn()))
+            $request['easy-return'] = $this->getEasyReturn();
+
+        if (!is_null($this->getEnvelopeType()))
+            $request['envelope-type'] = $this->getEnvelopeType();
+
+        if (!is_null($this->getHotelTo()))
+            $request['hotel-to'] = $this->getHotelTo();
+
+        if (!is_null($this->getIndexTo()))
+            $request['index-to'] = $this->getIndexTo();
+
+        if (!is_null($this->getInsrValue()))
+            $request['insr-value'] = $this->getInsrValue();
+
+        if (!is_null($this->getInventory()))
+            $request['inventory'] = $this->getInventory();
+
+        if (!is_null($this->getLetterTo()))
+            $request['letter-to'] = $this->getLetterTo();
+
+        if (!is_null($this->getLocationTo()))
+            $request['location-to'] = $this->getLocationTo();
+
+        if (!is_null($this->getMiddleName()))
+            $request['middle-name'] = $this->getMiddleName();
+
+        if (!is_null($this->getNoReturn()))
+            $request['no-return'] = $this->getNoReturn();
+
+        if (!is_null($this->getNoticePaymentMethod()))
+            $request['notice-payment-method'] = $this->getNoticePaymentMethod();
+
+        if (!is_null($this->getNumAddressTypeTo()))
+            $request['num-address-type-to'] = $this->getNumAddressTypeTo();
+
+        if (!is_null($this->getOfficeTo()))
+            $request['office-to'] = $this->getOfficeTo();
+
+        if (!is_null($this->getPayment()))
+            $request['payment'] = $this->getPayment();
+
+        if (!is_null($this->getPaymentMethod()))
+            $request['payment-method'] = $this->getPaymentMethod();
+
+        if (!is_null($this->getPostOfficeCode()))
+            $request['postoffice-code'] = $this->getPostOfficeCode();
+
+        if (!is_null($this->getRoomTo()))
+            $request['room-to'] = $this->getRoomTo();
+
+        if (!is_null($this->getSlashTo()))
+            $request['slash-to'] = $this->getSlashTo();
+
+        if (!is_null($this->getSmsNoticeRecipient()))
+            $request['sms-notice-recipient'] = $this->getSmsNoticeRecipient();
+
+        if (!is_null($this->getStrIndexTo()))
+            $request['str-index-to'] = $this->getStrIndexTo();
+
+        if (!is_null($this->getTelAddress()))
+            $request['tel-address'] = $this->getTelAddress();
+
+        if (!is_null($this->getTransportType()))
+            $request['transport-type'] = $this->getTransportType();
+
+        if (!is_null($this->getVladenieTo()))
+            $request['vladenie-to'] = $this->getVladenieTo();
+
+        if (!is_null($this->getVsd()))
+            $request['vsd'] = $this->getVsd();
+
+        if (!is_null($this->getWithElectronicNotice()))
+            $request['with-electronic-notice'] = $this->getWithElectronicNotice();
+
+        if (!is_null($this->getWithOrderOfNotice()))
+            $request['with-order-of-notice'] = $this->getWithOrderOfNotice();
+
+        if (!is_null($this->getWithSimpleNotice()))
+            $request['with-simple-notice'] = $this->getWithSimpleNotice();
+
+        if (!is_null($this->getWoMailRank()))
+            $request['wo-mail-rank'] = $this->getWoMailRank();
+
+        if (!empty($this->items)) {
+            $request['goods']['items'] = [];
+            /** @var \LapayGroup\RussianPost\Entity\Item $item */
+            foreach ($this->items as $item) {
+                $order_item = [];
+                $order_item['description'] = $item->getDescription();
+                $order_item['quantity'] = $item->getQuantity();
+
+                if (!is_null($item->getCode()))
+                    $order_item['code'] = $item->getCode();
+
+                if (!is_null($item->getInsrValue()))
+                    $order_item['insr-value'] = $item->getInsrValue();
+
+                if (!is_null($item->getItemNumber()))
+                    $order_item['item-number'] = $item->getItemNumber();
+
+                if (!is_null($item->getSupplierInn()))
+                    $order_item['supplier-inn'] = $item->getSupplierInn();
+
+                if (!is_null($item->getSupplierName()))
+                    $order_item['supplier-name'] = $item->getSupplierName();
+
+                if (!is_null($item->getSupplierPhone()))
+                    $order_item['supplier-phone'] = $item->getSupplierPhone();
+
+                if (!is_null($item->getValue()))
+                    $order_item['value'] = $item->getValue();
+
+                if (!is_null($item->getVatRate()))
+                    $order_item['vat-rate'] = $item->getVatRate();
+
+                $request['goods']['items'][] = $order_item;
+            }
+        }
+
+        if (!empty($this->customsDeclaration)) {
+            $request['customs-declaration'] = [];
+            $request['customs-declaration']['currency'] = $this->customsDeclaration->getCurrency();
+            $request['customs-declaration']['entries-type'] = $this->getCustomsDeclaration()->getEntriesType();
+
+            if (!is_null($this->customsDeclaration->getCertificateNumber()))
+                $request['customs-declaration']['certificate-number'] = $this->customsDeclaration->getCertificateNumber();
+
+            if (!is_null($this->customsDeclaration->getInvoiceNumber()))
+                $request['customs-declaration']['invoice-number'] = $this->customsDeclaration->getInvoiceNumber();
+
+            if (!is_null($this->customsDeclaration->getLicenseNumber()))
+                $request['customs-declaration']['license-number'] = $this->customsDeclaration->getLicenseNumber();
+
+            if (!is_null($this->customsDeclaration->getWithCertificate()))
+                $request['customs-declaration']['with-certificate'] = $this->customsDeclaration->getWithCertificate();
+
+            if (!is_null($this->customsDeclaration->getWithInvoice()))
+                $request['customs-declaration']['with-invoice'] = $this->customsDeclaration->getWithInvoice();
+
+            if (!is_null($this->customsDeclaration->getWithLicense()))
+                $request['customs-declaration']['with-license'] = $this->customsDeclaration->getWithLicense();
+
+            $cd_items = $this->getCustomsDeclaration()->getCustomsEntries();
+            if (!empty($cd_items)) {
+                $request['customs-declaration']['customs-entries'] = [];
+                /** @var CustomsDeclarationItem $cd_item */
+                foreach ($cd_items as $cd_item) {
+                    $cd_order_item = [];
+                    $cd_order_item['amount'] = $cd_item->getAmount();
+                    $cd_order_item['country-code'] = $cd_item->getCountryCode();
+                    $cd_order_item['description'] = $cd_item->getDescription();
+                    $cd_order_item['tnved-code'] = $cd_item->getTnvedCode();
+                    $cd_order_item['weight'] = $cd_item->getWeight();
+                    if (!is_null($cd_item->getValue()))
+                        $cd_order_item['value'] = $cd_item->getValue();
+
+                    $request['customs-declaration']['customs-entries'][] = $cd_order_item;
+                }
+            }
+
+            if (!empty($this->ecomData)) {
+                $request['ecom-data'] = [];
+                if (!is_null($this->ecomData->getDeliveryPointIndex()))
+                    $request['ecom-data']['delivery-point-index'] = $this->ecomData->getDeliveryPointIndex();
+
+                if (!is_null($this->ecomData->getDeliveryRate()))
+                    $request['ecom-data']['delivery-rate'] = $this->ecomData->getDeliveryRate();
+
+                if (!is_null($this->ecomData->getDeliveryVatRate()))
+                    $request['ecom-data']['delivery-vat-rate'] = $this->ecomData->getDeliveryVatRate();
+
+                if (!is_null($this->ecomData->getServices()))
+                    $request['ecom-data']['services'] = $this->ecomData->getServices();
+            }
+        }
+
+        return $request;
     }
 
     /**
@@ -172,22 +414,6 @@ Class Order
     public function setAddressTypeTo($address_type_to)
     {
         $this->address_type_to = $address_type_to;
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getRawAddress()
-    {
-        return $this->raw_address;
-    }
-
-    /**
-     * @param string|null $raw_address
-     */
-    public function setRawAddress($raw_address)
-    {
-        $this->raw_address = $raw_address;
     }
 
     /**
@@ -764,6 +990,22 @@ Class Order
     public function setMailDirect($mail_direct)
     {
         $this->mail_direct = $mail_direct;
+    }
+
+    /**
+     * @return string
+     */
+    public function getMailType()
+    {
+        return $this->mail_type;
+    }
+
+    /**
+     * @param string $mail_type
+     */
+    public function setMailType($mail_type)
+    {
+        $this->mail_type = $mail_type;
     }
 
     /**
