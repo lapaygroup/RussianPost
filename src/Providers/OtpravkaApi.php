@@ -78,6 +78,7 @@ class OtpravkaApi implements LoggerAwareInterface
                 break;
             case 'POST':
             case 'PUT':
+            case 'DELETE':
                 if ($this->logger) {
                     $this->logger->info('Russian Post Otpravka API request: '.json_encode($params));
                 }
@@ -242,14 +243,50 @@ class OtpravkaApi implements LoggerAwareInterface
     }
 
     /**
-     * Создание заказа
+     * Создание заказов
      *
-     * @param Order $order
-     * @return array|string
+     * @param array $order - массив объектов Order
+     * @return array
      * @throws RussianPostException
      */
     public function createOrder($orders)
     {
         return $this->callApi('PUT', 'user/backlog', $orders);
+    }
+
+    /**
+     * Поиск заказа по идентификатору
+     *
+     * @param int $id - id заказа Почты России
+     * @return array
+     * @throws RussianPostException
+     */
+    public function findOrderById($id)
+    {
+        return $this->callApi('GET', 'backlog/'.$id);
+    }
+
+    /**
+     * Поиска заказа по назначенному магазином идентификатору
+     *
+     * @param string $order_num - номер заказа магазина
+     * @return array
+     * @throws RussianPostException
+     */
+    public function findOrderByShopId($order_num)
+    {
+        return $this->callApi('GET', 'backlog/search', ['query' => $order_num]);
+    }
+
+    /**
+     * Удаление заказов
+     *
+     * @param $id_list - массив id заказов
+     * @return array
+     * @throws RussianPostException
+     */
+    public function deleteOrders($id_list)
+    {
+        return $this->callApi('DELETE', 'backlog', $id_list);
     }
 }
