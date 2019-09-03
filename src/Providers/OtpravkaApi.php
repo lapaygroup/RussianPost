@@ -483,4 +483,39 @@ class OtpravkaApi implements LoggerAwareInterface
 
         throw new \InvalidArgumentException($result['error-code']);
     }
+
+    /**
+     * Запрос данных о партиях в архиве
+     *
+     * @return array
+     * @throws RussianPostException
+     */
+    public function getArchivedBatches()
+    {
+        return $this->callApi('GET', 'archive');
+    }
+
+    /**
+     * Перевод списка партий в архив
+     *
+     * @param array $batch_name_list - массив названий партий
+     * @return array
+     * @throws RussianPostException
+     */
+    public function archivingBatch($batch_name_list)
+    {
+        return $this->callApi('PUT', 'archive', $batch_name_list);
+    }
+
+    /**
+     * Возврат списка партий из архива
+     *
+     * @param array $batch_name_list - массив названий партий
+     * @return array
+     * @throws RussianPostException
+     */
+    public function unarchivingBatch($batch_name_list)
+    {
+        return $this->callApi('POST', 'archive/revert', $batch_name_list);
+    }
 }

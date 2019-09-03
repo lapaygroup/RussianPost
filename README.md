@@ -50,10 +50,10 @@
   - [ ] [Генерация печатной формы Ф103](#)  
   - [ ] [Подготовка и отправка электронной формы Ф103](#)  
   - [ ] [Генерация акта осмотра содержимого](#)  
-- [Архив](#archive)
-  - [ ] [Запрос данных о партиях в архиве](#)  
-  - [ ] [Перевод партии в архив](#)  
-  - [ ] [Возврат партии из архива](#)  
+- [Архив](#archive) 
+  - [x] [Перевод партии в архив](#archiving_batch)  
+  - [x] [Возврат партии из архива](#unarchiving_batch)  
+  - [x] [Запрос данных о партиях в архиве](#get_archived_batch)  
 - [Поиск ОПС](#ops_search)  
   - [ ] [По индексу](#)  
   - [ ] [По адресу](#)  
@@ -1788,27 +1788,6 @@ catch (\Exception $e) {
 }
 ```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 <a name="documents"><h1>Документы</h1></a>   
 Реализует функции [API](https://otpravka.pochta.ru/specification#/orders-creating_order) Почты России для работы с данными. 
 Для работы данных функций необходимы аутентификационные данные. Подробнее в разделе [Конфигурация](#configfile).
@@ -1825,6 +1804,160 @@ catch (\Exception $e) {
 в котором будет текст и код ошибки от API Почты России и дамп сырого ответа с HTTP-кодом.  
 
 
+<a name="archiving_batch"><h3>Перевод партии в архив</h3></a> 
+Перевод списка партий в архив.  
+
+```php
+<?php
+use Symfony\Component\Yaml\Yaml;
+use LapayGroup\RussianPost\Providers\OtpravkaApi;
+
+try {
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $result = $otpravkaApi->archivingBatch([25]);
+    /*
+    Array    (
+
+        [0] => Array
+            (
+                [batch-name] => 25
+            )
+    
+    )*/
+}
+        
+catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
+  // Обработка ошибочного ответа от API ПРФ
+}
+
+catch (\Exception $e) {
+  // Обработка нештатной ситуации
+}
+```
+
+<a name="unarchiving_batch"><h3>Возврат партии из архива</h3></a> 
+Возврат списка партий из архива.  
+
+```php
+<?php
+use Symfony\Component\Yaml\Yaml;
+use LapayGroup\RussianPost\Providers\OtpravkaApi;
+
+try {
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $result = $otpravkaApi->unarchivingBatch([25]);
+    /*
+    Array Успешный ответ
+    (
+        [0] => Array
+            (
+                [batch-name] => 25
+            )
+    
+    )
+    
+    Array Ответ с ошибкой
+    (
+        [0] => Array
+            (
+                [batch-name] => 26
+                [error-code] => NOT_FOUND
+            )
+    
+    )*/
+}
+        
+catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
+  // Обработка ошибочного ответа от API ПРФ
+}
+
+catch (\Exception $e) {
+  // Обработка нештатной ситуации
+}
+```
+
+<a name="get_archived_batch"><h3>Запрос данных о партиях в архиве</h3></a> 
+Возврат списка партий в архиве.  
+
+```php
+<?php
+use Symfony\Component\Yaml\Yaml;
+use LapayGroup\RussianPost\Providers\OtpravkaApi;
+
+try {
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $result = $otpravkaApi->getArchivedBatches();
+    /*
+    Array
+    (
+        [0] => Array
+            (
+                [batch-name] => 25
+                [batch-status] => ARCHIVED
+                [batch-status-date] => 2019-09-03T13:17:59.237Z
+                [combined-batch-mail-types] => Array
+                    (
+                        [0] => POSTAL_PARCEL
+                    )
+    
+                [courier-order-statuses] => Array
+                    (
+                        [0] => NOT_REQUIRED
+                    )
+    
+                [international] =>
+                [list-number-date] => 2019-09-08
+                [mail-category] => COMBINED
+                [mail-category-text] => Комбинированно
+                [mail-rank] => WO_RANK
+                [mail-type] => COMBINED
+                [mail-type-text] => Комбинированно
+                [payment-method] => CASHLESS
+                [postmarks] => Array
+                    (
+                        [0] => NONSTANDARD
+                    )
+    
+                [postoffice-address] => ул Никольская, д.7-9, стр.3, г Москва
+                [postoffice-code] => 109012
+                [postoffice-name] => ОПС 109012
+                [shipment-avia-rate-sum] => 0
+                [shipment-avia-rate-vat-sum] => 0
+                [shipment-completeness-checking-rate-sum] => 0
+                [shipment-completeness-checking-rate-vat-sum] => 0
+                [shipment-contents-checking-rate-sum] => 0
+                [shipment-contents-checking-rate-vat-sum] => 0
+                [shipment-count] => 1
+                [shipment-ground-rate-sum] => 16500
+                [shipment-ground-rate-vat-sum] => 3300
+                [shipment-insure-rate-sum] => 0
+                [shipment-insure-rate-vat-sum] => 0
+                [shipment-inventory-rate-sum] => 0
+                [shipment-inventory-rate-vat-sum] => 0
+                [shipment-mass] => 1000
+                [shipment-mass-rate-sum] => 16500
+                [shipment-mass-rate-vat-sum] => 3300
+                [shipment-notice-rate-sum] => 0
+                [shipment-notice-rate-vat-sum] => 0
+                [shipment-sms-notice-rate-sum] => 0
+                [shipment-sms-notice-rate-vat-sum] => 0
+                [shipping-notice-type] => SIMPLE
+                [transport-type] => SURFACE
+                [use-online-balance] =>
+                [wo-mass] =>
+            )
+    )*/
+}
+        
+catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
+  // Обработка ошибочного ответа от API ПРФ
+}
+
+catch (\Exception $e) {
+  // Обработка нештатной ситуации
+}
+```
+
 <a name="ops_search"><h1>Поиск ОПС</h1></a>   
 Реализует функции [API](https://otpravka.pochta.ru/specification#/services-postoffice) Почты России для работы с данными. 
 Для работы данных функций необходимы аутентификационные данные. Подробнее в разделе [Конфигурация](#configfile).
@@ -1833,7 +1966,12 @@ catch (\Exception $e) {
 в котором будет текст и код ошибки от API Почты России и дамп сырого ответа с HTTP-кодом.  
 
 
-<a name="warehouse"><h1>Долгосрочное хранение</h1></a>   
+<a name="warehouse"><h1>Долгосрочное хранение</h1></a>     
+  
+**!!!Данный раздел не работает в API Почты России!!!**    
+
+
+
 Реализует функции [API](https://otpravka.pochta.ru/specification#/long-term-archive-search_shipments) Почты России для работы с данными. 
 Для работы данных функций необходимы аутентификационные данные. Подробнее в разделе [Конфигурация](#configfile).
 
