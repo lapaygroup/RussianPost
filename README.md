@@ -1,3 +1,7 @@
+<a href="https://lapay.group/"><img align="left" width="200" src="https://lapay.group/lglogo.jpg"></a>
+<a href="https://lapay.group/"><img align="right" width="200" src="https://lapay.group/prflogo.svg"></a>    
+
+<br /><br /><br />
 [![Latest Stable Version](https://poser.pugx.org/lapaygroup/russianpost/v/stable)](https://packagist.org/packages/lapaygroup/russianpost)
 [![Total Downloads](https://poser.pugx.org/lapaygroup/russianpost/downloads)](https://packagist.org/packages/lapaygroup/russianpost)
 [![License](https://poser.pugx.org/lapaygroup/russianpost/license)](https://packagist.org/packages/lapaygroup/russianpost)
@@ -85,7 +89,8 @@
 - 0.5.2 - Исправлена ошибка получения информации о сроках доставки в формате HTML;  
 - 0.5.3 - Описание можно посмотреть [тут](https://github.com/lapaygroup/RussianPost/releases/tag/0.5.3);  
 - 0.5.4 - Правки composer.json;  
-- 0.6.0 - Долгожданная работа с заказами, подробнее [тут](https://github.com/lapaygroup/RussianPost/releases/tag/0.6.0).  
+- 0.6.0 - Долгожданная работа с заказами, подробнее [тут](https://github.com/lapaygroup/RussianPost/releases/tag/0.6.0);  
+- 0.6.5 - Реализованы функции работы с архивом.  
 
 
 # Установка  
