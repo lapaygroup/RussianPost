@@ -24,23 +24,23 @@
   - [x] [Отображение баланса](#show_balance)   
   - [x] [Неблагонадёжный получатель](#untrustworthy_recipient)    
 - [Заказы](#orders)  
-  - [ ] [Создание заказа](#create_order)  
-  - [ ] [Редактирование заказа](#edit_order)   
-  - [ ] [Удаление заказа](#delete_order)   
-  - [ ] [Поиск заказа](#search_order)  
-  - [ ] [Поиск заказа по идентификатору](#search_order_by_id)  
-  - [ ] [Возврат заказов в "Новые"](#return_order_to_new)    
-- [Партии](#party)  
-  - [ ] [Создание партии из N заказов](#)  
-  - [ ] [Изменение дня отправки в почтовое отделение](#)  
-  - [ ] [Перенос заказов в партию](#)  
-  - [ ] [Поиск партии по наименованию](#)  
-  - [ ] [Поиск заказов с ШПИ](#)  
-  - [ ] [Добавление заказов в партию](#)  
-  - [ ] [Удаление заказов из партии](#)  
-  - [ ] [Запрос данных о заказах в партии](#)  
-  - [ ] [Поиск всех партий](#)  
-  - [ ] [Поиск заказа в партии по id](#)  
+  - [x] [Создание заказов](#create_orders)    
+  - [x] [Редактирование заказа](#edit_order)   
+  - [x] [Удаление заказов](#delete_orders)   
+  - [x] [Поиск заказа](#search_order)  
+  - [x] [Поиск заказа по идентификатору](#search_order_by_id)  
+  - [x] [Возврат заказов в "Новые"](#return_order_to_new)    
+- [Партии](#batch)  
+  - [x] [Создание партии из N заказов](#create_batch)  
+  - [x] [Изменение дня отправки в почтовое отделение](#change_batch_sending_day)  
+  - [x] [Перенос заказов в партию](#move_orders_to_batch)    
+  - [x] [Поиск партии по наименованию](#find_batch_by_name)  
+  - [x] [Поиск заказов с ШПИ](#find_orders_by_rpo)  
+  - [x] [Добавление заказов в партию](#add_orders_in_batch)  
+  - [x] [Удаление заказов из партии](#delete_orders_in_batch)  
+  - [x] [Запрос данных о заказах в партии](#get_orders_in_batch)  
+  - [x] [Поиск всех партий](#get_all_bathes)  
+  - [x] [Поиск заказа в партии по id](#find_order_by_id_in_batch)  
 - [Документы](#documents)  
   - [ ] [Генерация пакета документации](#)  
   - [ ] [Генерация печатной формы Ф7п](#)  
@@ -65,7 +65,7 @@
   - [ ] [Запрос данных о заказах в архиве](#)  
 - [Настройки](#settings)  
   - [x] [Текущие точки сдачи](#settings_shipping_points)  
-  - [ ] [Текущие настройки пользователя](#)  
+  - [x] [Текущие настройки пользователя](#get_settings)  
 
 <a name="links"><h1>Changelog</h1></a>
 
@@ -78,12 +78,14 @@
 - 0.4.8 - Изменен адрес калькулятора Почты России, старый будет отключен 01.01.2019;
 - 0.4.9 - Исправлена ошибка выставления флага isFinal в пакетном трекинге отправлений, за обнаружение спасибо [Dmitry Sobchenko](https://github.com/sharpensteel);  
 - 0.4.10 - Актуализирован расчет стоимости пересылки (Упрощенная версия), за актуализацию спасибо [rik43](https://github.com/rik43);  
-- 0.4.11 - Актуализирован список статусов Почты России;
-- 0.4.12 - Скорректировано описание упрощенной версии расчета тарифов, добавлен метод получения списка точек сдачи;
-- 0.5.0 - Описание можно посмотреть [тут](https://github.com/lapaygroup/RussianPost/releases/tag/0.5.0);
-- 0.5.1 - Описание можно посмотреть [тут](https://github.com/lapaygroup/RussianPost/releases/tag/0.5.1);
-- 0.5.2 - Исправлена ошибка получения информации о сроках доставки в формате HTML;
-- 0.5.3 - Описание можно посмотреть [тут](https://github.com/lapaygroup/RussianPost/releases/tag/0.5.3);
+- 0.4.11 - Актуализирован список статусов Почты России;  
+- 0.4.12 - Скорректировано описание упрощенной версии расчета тарифов, добавлен метод получения списка точек сдачи;  
+- 0.5.0 - Описание можно посмотреть [тут](https://github.com/lapaygroup/RussianPost/releases/tag/0.5.0);  
+- 0.5.1 - Описание можно посмотреть [тут](https://github.com/lapaygroup/RussianPost/releases/tag/0.5.1);  
+- 0.5.2 - Исправлена ошибка получения информации о сроках доставки в формате HTML;  
+- 0.5.3 - Описание можно посмотреть [тут](https://github.com/lapaygroup/RussianPost/releases/tag/0.5.3);  
+- 0.5.4 - Правки composer.json;  
+- 0.6.0 - Долгожданная работа с заказами, подробнее [тут](https://github.com/lapaygroup/RussianPost/releases/tag/0.6.0).  
 
 
 # Установка  
@@ -525,7 +527,6 @@ Array
 ```php
 use Symfony\Component\Yaml\Yaml;
 use LapayGroup\RussianPost\Providers\OtpravkaApi;
-use LapayGroup\RussianPost\ParcelInfo;
 
 $OtpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
 $list = $OtpravkaApi->shippingPoints();
@@ -751,8 +752,398 @@ $list = $OtpravkaApi->shippingPoints();
 Для работы данных функций необходимы аутентификационные данные. Подробнее в разделе [Конфигурация](#configfile).
 
 В случае возникновеня ошибок при обмене выбрасывает исключение *\LapayGroup\RussianPost\Exceptions\RussianPostException*
-в котором будет текст и код ошибки от API Почты России и дамп сырого ответа с HTTP-кодом.  
+в котором будет текст и код ошибки от API Почты России и дамп сырого ответа с HTTP-кодом.
 
+<a name="create_orders"><h3>Создание заказа</h3></a> 
+Создает новый заказ. Автоматически рассчитывает и проставляет плату за пересылку.  
+Метод asArr() проверяет заполнение необходимых для создания заказа полей и в случае незаполнения выбрасывает \InvalidArgumentException.  
+
+**Важно!**  
+Для внутренних отправлений должен задаваться цифровой почтовый индекс *$order->setIndexTo(115551)*.  
+Для зарубежных отправлений должен задаваться зарубежный почтовый индекс *$order->setStrIndexTo('ab5551')*.  
+По умолчанию выбран динамический ДТИ. Для изменения диапазона ДТИ нужно обратиться в службу поддержки Почты России.    
+
+**Пример создания заказа:**
+```php
+<?php
+use Symfony\Component\Yaml\Yaml;
+use LapayGroup\RussianPost\Providers\OtpravkaApi;
+use LapayGroup\RussianPost\Entity\Order;
+
+try {
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    
+    $orders = [];
+    $order = new Order();
+    $order->setIndexTo(115551);
+    $order->setPostOfficeCode(109012);
+    $order->setGivenName('Иван');
+    $order->setHouseTo('92');
+    $order->setCorpusTo('3');
+    $order->setMass(1000);
+    $order->setOrderNum('2');
+    $order->setPlaceTo('Москва');
+    $order->setRecipientName('Иванов Иван');
+    $order->setRegionTo('Москва');
+    $order->setStreetTo('Каширское шоссе');
+    $order->setRoomTo('1');
+    $order->setSurname('Иванов');
+    $orders[] = $order->asArr();
+    
+    $result = $otpravkaApi->createOrders($orders);
+    
+    // Успешный ответ
+    /*Array
+    (
+        [result-ids] => Array
+            (
+                [0] => 115322331
+            )
+    
+    )
+    */
+    
+    // Ответ с ошибкой
+    /*Array
+    (
+        [errors] => Array
+            (
+                [0] => Array
+                    (
+                        [error-codes] => Array
+                            (
+                                [0] => Array
+                                    (
+                                        [code] => EMPTY_INDEX_TO
+                                        [description] => Почтовый индекс не указан
+                                    )
+    
+                            )
+    
+                        [position] => 0
+                    )
+    
+            )
+    
+    )*/
+}
+    
+catch (\InvalidArgumentException $e) {
+  // Обработка ошибки заполнения параметров
+}
+        
+catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
+  // Обработка ошибочного ответа от API ПРФ
+}
+
+catch (\Exception $e) {
+  // Обработка нештатной ситуации
+}
+```  
+
+<a name="edit_order"><h3>Редактирование заказа</h3></a> 
+Изменение ранее созданного заказа. Автоматически рассчитывает и проставляет плату за пересылку.  
+
+```php
+<?php
+use Symfony\Component\Yaml\Yaml;
+use LapayGroup\RussianPost\Providers\OtpravkaApi;
+use LapayGroup\RussianPost\Entity\Order;
+
+try {
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    
+    $orders = [];
+    $order = new Order();
+    $order->setIndexTo(115551);
+    $order->setPostOfficeCode(109012);
+    $order->setGivenName('Иван');
+    $order->setHouseTo('92');
+    $order->setCorpusTo('3');
+    $order->setMass(1000);
+    $order->setOrderNum('333'); // Меняем внутренний номер заказа
+    $order->setPlaceTo('Москва');
+    $order->setRecipientName('Иванов Иван');
+    $order->setRegionTo('Москва');
+    $order->setStreetTo('Каширское шоссе');
+    $order->setRoomTo('1');
+    $order->setSurname('Иванов');
+    $orders[] = $order->asArr();
+    
+    $result = $otpravkaApi->editOrder($order, 115322331);
+    
+    // Успешный ответ
+    /*Array
+    (
+        [result-ids] => Array
+            (
+                [0] => 115322331
+            )
+    
+    )
+    */
+    
+    // Ответ с ошибкой
+    /*Array
+      (
+          [error-codes] => Array
+              (
+                  [0] => Array
+                      (
+                          [code] => EMPTY_INDEX_TO
+                          [description] => Почтовый индекс не указан
+                      )
+
+              )
+
+          [position] => 0
+      )*/
+}
+    
+catch (\InvalidArgumentException $e) {
+  // Обработка ошибки заполнения параметров
+}
+        
+catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
+  // Обработка ошибочного ответа от API ПРФ
+}
+
+catch (\Exception $e) {
+  // Обработка нештатной ситуации
+}
+```
+
+<a name="delete_orders"><h3>Удаление заказов</h3></a> 
+Удаление заказов, который еще не добавлены в партию.
+
+```php
+<?php
+use Symfony\Component\Yaml\Yaml;
+use LapayGroup\RussianPost\Providers\OtpravkaApi;
+
+try {
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $result = $otpravkaApi->deleteOrders([115322331]);
+    /* 
+    Array Успешный ответ
+    (
+        [result-ids] => Array
+            (
+                [0] => 115322331
+            )
+    )
+    
+    Array Ответ с ошибкой
+    (
+        [errors] => Array
+            (
+                [0] => Array
+                    (
+                        [error-code] => NOT_FOUND
+                        [position] => 0
+                    )
+    
+            )
+    )*/
+}
+        
+catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
+  // Обработка ошибочного ответа от API ПРФ
+}
+
+catch (\Exception $e) {
+  // Обработка нештатной ситуации
+}
+```
+
+
+<a name="search_order"><h3>Поиск заказа</h3></a> 
+Ищет заказы по назначенному магазином идентификатору.  
+
+```php
+<?php
+use Symfony\Component\Yaml\Yaml;
+use LapayGroup\RussianPost\Providers\OtpravkaApi;
+
+try {
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $result = $otpravkaApi->findOrderByShopId(1);
+    /*
+    Array
+    (
+        [0] => Array
+            (
+                [address-type-to] => DEFAULT
+                // По умолчанию выбран динамический ДТИ. Для изменения диапазона ДТИ нужно обратиться в службу поддержки Почты России
+                [barcode] => 80082240994512
+                [corpus-to] => 3
+                [delivery-time] => Array
+                    (
+                        [max-days] => 1
+                    )
+    
+                [given-name] => Иван
+                [ground-rate] => 16500
+                [ground-rate-with-vat] => 19800
+                [ground-rate-wo-vat] => 16500
+                [house-to] => 92
+                [id] => 115322331
+                [index-to] => 115551
+                [mail-category] => ORDINARY
+                [mail-direct] => 643
+                [mail-rank] => WO_RANK
+                [mail-type] => POSTAL_PARCEL
+                [manual-address-input] =>
+                [mass] => 1000
+                [mass-rate] => 16500
+                [mass-rate-with-vat] => 19800
+                [mass-rate-wo-vat] => 16500
+                [order-num] => 1
+                [payment-method] => CASHLESS
+                [place-to] => Москва
+                [postmarks] => Array
+                    (
+                        [0] => NONSTANDARD
+                    )
+    
+                [postoffice-code] => 109012
+                [recipient-name] => Иванов Иван
+                [region-to] => Москва
+                [room-to] => 1
+                [str-index-to] => 115551
+                [street-to] => Каширское шоссе
+                [surname] => Иванов
+                [total-rate-wo-vat] => 16500
+                [total-vat] => 3300
+                [transport-type] => SURFACE
+                [version] => 0
+        )
+    )*/
+}
+        
+catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
+  // Обработка ошибочного ответа от API ПРФ
+}
+
+catch (\Exception $e) {
+  // Обработка нештатной ситуации
+}
+```
+
+
+<a name="search_order_by_id"><h3>Поиск заказа по идентификатору</h3></a> 
+Ищет заказ по идентификатору Почты России.   
+
+```php
+<?php
+use Symfony\Component\Yaml\Yaml;
+use LapayGroup\RussianPost\Providers\OtpravkaApi;
+
+try {
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $result = $otpravkaApi->findOrderById(115322331);
+    /*
+    Array
+    (
+        [address-type-to] => DEFAULT
+        [barcode] => 80082240994512
+        [corpus-to] => 3
+        [delivery-time] => Array
+            (
+                [max-days] => 1
+            )
+    
+        [given-name] => Иван
+        [ground-rate] => 16500
+        [ground-rate-with-vat] => 19800
+        [ground-rate-wo-vat] => 16500
+        [house-to] => 92
+        [id] => 115322331
+        [index-to] => 115551
+        [mail-category] => ORDINARY
+        [mail-direct] => 643
+        [mail-rank] => WO_RANK
+        [mail-type] => POSTAL_PARCEL
+        [manual-address-input] =>
+        [mass] => 1000
+        [mass-rate] => 16500
+        [mass-rate-with-vat] => 19800
+        [mass-rate-wo-vat] => 16500
+        [order-num] => 1
+        [payment-method] => CASHLESS
+        [place-to] => Москва
+        [postmarks] => Array
+            (
+                [0] => NONSTANDARD
+            )
+    
+        [postoffice-code] => 109012
+        [recipient-name] => Иванов Иван
+        [region-to] => Москва
+        [room-to] => 1
+        [str-index-to] => 115551
+        [street-to] => Каширское шоссе
+        [surname] => Иванов
+        [total-rate-wo-vat] => 16500
+        [total-vat] => 3300
+        [transport-type] => SURFACE
+        [version] => 0
+    )*/
+}
+        
+catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
+  // Обработка ошибочного ответа от API ПРФ
+}
+
+catch (\Exception $e) {
+  // Обработка нештатной ситуации
+}
+```
+
+
+<a name="return_order_to_new"><h3>Возврат заказов в "Новые"</h3></a> 
+Метод переводит заказы из партии в раздел Новые. Партия должна быть в статусе CREATED.   
+
+```php
+<?php
+use Symfony\Component\Yaml\Yaml;
+use LapayGroup\RussianPost\Providers\OtpravkaApi;
+
+try {
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $result = $otpravkaApi->returnToNew([115527611]);
+    /*
+    Array Успешный ответ
+    (
+        [result-ids] => Array
+            (
+                [0] => 115527611
+            )
+    
+    )
+
+    Array Ответ с ошибкой
+    (
+        [errors] => Array
+            (
+                [0] => Array
+                    (
+                        [error-code] => NOT_FOUND
+                        [position] => 0
+                    )
+    
+            )
+    )*/
+}
+        
+catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
+  // Обработка ошибочного ответа от API ПРФ
+}
+
+catch (\Exception $e) {
+  // Обработка нештатной ситуации
+}
+```
 
 <a name="party"><h1>Партии</h1></a>   
 Реализует функции [API](https://otpravka.pochta.ru/specification#/batches-create_batch_from_N_orders) Почты России для работы с данными. 
@@ -760,6 +1151,662 @@ $list = $OtpravkaApi->shippingPoints();
 
 В случае возникновеня ошибок при обмене выбрасывает исключение *\LapayGroup\RussianPost\Exceptions\RussianPostException*
 в котором будет текст и код ошибки от API Почты России и дамп сырого ответа с HTTP-кодом.  
+
+<a name="create_batch"><h3>Создание партии из N заказов</h3></a> 
+Автоматически создает партию и переносит указанные подготовленные заказы в эту партию. 
+Если заказы относятся к разным типам и категориям – создается несколько партий. 
+Заказы распределяются по соответствующим партиям. 
+Каждому перенесенному заказу автоматически присваивается ШПИ.  
+
+```php
+<?php
+use Symfony\Component\Yaml\Yaml;
+use LapayGroup\RussianPost\Providers\OtpravkaApi;
+
+try {
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $result = $otpravkaApi->createBatch([115527611], new DateTimeImmutable('2019-09-20'));
+    /*
+     Array Успешный ответ
+        (
+        [batches] => Array
+            (
+                [0] => Array
+                    (
+                        [batch-name] => 24
+                        [batch-status] => CREATED
+                        [batch-status-date] => 2019-09-03T11:37:17.589Z
+                        [combined-batch-mail-types] => Array
+                            (
+                                [0] => POSTAL_PARCEL
+                            )
+    
+                        [courier-order-statuses] => Array
+                            (
+                                [0] => NOT_REQUIRED
+                            )
+    
+                        [international] =>
+                        [list-number-date] => 2019-09-20
+                        [mail-category] => COMBINED
+                        [mail-category-text] => Комбинированно
+                        [mail-rank] => WO_RANK
+                        [mail-type] => COMBINED
+                        [mail-type-text] => Комбинированно
+                        [payment-method] => CASHLESS
+                        [postmarks] => Array
+                            (
+                                [0] => NONSTANDARD
+                            )
+    
+                        [postoffice-code] => 109012
+                        [postoffice-name] => ОПС 109012
+                        [shipment-avia-rate-sum] => 0
+                        [shipment-avia-rate-vat-sum] => 0
+                        [shipment-completeness-checking-rate-sum] => 0
+                        [shipment-completeness-checking-rate-vat-sum] => 0
+                        [shipment-contents-checking-rate-sum] => 0
+                        [shipment-contents-checking-rate-vat-sum] => 0
+                        [shipment-count] => 1
+                        [shipment-ground-rate-sum] => 16500
+                        [shipment-ground-rate-vat-sum] => 3300
+                        [shipment-insure-rate-sum] => 0
+                        [shipment-insure-rate-vat-sum] => 0
+                        [shipment-inventory-rate-sum] => 0
+                        [shipment-inventory-rate-vat-sum] => 0
+                        [shipment-mass] => 1000
+                        [shipment-mass-rate-sum] => 16500
+                        [shipment-mass-rate-vat-sum] => 3300
+                        [shipment-notice-rate-sum] => 0
+                        [shipment-notice-rate-vat-sum] => 0
+                        [shipment-sms-notice-rate-sum] => 0
+                        [shipment-sms-notice-rate-vat-sum] => 0
+                        [shipping-notice-type] => SIMPLE
+                        [transport-type] => SURFACE
+                        [use-online-balance] =>
+                        [wo-mass] =>
+                    )
+            )
+    
+        [result-ids] => Array
+            (
+                [0] => 115527611
+            )
+    )
+    
+    Array Ответ с ошибкой
+    (
+        [errors] => Array
+            (
+                [0] => Array
+                    (
+                        [error-code] => NOT_FOUND
+                        [error-description] => Отправление не найдено
+                        [position] => 0
+                    )
+            )
+    )*/
+}
+        
+catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
+  // Обработка ошибочного ответа от API ПРФ
+}
+
+catch (\Exception $e) {
+  // Обработка нештатной ситуации
+}
+```
+
+<a name="change_batch_sending_day"><h3>Изменение дня отправки в почтовое отделение</h3></a> 
+Изменяет (устанавливает) новый день отправки в почтовое отделение.  
+
+```php
+<?php
+use Symfony\Component\Yaml\Yaml;
+use LapayGroup\RussianPost\Providers\OtpravkaApi;
+
+try {
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $result = $otpravkaApi->changeBatchSendingDay(25, new DateTimeImmutable('2019-09-08'));
+    
+}
+catch (\InvalidArgumentException $e) {
+    // Обработка ошибки
+}
+        
+catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
+  // Обработка ошибочного ответа от API ПРФ
+}
+
+catch (\Exception $e) {
+  // Обработка нештатной ситуации
+}
+```
+
+<a name="move_orders_to_batch"><h3>Перенос заказов в партию</h3></a> 
+Переносит подготовленные заказы в указанную партию. 
+Если часть заказов не может быть помещена в партию (тип и категория партии не соответствует типу и категории заказа) - 
+возвращается json объект с указанием индекса заказа в переданном массиве и типом ошибки, остальные заказы помещаются в указанную партию. 
+Каждому перенесенному заказу автоматически присваивается ШПИ.  
+
+```php
+<?php
+use Symfony\Component\Yaml\Yaml;
+use LapayGroup\RussianPost\Providers\OtpravkaApi;
+
+try {
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $result = $otpravkaApi->moveOrdersToBatch('24', [115685148]);
+    /*Array
+    (
+        [result-ids] => Array
+            (
+                [0] => 115685148
+            )
+    
+    )*/
+}
+        
+catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
+  // Обработка ошибочного ответа от API ПРФ
+}
+
+catch (\Exception $e) {
+  // Обработка нештатной ситуации
+}
+```
+
+<a name="find_batch_by_name"><h3>Поиск партии по наименованию</h3></a> 
+Возвращает параметры партии по ее наименованию (batch-name).
+
+```php
+<?php
+use Symfony\Component\Yaml\Yaml;
+use LapayGroup\RussianPost\Providers\OtpravkaApi;
+
+try {
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $result = $otpravkaApi->findBatchByName('24');
+    /*
+    Array
+      (
+          [batch-name] => 24
+          [batch-status] => CREATED
+          [batch-status-date] => 2019-09-03T11:37:17.589Z
+          [combined-batch-mail-types] => Array
+              (
+                  [0] => POSTAL_PARCEL
+              )
+      
+          [courier-order-statuses] => Array
+              (
+                  [0] => NOT_REQUIRED
+              )
+      
+          [international] =>
+          [list-number-date] => 2019-09-16
+          [mail-category] => COMBINED
+          [mail-category-text] => Комбинированно
+          [mail-rank] => WO_RANK
+          [mail-type] => COMBINED
+          [mail-type-text] => Комбинированно
+          [payment-method] => CASHLESS
+          [postmarks] => Array
+              (
+                  [0] => NONSTANDARD
+              )
+      
+          [postoffice-code] => 109012
+          [postoffice-name] => ОПС 109012
+          [shipment-avia-rate-sum] => 0
+          [shipment-avia-rate-vat-sum] => 0
+          [shipment-completeness-checking-rate-sum] => 0
+          [shipment-completeness-checking-rate-vat-sum] => 0
+          [shipment-contents-checking-rate-sum] => 0
+          [shipment-contents-checking-rate-vat-sum] => 0
+          [shipment-count] => 2
+          [shipment-ground-rate-sum] => 33000
+          [shipment-ground-rate-vat-sum] => 6600
+          [shipment-insure-rate-sum] => 0
+          [shipment-insure-rate-vat-sum] => 0
+          [shipment-inventory-rate-sum] => 0
+          [shipment-inventory-rate-vat-sum] => 0
+          [shipment-mass] => 2000
+          [shipment-mass-rate-sum] => 33000
+          [shipment-mass-rate-vat-sum] => 6600
+          [shipment-notice-rate-sum] => 0
+          [shipment-notice-rate-vat-sum] => 0
+          [shipment-sms-notice-rate-sum] => 0
+          [shipment-sms-notice-rate-vat-sum] => 0
+          [shipping-notice-type] => SIMPLE
+          [transport-type] => SURFACE
+          [use-online-balance] =>
+          [wo-mass] =>
+      )*/
+}
+        
+catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
+  // Обработка ошибочного ответа от API ПРФ
+}
+
+catch (\Exception $e) {
+  // Обработка нештатной ситуации
+}
+```
+
+<a name="find_orders_by_rpo"><h3>Поиск заказов с ШПИ</h3></a> 
+Возвращает данные заказа в партии по присвоенному ему ШПИ.  
+
+```php
+<?php
+use Symfony\Component\Yaml\Yaml;
+use LapayGroup\RussianPost\Providers\OtpravkaApi;
+
+try {
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $result = $otpravkaApi->findOrderByRpo(80083740712514);
+    /*
+    Array
+    (
+        [0] => Array
+            (
+                [address-type-to] => DEFAULT
+                [barcode] => 80083740712514
+                [batch-category] => COMBINED
+                [batch-name] => 24
+                [batch-status] => CREATED
+                [completeness-checking] =>
+                [corpus-to] => 3
+                [delivery-time] => Array
+                    (
+                        [max-days] => 1
+                    )
+    
+                [given-name] => Иван
+                [ground-rate] => 16500
+                [ground-rate-with-vat] => 19800
+                [ground-rate-wo-vat] => 16500
+                [house-to] => 92
+                [id] => 115527611
+                [index-to] => 115551
+                [legal-hid] => 15b12c4c-96ff-4548-8e15-aeab82c8e927
+                [mail-category] => ORDINARY
+                [mail-direct] => 643
+                [mail-rank] => WO_RANK
+                [mail-type] => POSTAL_PARCEL
+                [manual-address-input] =>
+                [mass] => 1000
+                [mass-rate] => 16500
+                [mass-rate-with-vat] => 19800
+                [mass-rate-wo-vat] => 16500
+                [order-num] => 223
+                [payment-method] => CASHLESS
+                [place-to] => Москва
+                [pochtaid-hid] => 816284
+                [postmarks] => Array
+                    (
+                        [0] => NONSTANDARD
+                    )
+    
+                [postoffice-code] => 109012
+                [recipient-name] => Иванов Иван
+                [region-to] => Москва
+                [room-to] => 1
+                [str-index-to] => 115551
+                [street-to] => Каширское шоссе
+                [surname] => Иванов
+                [total-rate-wo-vat] => 16500
+                [total-vat] => 3300
+                [transport-type] => SURFACE
+                [version] => 0
+            )
+    
+    )*/
+}
+        
+catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
+  // Обработка ошибочного ответа от API ПРФ
+}
+
+catch (\Exception $e) {
+  // Обработка нештатной ситуации
+}
+```
+
+<a name="add_orders_in_batch"><h3>Добавление заказов в партию</h3></a> 
+Создает массив заказов и помещает непосредственно в партию. 
+Автоматически рассчитывает и проставляет плату за пересылку. 
+Каждому заказу автоматически присваивается ШПИ.  
+
+```php
+<?php
+use Symfony\Component\Yaml\Yaml;
+use LapayGroup\RussianPost\Providers\OtpravkaApi;
+
+try {
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $orders = []; // Массив заказов
+    $result = $otpravkaApi->addOrdersToBatch('24', $orders); // Ответ аналогичен созданию заказов
+}
+
+catch (\InvalidArgumentException $e) {
+  // Обработка ошибки заполнения параметров
+}
+        
+catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
+  // Обработка ошибочного ответа от API ПРФ
+}
+
+catch (\Exception $e) {
+  // Обработка нештатной ситуации
+}
+```
+
+<a name="delete_orders_in_batch"><h3>Удаление заказов из партии</h3></a> 
+Удаляет заказы, которые уже были добавлены в партию.
+
+```php
+<?php
+use Symfony\Component\Yaml\Yaml;
+use LapayGroup\RussianPost\Providers\OtpravkaApi;
+
+try {
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $result = $otpravkaApi->deleteOrdersInBatch([115527611]);
+    /*
+     Array Успешный ответ
+    (
+        [result-ids] => Array
+            (
+                [0] => 115685148
+            )
+    )
+   
+    Array Ответ с ошибкой
+    (
+        [errors] => Array
+            (
+                [0] => Array
+                    (
+                        [error-code] => NOT_FOUND
+                        [position] => 0
+                    )
+    
+            )
+    )*/
+}
+        
+catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
+  // Обработка ошибочного ответа от API ПРФ
+}
+
+catch (\Exception $e) {
+  // Обработка нештатной ситуации
+}
+```
+
+<a name="get_orders_in_batch"><h3>Запрос данных о заказах в партии</h3></a> 
+Возвращает заказы в партии по заданным параметрам.
+
+```php
+<?php
+use Symfony\Component\Yaml\Yaml;
+use LapayGroup\RussianPost\Providers\OtpravkaApi;
+
+try {
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $result = $otpravkaApi->getOrdersInBatch(25);
+    /*
+    Array
+    (
+        [0] => Array
+            (
+                [address-type-to] => DEFAULT
+                [barcode] => 80084740397510
+                [batch-category] => COMBINED
+                [batch-name] => 25
+                [batch-status] => CREATED
+                [completeness-checking] =>
+                [corpus-to] => 3
+                [delivery-time] => Array
+                    (
+                        [max-days] => 1
+                    )
+    
+                [given-name] => Иван
+                [ground-rate] => 16500
+                [ground-rate-with-vat] => 19800
+                [ground-rate-wo-vat] => 16500
+                [house-to] => 92
+                [human-operation-name] => Присвоен трек-номер
+                [id] => 115689758
+                [index-to] => 115551
+                [last-oper-attr] => ID_ASSIGNED
+                [last-oper-date] => 2019-09-03T11:48:20.759Z
+                [last-oper-type] => ID_ASSIGNMENT
+                [legal-hid] => 15b12c4c-96ff-4548-8e15-aeab82c8e927
+                [mail-category] => ORDINARY
+                [mail-direct] => 643
+                [mail-rank] => WO_RANK
+                [mail-type] => POSTAL_PARCEL
+                [manual-address-input] =>
+                [mass] => 1000
+                [mass-rate] => 16500
+                [mass-rate-with-vat] => 19800
+                [mass-rate-wo-vat] => 16500
+                [order-num] => 2
+                [payment-method] => CASHLESS
+                [place-to] => Москва
+                [pochtaid-hid] => 816284
+                [postmarks] => Array
+                    (
+                        [0] => NONSTANDARD
+                    )
+    
+                [postoffice-code] => 109012
+                [recipient-name] => Иванов Иван
+                [region-to] => Москва
+                [room-to] => 1
+                [str-index-to] => 115551
+                [street-to] => Каширское шоссе
+                [surname] => Иванов
+                [total-rate-wo-vat] => 16500
+                [total-vat] => 3300
+                [transport-type] => SURFACE
+                [version] => 1
+            )
+    )*/
+}
+        
+catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
+  // Обработка ошибочного ответа от API ПРФ
+}
+
+catch (\Exception $e) {
+  // Обработка нештатной ситуации
+}
+```
+
+<a name="get_all_bathes"><h3>Поиск всех партий</h3></a> 
+Возвращает партии по заданным фильтрам.
+
+```php
+<?php
+use Symfony\Component\Yaml\Yaml;
+use LapayGroup\RussianPost\Providers\OtpravkaApi;
+
+try {
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $result = $otpravkaApi->getAllBatches(); // Может вызываться с фильтрами
+    /*
+    Array
+    (
+        [0] => Array
+            (
+                [batch-name] => 24
+                [batch-status] => CREATED
+                [batch-status-date] => 2019-09-03T11:37:17.589Z
+                [combined-batch-mail-types] => Array
+                    (
+                        [0] => POSTAL_PARCEL
+                    )
+    
+                [courier-order-statuses] => Array
+                    (
+                        [0] => NOT_REQUIRED
+                    )
+    
+                [international] =>
+                [list-number-date] => 2019-09-16
+                [mail-category] => COMBINED
+                [mail-category-text] => Комбинированно
+                [mail-rank] => WO_RANK
+                [mail-type] => COMBINED
+                [mail-type-text] => Комбинированно
+                [payment-method] => CASHLESS
+                [postmarks] => Array
+                    (
+                        [0] => NONSTANDARD
+                    )
+    
+                [postoffice-address] => ул Никольская, д.7-9, стр.3, г Москва
+                [postoffice-code] => 109012
+                [postoffice-name] => ОПС 109012
+                [shipment-avia-rate-sum] => 0
+                [shipment-avia-rate-vat-sum] => 0
+                [shipment-completeness-checking-rate-sum] => 0
+                [shipment-completeness-checking-rate-vat-sum] => 0
+                [shipment-contents-checking-rate-sum] => 0
+                [shipment-contents-checking-rate-vat-sum] => 0
+                [shipment-count] => 1
+                [shipment-ground-rate-sum] => 16500
+                [shipment-ground-rate-vat-sum] => 3300
+                [shipment-insure-rate-sum] => 0
+                [shipment-insure-rate-vat-sum] => 0
+                [shipment-inventory-rate-sum] => 0
+                [shipment-inventory-rate-vat-sum] => 0
+                [shipment-mass] => 1000
+                [shipment-mass-rate-sum] => 16500
+                [shipment-mass-rate-vat-sum] => 3300
+                [shipment-notice-rate-sum] => 0
+                [shipment-notice-rate-vat-sum] => 0
+                [shipment-sms-notice-rate-sum] => 0
+                [shipment-sms-notice-rate-vat-sum] => 0
+                [shipping-notice-type] => SIMPLE
+                [transport-type] => SURFACE
+                [use-online-balance] =>
+                [wo-mass] =>
+            )
+    )*/
+}
+        
+catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
+  // Обработка ошибочного ответа от API ПРФ
+}
+
+catch (\Exception $e) {
+  // Обработка нештатной ситуации
+}
+```
+
+<a name="find_order_by_id_in_batch"><h3>Поиск заказа в партии по id</h3></a> 
+
+
+```php
+<?php
+use Symfony\Component\Yaml\Yaml;
+use LapayGroup\RussianPost\Providers\OtpravkaApi;
+
+try {
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $result = $otpravkaApi->findOrderInBatch(115689758);
+    /*
+    Array
+    (
+        [address-type-to] => DEFAULT
+        [barcode] => 80084740397510
+        [batch-category] => COMBINED
+        [batch-name] => 25
+        [batch-status] => CREATED
+        [completeness-checking] =>
+        [corpus-to] => 3
+        [delivery-time] => Array
+            (
+                [max-days] => 1
+            )
+    
+        [given-name] => Иван
+        [ground-rate] => 16500
+        [ground-rate-with-vat] => 19800
+        [ground-rate-wo-vat] => 16500
+        [house-to] => 92
+        [human-operation-name] => Присвоен трек-номер
+        [id] => 115689758
+        [index-to] => 115551
+        [last-oper-attr] => ID_ASSIGNED
+        [last-oper-date] => 2019-09-03T11:48:20.759Z
+        [last-oper-type] => ID_ASSIGNMENT
+        [legal-hid] => 15b12c4c-96ff-4548-8e15-aeab82c8e927
+        [mail-category] => ORDINARY
+        [mail-direct] => 643
+        [mail-rank] => WO_RANK
+        [mail-type] => POSTAL_PARCEL
+        [manual-address-input] =>
+        [mass] => 1000
+        [mass-rate] => 16500
+        [mass-rate-with-vat] => 19800
+        [mass-rate-wo-vat] => 16500
+        [order-num] => 2
+        [payment-method] => CASHLESS
+        [place-to] => Москва
+        [pochtaid-hid] => 816284
+        [postmarks] => Array
+            (
+                [0] => NONSTANDARD
+            )
+    
+        [postoffice-code] => 109012
+        [recipient-name] => Иванов Иван
+        [region-to] => Москва
+        [room-to] => 1
+        [str-index-to] => 115551
+        [street-to] => Каширское шоссе
+        [surname] => Иванов
+        [total-rate-wo-vat] => 16500
+        [total-vat] => 3300
+        [transport-type] => SURFACE
+        [version] => 1
+    )*/
+}
+        
+catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
+  // Обработка ошибочного ответа от API ПРФ
+}
+
+catch (\Exception $e) {
+  // Обработка нештатной ситуации
+}
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 <a name="documents"><h1>Документы</h1></a>   
@@ -806,10 +1853,23 @@ $list = $OtpravkaApi->shippingPoints();
 
 **Пример получения списка текущих точек сдачи:**
 ```php
+<?php
 use Symfony\Component\Yaml\Yaml;
 use LapayGroup\RussianPost\Providers\OtpravkaApi;
-use LapayGroup\RussianPost\ParcelInfo;
 
-$OtpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
-$list = $OtpravkaApi->shippingPoints();
+$otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+$list = $otpravkaApi->shippingPoints();
+```
+
+<a name="get_settings"><h3>Текущие настройки пользователя</h3></a> 
+Возвращает текущие настройки пользователя.  
+
+**Пример получения списка текущих точек сдачи:**
+```php
+<?php
+use Symfony\Component\Yaml\Yaml;
+use LapayGroup\RussianPost\Providers\OtpravkaApi;
+
+$otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+$info = $otpravkaApi->settings();
 ```

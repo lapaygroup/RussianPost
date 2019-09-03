@@ -143,6 +143,9 @@ Class Order
         $request['street-to'] = $this->getStreetTo();
         $request['surname'] = $this->getSurname();
 
+        if (empty($this->index_to) && empty($this->str_index_to))
+            throw new \InvalidArgumentException('Почтовый индекс получателя должен быть заполнен! (поле index_to или str_index_to)');
+
         // Проверяем заполненность полей
         foreach (array_keys($request) as $key) {
             if ($key == 'fragile') continue;

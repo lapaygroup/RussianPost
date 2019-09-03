@@ -5,8 +5,6 @@ use LapayGroup\RussianPost\Providers\Calculation;
 
 class CategoryList
 {
-    use Singleton;
-
     private $Calculation = false;
     private $subcategory = true;
     private $description = false;
@@ -14,7 +12,7 @@ class CategoryList
 
     function __construct()
     {
-        $this->Calculation = Calculation::getInstance();
+        $this->Calculation = new Calculation();
     }
 
     /**

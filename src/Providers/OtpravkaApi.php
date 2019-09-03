@@ -97,14 +97,14 @@ class OtpravkaApi implements LoggerAwareInterface
         if ($response->getStatusCode() != 200 && $response->getStatusCode() != 404 && $response->getStatusCode() != 400)
             throw new RussianPostException('Неверный код ответа от сервера Почты России при вызове метода '.$method.': ' . $response->getStatusCode(), $response->getStatusCode(), $response_contents);
 
+        if (empty($response_contents))
+            throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' пришел пустой ответ', $response->getStatusCode(), $response_contents);
+
         $resp = json_decode($response_contents, true);
 
         if (empty($resp) && $endpoint == 'delivery' && json_last_error() == JSON_ERROR_SYNTAX) {
             return $response_contents;
         }
-
-        if (empty($resp))
-            throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' пришел пустой ответ', $response->getStatusCode(), $response_contents);
 
         if ($response->getStatusCode() == 404 && !empty($resp['code']))
             throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' получена ошибка: '.$resp['sub-code'] . " (".$resp['code'].")", $response->getStatusCode(), $response_contents);
@@ -173,6 +173,17 @@ class OtpravkaApi implements LoggerAwareInterface
     public function shippingPoints()
     {
         return $this->callApi('GET', 'user-shipping-points');
+    }
+
+    /**
+     * Текущие настройки пользователя
+     *
+     * @return mixed
+     * @throws RussianPostException
+     */
+    public function settings()
+    {
+        return $this->callApi('GET', 'settings');
     }
 
     /**
@@ -245,13 +256,27 @@ class OtpravkaApi implements LoggerAwareInterface
     /**
      * Создание заказов
      *
-     * @param array $order - массив объектов Order
+     * @param array $orders - массив объектов Order
      * @return array
      * @throws RussianPostException
      */
-    public function createOrder($orders)
+    public function createOrders($orders)
     {
         return $this->callApi('PUT', 'user/backlog', $orders);
+    }
+
+
+    /**
+     * Редактирование заказа
+     *
+     * @param Order $order - данные заказа
+     * @param $id - id заказа в системе Почты России
+     * @return array|string
+     * @throws RussianPostException
+     */
+    public function editOrder($order, $id)
+    {
+        return $this->callApi('PUT', 'backlog/'.$id, $order->asArr());
     }
 
     /**
@@ -279,14 +304,183 @@ class OtpravkaApi implements LoggerAwareInterface
     }
 
     /**
+     * Поиск заказов с ШПИ (В партии)
+     *
+     * @param $rpo - ШПИ (РПО) заказа
+     * @return array
+     * @throws RussianPostException
+     */
+    public function findOrderByRpo($rpo)
+    {
+        return $this->callApi('GET', 'shipment/search', ['query' => $rpo]);
+    }
+
+    /**
+     * Поиск заказа в партии по внутреннему id
+     *
+     * @param int $id - id заказа Почты России
+     * @return array
+     * @throws RussianPostException
+     */
+    public function findOrderInBatch($id)
+    {
+        return $this->callApi('GET', 'shipment/'.$id);
+    }
+
+    /**
      * Удаление заказов
      *
-     * @param $id_list - массив id заказов
+     * @param array $id_list - массив id заказов
      * @return array
      * @throws RussianPostException
      */
     public function deleteOrders($id_list)
     {
         return $this->callApi('DELETE', 'backlog', $id_list);
+    }
+
+    /**
+     * Возврат заказов в "Новые"
+     *
+     * @param array $id_list - массив id заказов
+     * @return array
+     * @throws RussianPostException
+     */
+    public function returnToNew($id_list)
+    {
+        return $this->callApi('POST', 'user/backlog', $id_list);
+    }
+
+    /**
+     * Создание партии из N заказов
+     *
+     * @param array $id_list - массив id заказов
+     * @param \DateTimeImmutable $sending_date - дата отправки
+     * @return array
+     * @throws RussianPostException
+     */
+    public function createBatch($id_list, $sending_date = null)
+    {
+        $method = 'user/shipment';
+        if ($sending_date)
+            $method .= '?sending-date='.$sending_date->format('Y-m-d');
+
+        return $this->callApi('POST', $method, $id_list);
+    }
+
+    /**
+     * Поиск всех партий
+     *
+     * @param string|null $mail_type
+     * @param string|null $mail_category
+     * @param int|null $size
+     * @param string $sort
+     * @param int|null $page
+     * @return array
+     * @throws RussianPostException
+     */
+    public function getAllBatches($mail_type = null, $mail_category = null, $size = null, $sort = 'ask', $page = null)
+    {
+        $params = [];
+        $params['sort'] = $sort;
+        if (!empty($mail_type)) $params['mailType'] = $mail_type;
+        if (!empty($mail_category)) $params['mailCategory'] = $mail_category;
+        if (!empty($size)) $params['size'] = $size;
+        if (!empty($page)) $params['page'] = $page;
+
+        return $this->callApi('GET', 'batch', $params);
+    }
+
+    /**
+     * Перенос заказов в ранее созданную партию
+     *
+     * @param string $batch_name - название партии
+     * @param array $id_list - массив id заказов
+     * @return array
+     * @throws RussianPostException
+     */
+    public function moveOrdersToBatch($batch_name, $id_list)
+    {
+        $method = 'batch/'.$batch_name.'/shipment';
+        return $this->callApi('POST', $method, $id_list);
+    }
+
+
+    /**
+     * Поиск партии по наименованию
+     *
+     * @param string $batch_name - название партии
+     * @return array
+     * @throws RussianPostException
+     */
+    public function findBatchByName($batch_name)
+    {
+        return $this->callApi('GET', 'batch/'.$batch_name);
+    }
+
+    /**
+     * Создание заказов и добавление их в партию
+     *
+     * @param string $batch_name - название партии
+     * @param array $orders - заказы (массив объектов Order)
+     * @return array
+     * @throws RussianPostException
+     */
+    public function addOrdersToBatch($batch_name, $orders)
+    {
+        return $this->callApi('PUT', 'batch/'.$batch_name.'/shipment', $orders);
+    }
+
+    /**
+     * Удаление заказов из партии
+     *
+     * @param array $id_list - массив id заказов
+     * @return array
+     * @throws RussianPostException
+     */
+    public function deleteOrdersInBatch($id_list)
+    {
+        return $this->callApi('DELETE', 'shipment', $id_list);
+    }
+
+    /**
+     * Запрос данных о заказах в партии
+     *
+     * @param string $batch_name
+     * @param int|null $size
+     * @param string $sort
+     * @param int|null $page
+     * @return array
+     * @throws RussianPostException
+     */
+    public function getOrdersInBatch($batch_name, $size = null, $sort = 'ask', $page = null)
+    {
+        $params = [];
+        $params['sort'] = $sort;
+        if (!empty($size)) $params['size'] = $size;
+        if (!empty($page)) $params['page'] = $page;
+
+        return $this->callApi('GET', 'batch/'.$batch_name.'/shipment', $params);
+    }
+
+
+    /**
+     * Изменение дня отправки в почтовое отделение
+     *
+     * @param string $batch_name - наименование партии
+     * @param \DateTimeImmutable $date - дата отправки
+     * @return array|string
+     * @throws RussianPostException
+     * @throws \InvalidArgumentException
+     */
+    public function changeBatchSendingDay($batch_name, $date)
+    {
+        $year = $date->format('Y');
+        $month = $date->format('m');
+        $day = $date->format('d');
+        $result = $this->callApi('POST', 'batch/'.$batch_name.'/sending/'.$year.'/'.$month.'/'.$day);
+        if (empty($result)) return true;
+
+        throw new \InvalidArgumentException($result['error-code']);
     }
 }

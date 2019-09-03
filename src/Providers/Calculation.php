@@ -2,7 +2,6 @@
 namespace LapayGroup\RussianPost\Providers;
 
 use LapayGroup\RussianPost\Exceptions\RussianPostException;
-use LapayGroup\RussianPost\Singleton;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 
