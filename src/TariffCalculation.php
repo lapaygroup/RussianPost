@@ -7,7 +7,6 @@ use Psr\Log\LoggerAwareTrait;
 
 class TariffCalculation implements LoggerAwareInterface
 {
-    use Singleton;
     use LoggerAwareTrait;
 
     /**
