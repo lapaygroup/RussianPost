@@ -1,5 +1,5 @@
 <a href="https://lapay.group/"><img align="left" width="200" src="https://lapay.group/lglogo.jpg"></a>
-<a href="https://lapay.group/"><img align="right" width="200" src="https://lapay.group/prflogo.svg"></a>    
+<a href="https://www.pochta.ru/support/business/api"><img align="right" width="200" src="https://lapay.group/prflogo.svg"></a>    
 
 <br /><br /><br />
 [![Latest Stable Version](https://poser.pugx.org/lapaygroup/russianpost/v/stable)](https://packagist.org/packages/lapaygroup/russianpost)
