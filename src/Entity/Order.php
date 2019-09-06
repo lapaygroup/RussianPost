@@ -128,32 +128,49 @@ Class Order
     public function asArr()
     {
         $request = [];
-        $request['address-type-to'] = $this->getAddressTypeTo();
-        $request['fragile'] = $this->isFragile();
-        $request['given-name'] = $this->getGivenName();
-        $request['house-to'] = $this->getHouseTo();
-        $request['mail-category'] = $this->getMailCategory();
-        $request['mail-direct'] = $this->getMailDirect();
-        $request['mail-type'] = $this->getMailType();
-        $request['mass'] = $this->getMass();
-        $request['order-num'] = $this->getOrderNum();
-        $request['place-to'] = $this->getPlaceTo();
-        $request['recipient-name'] = $this->getRecipientName();
-        $request['region-to'] = $this->getRegionTo();
-        $request['street-to'] = $this->getStreetTo();
-        $request['surname'] = $this->getSurname();
+        if (!is_null($this->getAddressTypeTo()))
+            $request['address-type-to'] = $this->getAddressTypeTo();
+
+        $request['fragile'] = (bool)$this->isFragile();
+
+        if (!is_null($this->getGivenName()))
+            $request['given-name'] = $this->getGivenName();
+
+        if (!is_null($this->getHouseTo()))
+            $request['house-to'] = $this->getHouseTo();
+
+        if (!is_null($this->getMailCategory()))
+            $request['mail-category'] = $this->getMailCategory();
+
+        if (!is_null($this->getMailDirect()))
+            $request['mail-direct'] = (int)$this->getMailDirect();
+
+        if (!is_null($this->getMailType()))
+            $request['mail-type'] = $this->getMailType();
+
+        if (!is_null($this->getMass()))
+            $request['mass'] = (int)$this->getMass();
+
+        if (!is_null($this->getOrderNum()))
+            $request['order-num'] = $this->getOrderNum();
+
+        if (!is_null($this->getPlaceTo()))
+            $request['place-to'] = $this->getPlaceTo();
+
+        if (!is_null($this->getRecipientName()))
+            $request['recipient-name'] = $this->getRecipientName();
+
+        if (!is_null($this->getRegionTo()))
+            $request['region-to'] = $this->getRegionTo();
+
+        if (!is_null($this->getStreetTo()))
+            $request['street-to'] = $this->getStreetTo();
+
+        if (!is_null($this->getSurname()))
+            $request['surname'] = $this->getSurname();
 
         if (empty($this->index_to) && empty($this->str_index_to))
             throw new \InvalidArgumentException('Почтовый индекс получателя должен быть заполнен! (поле index_to или str_index_to)');
-
-        // Проверяем заполненность полей
-        foreach (array_keys($request) as $key) {
-            if ($key == 'fragile') continue;
-
-            if (empty($request[$key]))
-                throw new \InvalidArgumentException('Параметр '.$key.' не может быть пустым!');
-        }
-
 
         if (!is_null($this->getAreaTo()))
             $request['area-to'] = $this->getAreaTo();
@@ -165,34 +182,34 @@ Class Order
             $request['building-to'] = $this->getBuildingTo();
 
         if (!is_null($this->getCompletenessChecking()))
-            $request['completeness-checking'] = $this->getCompletenessChecking();
+            $request['completeness-checking'] = (bool)$this->getCompletenessChecking();
 
         if (!is_null($this->getCompulsoryPayment()))
-            $request['compulsory-payment'] = $this->getCompulsoryPayment();
+            $request['compulsory-payment'] = (int)$this->getCompulsoryPayment();
 
         if (!is_null($this->getCorpusTo()))
             $request['corpus-to'] = $this->getCorpusTo();
 
         if (!is_null($this->getCourier()))
-            $request['courier'] = $this->getCourier();
+            $request['courier'] = (bool)$this->getCourier();
 
         if (!is_null($this->getDeliveryWithCod()))
-            $request['delivery-with-cod'] = $this->getDeliveryWithCod();
+            $request['delivery-with-cod'] = (bool)$this->getDeliveryWithCod();
 
         if (!is_null($this->getHeight()))
-            $request['dimension']['height'] = $this->getHeight();
+            $request['dimension']['height'] = (int)$this->getHeight();
 
         if (!is_null($this->getLength()))
-            $request['dimension']['length'] = $this->getLength();
+            $request['dimension']['length'] = (int)$this->getLength();
 
         if (!is_null($this->getWidth()))
-            $request['dimension']['width'] = $this->getWidth();
+            $request['dimension']['width'] = (int)$this->getWidth();
 
         if (!is_null($this->getDimensionType()))
             $request['dimension-type'] = $this->getDimensionType();
 
         if (!is_null($this->getEasyReturn()))
-            $request['easy-return'] = $this->getEasyReturn();
+            $request['easy-return'] = (bool)$this->getEasyReturn();
 
         if (!is_null($this->getEnvelopeType()))
             $request['envelope-type'] = $this->getEnvelopeType();
@@ -201,13 +218,13 @@ Class Order
             $request['hotel-to'] = $this->getHotelTo();
 
         if (!is_null($this->getIndexTo()))
-            $request['index-to'] = $this->getIndexTo();
+            $request['index-to'] = (int)$this->getIndexTo();
 
         if (!is_null($this->getInsrValue()))
-            $request['insr-value'] = $this->getInsrValue();
+            $request['insr-value'] = (int)$this->getInsrValue();
 
         if (!is_null($this->getInventory()))
-            $request['inventory'] = $this->getInventory();
+            $request['inventory'] = (bool)$this->getInventory();
 
         if (!is_null($this->getLetterTo()))
             $request['letter-to'] = $this->getLetterTo();
@@ -219,7 +236,7 @@ Class Order
             $request['middle-name'] = $this->getMiddleName();
 
         if (!is_null($this->getNoReturn()))
-            $request['no-return'] = $this->getNoReturn();
+            $request['no-return'] = (bool)$this->getNoReturn();
 
         if (!is_null($this->getNoticePaymentMethod()))
             $request['notice-payment-method'] = $this->getNoticePaymentMethod();
@@ -231,7 +248,7 @@ Class Order
             $request['office-to'] = $this->getOfficeTo();
 
         if (!is_null($this->getPayment()))
-            $request['payment'] = $this->getPayment();
+            $request['payment'] = (int)$this->getPayment();
 
         if (!is_null($this->getPaymentMethod()))
             $request['payment-method'] = $this->getPaymentMethod();
@@ -246,13 +263,13 @@ Class Order
             $request['slash-to'] = $this->getSlashTo();
 
         if (!is_null($this->getSmsNoticeRecipient()))
-            $request['sms-notice-recipient'] = $this->getSmsNoticeRecipient();
+            $request['sms-notice-recipient'] = (int)$this->getSmsNoticeRecipient();
 
         if (!is_null($this->getStrIndexTo()))
             $request['str-index-to'] = $this->getStrIndexTo();
 
         if (!is_null($this->getTelAddress()))
-            $request['tel-address'] = $this->getTelAddress();
+            $request['tel-address'] = (int)$this->getTelAddress();
 
         if (!is_null($this->getTransportType()))
             $request['transport-type'] = $this->getTransportType();
@@ -261,19 +278,19 @@ Class Order
             $request['vladenie-to'] = $this->getVladenieTo();
 
         if (!is_null($this->getVsd()))
-            $request['vsd'] = $this->getVsd();
+            $request['vsd'] = (bool)$this->getVsd();
 
         if (!is_null($this->getWithElectronicNotice()))
-            $request['with-electronic-notice'] = $this->getWithElectronicNotice();
+            $request['with-electronic-notice'] = (bool)$this->getWithElectronicNotice();
 
         if (!is_null($this->getWithOrderOfNotice()))
-            $request['with-order-of-notice'] = $this->getWithOrderOfNotice();
+            $request['with-order-of-notice'] = (bool)$this->getWithOrderOfNotice();
 
         if (!is_null($this->getWithSimpleNotice()))
-            $request['with-simple-notice'] = $this->getWithSimpleNotice();
+            $request['with-simple-notice'] = (bool)$this->getWithSimpleNotice();
 
         if (!is_null($this->getWoMailRank()))
-            $request['wo-mail-rank'] = $this->getWoMailRank();
+            $request['wo-mail-rank'] = (bool)$this->getWoMailRank();
 
         if (!empty($this->items)) {
             $request['goods']['items'] = [];
@@ -281,13 +298,13 @@ Class Order
             foreach ($this->items as $item) {
                 $order_item = [];
                 $order_item['description'] = $item->getDescription();
-                $order_item['quantity'] = $item->getQuantity();
+                $order_item['quantity'] = (int)$item->getQuantity();
 
                 if (!is_null($item->getCode()))
                     $order_item['code'] = $item->getCode();
 
                 if (!is_null($item->getInsrValue()))
-                    $order_item['insr-value'] = $item->getInsrValue();
+                    $order_item['insr-value'] = (int)$item->getInsrValue();
 
                 if (!is_null($item->getItemNumber()))
                     $order_item['item-number'] = $item->getItemNumber();
@@ -302,10 +319,10 @@ Class Order
                     $order_item['supplier-phone'] = $item->getSupplierPhone();
 
                 if (!is_null($item->getValue()))
-                    $order_item['value'] = $item->getValue();
+                    $order_item['value'] = (int)$item->getValue();
 
                 if (!is_null($item->getVatRate()))
-                    $order_item['vat-rate'] = $item->getVatRate();
+                    $order_item['vat-rate'] = (int)$item->getVatRate();
 
                 $request['goods']['items'][] = $order_item;
             }
@@ -326,13 +343,13 @@ Class Order
                 $request['customs-declaration']['license-number'] = $this->customsDeclaration->getLicenseNumber();
 
             if (!is_null($this->customsDeclaration->getWithCertificate()))
-                $request['customs-declaration']['with-certificate'] = $this->customsDeclaration->getWithCertificate();
+                $request['customs-declaration']['with-certificate'] = (bool)$this->customsDeclaration->getWithCertificate();
 
             if (!is_null($this->customsDeclaration->getWithInvoice()))
-                $request['customs-declaration']['with-invoice'] = $this->customsDeclaration->getWithInvoice();
+                $request['customs-declaration']['with-invoice'] = (bool)$this->customsDeclaration->getWithInvoice();
 
             if (!is_null($this->customsDeclaration->getWithLicense()))
-                $request['customs-declaration']['with-license'] = $this->customsDeclaration->getWithLicense();
+                $request['customs-declaration']['with-license'] = (bool)$this->customsDeclaration->getWithLicense();
 
             $cd_items = $this->getCustomsDeclaration()->getCustomsEntries();
             if (!empty($cd_items)) {
@@ -340,13 +357,13 @@ Class Order
                 /** @var CustomsDeclarationItem $cd_item */
                 foreach ($cd_items as $cd_item) {
                     $cd_order_item = [];
-                    $cd_order_item['amount'] = $cd_item->getAmount();
-                    $cd_order_item['country-code'] = $cd_item->getCountryCode();
+                    $cd_order_item['amount'] = (int)$cd_item->getAmount();
+                    $cd_order_item['country-code'] = (int)$cd_item->getCountryCode();
                     $cd_order_item['description'] = $cd_item->getDescription();
                     $cd_order_item['tnved-code'] = $cd_item->getTnvedCode();
-                    $cd_order_item['weight'] = $cd_item->getWeight();
+                    $cd_order_item['weight'] = (int)$cd_item->getWeight();
                     if (!is_null($cd_item->getValue()))
-                        $cd_order_item['value'] = $cd_item->getValue();
+                        $cd_order_item['value'] = (int)$cd_item->getValue();
 
                     $request['customs-declaration']['customs-entries'][] = $cd_order_item;
                 }
@@ -358,10 +375,10 @@ Class Order
                     $request['ecom-data']['delivery-point-index'] = $this->ecomData->getDeliveryPointIndex();
 
                 if (!is_null($this->ecomData->getDeliveryRate()))
-                    $request['ecom-data']['delivery-rate'] = $this->ecomData->getDeliveryRate();
+                    $request['ecom-data']['delivery-rate'] = (int)$this->ecomData->getDeliveryRate();
 
                 if (!is_null($this->ecomData->getDeliveryVatRate()))
-                    $request['ecom-data']['delivery-vat-rate'] = $this->ecomData->getDeliveryVatRate();
+                    $request['ecom-data']['delivery-vat-rate'] = (int)$this->ecomData->getDeliveryVatRate();
 
                 if (!is_null($this->ecomData->getServices()))
                     $request['ecom-data']['services'] = $this->ecomData->getServices();
