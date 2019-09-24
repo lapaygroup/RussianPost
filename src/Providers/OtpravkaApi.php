@@ -9,6 +9,7 @@ use LapayGroup\RussianPost\FioList;
 use LapayGroup\RussianPost\PhoneList;
 use LapayGroup\RussianPost\TariffInfo;
 use LapayGroup\RussianPost\ParcelInfo;
+use GuzzleHttp\Psr7\UploadedFile;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 
@@ -18,6 +19,12 @@ class OtpravkaApi implements LoggerAwareInterface
 
     const VERSION = '1.0';
     const DELIVERY_VERSION = 'v1';
+    const PRINT_TYPE_PAPER  = 'PAPER';
+    const PRINT_TYPE_THERMO = 'THERMO';
+    const PRINT_ONE_SIDED = 'ONE_SIDED';
+    const PRINT_TWO_SIDED = 'TWO_SIDED';
+    const DOWNLOAD_FILE = 1;
+    const PRINT_FILE = 2;
 
     /** @var \GuzzleHttp\Client  */
     private $otpravkaClient;
@@ -50,11 +57,12 @@ class OtpravkaApi implements LoggerAwareInterface
      *
      * @param $method
      * @param $params
-     * @return array | string
+     * @return array | string | UploadedFile
      * @throws RussianPostException
      */
     private function callApi($type, $method, $params = [], $endpoint = false)
     {
+        $is_file = false;
 
         switch ($endpoint) {
             case 'otpravka':
@@ -88,17 +96,36 @@ class OtpravkaApi implements LoggerAwareInterface
                 break;
         }
 
+        $content_type = $response->getHeaderLine('Content-Type');
         $response_contents = $response->getBody()->getContents();
 
-        if ($this->logger) {
-            $this->logger->info('Russian Post Otpravka API response: '.$response_contents);
+        if (preg_match('~^application/(pdf|zip)~', $content_type, $matches_type)) {
+            $is_file = true;
+            if ($this->logger) {
+                $this->logger->info('Russian Post Otpravka API response: получен файл с расширением '.$matches_type[1]);
+            }
+        } else {
+            if ($this->logger) {
+                $this->logger->info('Russian Post Otpravka API response: ' . $response_contents);
+            }
         }
 
-        if ($response->getStatusCode() != 200 && $response->getStatusCode() != 404 && $response->getStatusCode() != 400)
+        if (!in_array($response->getStatusCode(), [200,400,404,407]))
             throw new RussianPostException('Неверный код ответа от сервера Почты России при вызове метода '.$method.': ' . $response->getStatusCode(), $response->getStatusCode(), $response_contents);
 
         if (empty($response_contents))
             throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' пришел пустой ответ', $response->getStatusCode(), $response_contents);
+
+        if ($is_file) {
+            preg_match('~=(.+)~', $response->getHeaderLine('Content-Disposition'), $matches_name);
+            return new UploadedFile(
+                $response->getBody(),
+                $response->getBody()->getSize(),
+                UPLOAD_ERR_OK,
+                "{$matches_name[1]}.{$matches_type[1]}",
+                $response->getHeaderLine('Content-Type')
+            );
+        }
 
         $resp = json_decode($response_contents, true);
 
@@ -106,13 +133,38 @@ class OtpravkaApi implements LoggerAwareInterface
             return $response_contents;
         }
 
+        if ($response->getStatusCode() == 407 && !empty($resp['status']) && $resp['status'] == 'ERROR')
+            throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' получена ошибка: '.$resp['message'] . " (".$resp['status'].")", $response->getStatusCode(), $response_contents);
+
         if ($response->getStatusCode() == 404 && !empty($resp['code']))
             throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' получена ошибка: '.$resp['sub-code'] . " (".$resp['code'].")", $response->getStatusCode(), $response_contents);
 
         if ($response->getStatusCode() == 400 && !empty($resp['error']))
             throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' получена ошибка: '.$resp['error'] . " (".$resp['status'].")", $response->getStatusCode(), $response_contents);
 
+        if (!empty($resp['error']))
+            throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' получена ошибка: '.$resp['error'] . " (".$resp['status'].")", $response->getStatusCode(), $response_contents);
+
         return $resp;
+    }
+
+    /**
+     * Действие с файлом
+     *
+     * @param UploadedFile $file
+     * @param int $action
+     * @return mixed
+     */
+    private function fileAction($file, $action)
+    {
+        if ($action == self::DOWNLOAD_FILE) {
+            header("Content-type:".$file->getClientMediaType());
+            header("Content-Disposition:inline;filename='".$file->getClientFilename()."'");
+            echo $file->getStream()->getContents();
+            exit;
+        } else {
+            return $file;
+        }
     }
 
     /**
@@ -517,5 +569,121 @@ class OtpravkaApi implements LoggerAwareInterface
     public function unarchivingBatch($batch_name_list)
     {
         return $this->callApi('POST', 'archive/revert', $batch_name_list);
+    }
+
+    /**
+     * Генерация пакета документации по партии
+     *
+     * @param string $batch_name - наименование партии
+     * @param int $action - действие с файлом (Печать или сохранение)
+     * @param string $print_type - тип печати (термо или на бумаге)
+     * @param string $print_type_form - тип печати уведомления (двусторонняя или односторонняя)
+     * @return string|UploadedFile
+     * @throws RussianPostException
+     */
+    public function generateDocPackage($batch_name, $action = self::PRINT_FILE, $print_type = self::PRINT_TYPE_PAPER, $print_type_form = self::PRINT_ONE_SIDED)
+    {
+        $file = $this->callApi('GET', 'forms/'.$batch_name.'/zip-all', [
+            'print-type' => $print_type,
+            'print-type-from' => $print_type_form
+        ]);
+        return $this->fileAction($file, $action);
+    }
+
+    /**
+     * Генерация печатной формы Ф7п
+     *
+     * @param int $order_id - уникальный идентификатор заказа
+     * @param int $action - действие с файлом
+     * @param \DateTimeImmutable $sending_date
+     * @param string $print_type
+     * @return string|UploadedFile
+     * @throws RussianPostException
+     */
+    public function generateDocF7p($order_id, $action, $sending_date = null, $print_type = self::PRINT_TYPE_PAPER)
+    {
+        $file = $this->callApi('GET', 'forms/'.$order_id.'/f7pdf', [
+            'print-type' => $print_type,
+            'sending-date' => $sending_date->format('Y-m-d')
+        ]);
+        return $this->fileAction($file, $action);
+    }
+
+    /**
+     * Генерация печатной формы Ф112ЭК
+     *
+     * @param int $order_id - уникальный идентификатор заказа
+     * @param int $action - действие с файлом
+     * @return string|UploadedFile
+     * @throws RussianPostException
+     */
+    public function generateDocF112ek($order_id, $action)
+    {
+        $file = $this->callApi('GET', 'forms/'.$order_id.'/f112pdf');
+        return $this->fileAction($file, $action);
+    }
+
+    /**
+     * Генерация печатных форм для заказа (до формирования партии)
+     *
+     * @param int $order_id - уникальный идентификатор заказа
+     * @param int $action - действие с файлом
+     * @param \DateTimeImmutable $sending_date
+     * @param string $print_type - тип печати (термопечать или на бумаге)
+     * @return string|UploadedFile
+     * @throws RussianPostException
+     */
+    public function generateDocOrderPrintForm($order_id, $action, $sending_date = null, $print_type = null)
+    {
+        $file = $this->callApi('GET', 'forms/'.$order_id.'/forms', [
+            'sending-date' => $sending_date->format('Y-m-d'),
+            'print-type' => $print_type
+        ]);
+        return $this->fileAction($file, $action);
+    }
+
+    /**
+     * Генерация печатной формы Ф103
+     *
+     * @param string $batch_name - наименование партии
+     * @param int $action - действие с файлом
+     * @return string|UploadedFile
+     * @throws RussianPostException
+     */
+    public function generateDocF103($batch_name,  $action = self::PRINT_FILE)
+    {
+        $file = $this->callApi('GET', 'forms/'.$batch_name.'/f103pdf');
+        return $this->fileAction($file, $action);
+    }
+
+    /**
+     * Генерация печатной формы акта осмотра содержимого
+     *
+     * @param string $batch_name - наименование партии
+     * @param int $action - действие с файлом
+     * @return string|UploadedFile
+     * @throws RussianPostException
+     */
+    public function generateDocCheckingAct($batch_name,  $action = self::PRINT_FILE)
+    {
+        $file = $this->callApi('GET', 'forms/'.$batch_name.'/completeness-checking-form');
+        return $this->fileAction($file, $action);
+    }
+
+    /**
+     * Подготовка и отправка электронной формы Ф103
+     *
+     * @param string $batch_name - наименование партии
+     * @return boolean
+     * @throws RussianPostException
+     */
+    public function sendingF103form($batch_name)
+    {
+        $method = 'batch/'.$batch_name.'/checkin';
+        $response = $this->callApi('POST', $method);
+        if (!empty($response['f103-sent'])) return true;
+
+        if (!empty($response['error-code']))
+            throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' получена ошибка: '.$response['error-code'].' (см. https://otpravka.pochta.ru/specification#/enums-errors)');
     }
 }
