@@ -35,26 +35,28 @@ class Calculation implements LoggerAwareInterface
             case 'GET':
                 $request = http_build_query($params);
                 if ($this->logger) {
-                    $this->logger->info('Russian Post Tariff API request: '.$request);
+                    $this->logger->info("Russian Post Tariff API {$type} request /".self::VERSION."/{$method}: ".$request);
                 }
                 $response = $this->httpClient->get($method, ['query' => $params]);
                 break;
             case 'POST':
                 $request = json_encode($params);
                 if ($this->logger) {
-                    $this->logger->info('Russian Post Tariff API request: '.$request);
+                    $this->logger->info("Russian Post Tariff API {$type} request /".self::VERSION."/{$method}: ".$request);
                 }
                 $response = $this->httpClient->post($method, ['json' => $params]);
                 break;
         }
 
-        if ($response->getStatusCode() != 200 && $response->getStatusCode() != 404 && $response->getStatusCode() != 400)
+        if (!in_array($response->getStatusCode(), [200,400,404]))
             throw new RussianPostException('Неверный код ответа от сервера Почты России при вызове метода '.$method.': ' . $response->getStatusCode(), $response->getStatusCode(), $response->getBody()->getContents(), $request);
 
         $json = $response->getBody()->getContents();
 
         if ($this->logger) {
-            $this->logger->info('Russian Post Tariff API response: '.$json);
+            $headers = $response->getHeaders();
+            $headers['http_status'] = $response->getStatusCode();
+            $this->logger->info("Russian Post Tariff API {$type} response /".self::VERSION."/{$method}: ".$json, $headers);
         }
 
         $resp = json_decode($json, true);

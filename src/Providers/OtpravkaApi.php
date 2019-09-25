@@ -10,6 +10,7 @@ use LapayGroup\RussianPost\PhoneList;
 use LapayGroup\RussianPost\TariffInfo;
 use LapayGroup\RussianPost\ParcelInfo;
 use GuzzleHttp\Psr7\UploadedFile;
+use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 
@@ -81,7 +82,7 @@ class OtpravkaApi implements LoggerAwareInterface
             case 'GET':
                 $request = http_build_query($params);
                 if ($this->logger) {
-                    $this->logger->info('Russian Post Otpravka API request: '.$request);
+                    $this->logger->info("Russian Post Otpravka API {$type} request /".self::VERSION."/{$method}: ".$request);
                 }
                 $response = $client->get($method, ['query' => $params]);
                 break;
@@ -90,25 +91,26 @@ class OtpravkaApi implements LoggerAwareInterface
             case 'DELETE':
                 $request = json_encode($params);
                 if ($this->logger) {
-                    $this->logger->info('Russian Post Otpravka API request: '.$request);
+                    $this->logger->info("Russian Post Otpravka API {$type} request /".self::VERSION."/{$method}: ".$request);
                 }
-
+                /** @var ResponseInterface $response */
                 $response = $client->{strtolower($type)}($method, ['json' => $params]);
-
                 break;
         }
 
+        $headers = $response->getHeaders();
+        $headers['http_status'] = $response->getStatusCode();
         $content_type = $response->getHeaderLine('Content-Type');
         $response_contents = $response->getBody()->getContents();
 
         if (preg_match('~^application/(pdf|zip)~', $content_type, $matches_type)) {
             $is_file = true;
             if ($this->logger) {
-                $this->logger->info('Russian Post Otpravka API response: получен файл с расширением '.$matches_type[1]);
+                $this->logger->info("Russian Post Otpravka API {$type} response /".self::VERSION."/{$method}: получен файл с расширением ".$matches_type[1], $headers);
             }
         } else {
             if ($this->logger) {
-                $this->logger->info('Russian Post Otpravka API response: ' . $response_contents);
+                $this->logger->info("Russian Post Otpravka API {$type} response /".self::VERSION."/{$method}: " . $response_contents, $headers);
             }
         }
 
