@@ -46,14 +46,13 @@
   - [x] [Поиск всех партий](#get_all_bathes)  
   - [x] [Поиск заказа в партии по id](#find_order_by_id_in_batch)  
 - [Документы](#documents)  
-  - [ ] [Генерация пакета документации](#)  
-  - [ ] [Генерация печатной формы Ф7п](#)  
-  - [ ] [Генерация печатной формы Ф112ЭК](#)  
-  - [ ] [Генерация печатных форм для заказа (до формирования партии)](#)  
-  - [ ] [Генерация печатных форм для заказа](#)  
-  - [ ] [Генерация печатной формы Ф103](#)  
-  - [ ] [Подготовка и отправка электронной формы Ф103](#)  
-  - [ ] [Генерация акта осмотра содержимого](#)  
+  - [x] [Генерация пакета документации](#gendocpackage)  
+  - [x] [Генерация печатной формы Ф7п](#gendocf7p)  
+  - [x] [Генерация печатной формы Ф112ЭК](#gendocf112)  
+  - [x] [Генерация печатных форм для заказа](#gendocorder)  
+  - [x] [Генерация печатной формы Ф103](#gendocf103)  
+  - [x] [Подготовка и отправка электронной формы Ф103](#senddocf103)  
+  - [x] [Генерация акта осмотра содержимого](#gendocact)  
 - [Архив](#archive) 
   - [x] [Перевод партии в архив](#archiving_batch)  
   - [x] [Возврат партии из архива](#unarchiving_batch)  
@@ -90,7 +89,9 @@
 - 0.5.3 - Описание можно посмотреть [тут](https://github.com/lapaygroup/RussianPost/releases/tag/0.5.3);  
 - 0.5.4 - Правки composer.json;  
 - 0.6.0 - Долгожданная работа с заказами, подробнее [тут](https://github.com/lapaygroup/RussianPost/releases/tag/0.6.0);  
-- 0.6.5 - Реализованы функции работы с архивом.  
+- 0.6.5 - Реализованы функции работы с архивом;  
+- 0.6.6 - Исправлено формирование и проверка параметров для запроса на создание заказа;
+- 0.7.0 - Описание можно посмотреть [тут](https://github.com/lapaygroup/RussianPost/releases/tag/0.7.0).
 
 
 # Установка  
@@ -1798,7 +1799,299 @@ catch (\Exception $e) {
 Для работы данных функций необходимы аутентификационные данные. Подробнее в разделе [Конфигурация](#configfile).
 
 В случае возникновеня ошибок при обмене выбрасывает исключение *\LapayGroup\RussianPost\Exceptions\RussianPostException*
-в котором будет текст и код ошибки от API Почты России и дамп сырого ответа с HTTP-кодом.  
+в котором будет текст и код ошибки от API Почты России и дамп сырого ответа с HTTP-кодом.    
+
+Все функции работы с документами принимают параметр action, который принимает два значения:  
+ - OtpravkaApi::DOWNLOAD_FILE - выводит соответствующие header для скачивания файла в браузере;  
+ - OtpravkaApi::PRINT_FILE - возврат объекта GuzzleHttp\Psr7\UploadedFile с данными о файле.  
+
+
+<a name="gendocpackage"><h3>Генерация пакета документации</h3></a> 
+Генерирует и возвращает zip архив с 4-мя файлами:
+ - Export.xls , Export.csv - список с основными данными по заявкам в составе партии
+ - F103.pdf - форма ф103 по заявкам в составе партии
+ - В зависимости от типа и категории отправлений, формируется комбинация из сопроводительных документов в формате pdf ( формы: f7, f112, f22)
+
+```php
+<?php
+use Symfony\Component\Yaml\Yaml;
+use LapayGroup\RussianPost\Providers\OtpravkaApi;
+
+try {
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $result = $otpravkaApi->generateDocPackage(28, OtpravkaApi::PRINT_FILE);
+    /*
+    GuzzleHttp\Psr7\UploadedFile Object
+    (
+        [clientFilename:GuzzleHttp\Psr7\UploadedFile:private] => all-pdf.zip
+        [clientMediaType:GuzzleHttp\Psr7\UploadedFile:private] => application/zip; charset=UTF-8
+        [error:GuzzleHttp\Psr7\UploadedFile:private] => 0
+        [file:GuzzleHttp\Psr7\UploadedFile:private] =>
+        [moved:GuzzleHttp\Psr7\UploadedFile:private] =>
+        [size:GuzzleHttp\Psr7\UploadedFile:private] => 290398
+        [stream:GuzzleHttp\Psr7\UploadedFile:private] => GuzzleHttp\Psr7\Stream Object
+            (
+                [stream:GuzzleHttp\Psr7\Stream:private] => Resource id #56
+                [size:GuzzleHttp\Psr7\Stream:private] => 290398
+                [seekable:GuzzleHttp\Psr7\Stream:private] => 1
+                [readable:GuzzleHttp\Psr7\Stream:private] => 1
+                [writable:GuzzleHttp\Psr7\Stream:private] => 1
+                [uri:GuzzleHttp\Psr7\Stream:private] => php://temp
+                [customMetadata:GuzzleHttp\Psr7\Stream:private] => Array
+                    (
+                    )
+    
+            )
+    
+    )*/
+}
+        
+catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
+  // Обработка ошибочного ответа от API ПРФ
+}
+
+catch (\Exception $e) {
+  // Обработка нештатной ситуации
+}
+```
+
+<a name="gendocf7p"><h3>Генерация печатной формы Ф7п</h3></a> 
+Генерирует и возвращает pdf файл с формой ф7п для указанного заказа. Опционально в файл прикрепляется форма Ф22 (посылка онлайн).
+Если параметр sending-date не передается, берется текущая дата.
+
+```php
+<?php
+use Symfony\Component\Yaml\Yaml;
+use LapayGroup\RussianPost\Providers\OtpravkaApi;
+
+try {
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $result = $otpravkaApi->generateDocF7p(123645924, OtpravkaApi::PRINT_FILE, new DateTimeImmutable('now'));
+    /*
+    GuzzleHttp\Psr7\UploadedFile Object
+    (
+        [clientFilename:GuzzleHttp\Psr7\UploadedFile:private] => f7p.pdf
+        [clientMediaType:GuzzleHttp\Psr7\UploadedFile:private] => application/pdf; charset=UTF-8
+        [error:GuzzleHttp\Psr7\UploadedFile:private] => 0
+        [file:GuzzleHttp\Psr7\UploadedFile:private] =>
+        [moved:GuzzleHttp\Psr7\UploadedFile:private] =>
+        [size:GuzzleHttp\Psr7\UploadedFile:private] => 99776
+        [stream:GuzzleHttp\Psr7\UploadedFile:private] => GuzzleHttp\Psr7\Stream Object
+            (
+                [stream:GuzzleHttp\Psr7\Stream:private] => Resource id #56
+                [size:GuzzleHttp\Psr7\Stream:private] => 99776
+                [seekable:GuzzleHttp\Psr7\Stream:private] => 1
+                [readable:GuzzleHttp\Psr7\Stream:private] => 1
+                [writable:GuzzleHttp\Psr7\Stream:private] => 1
+                [uri:GuzzleHttp\Psr7\Stream:private] => php://temp
+                [customMetadata:GuzzleHttp\Psr7\Stream:private] => Array
+                    (
+                    )
+    
+            )
+    
+    )*/
+}
+        
+catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
+  // Обработка ошибочного ответа от API ПРФ
+}
+
+catch (\Exception $e) {
+  // Обработка нештатной ситуации
+}
+```
+
+<a name="gendocf112"><h3>Генерация печатной формы Ф112ЭК</h3></a> 
+Генерирует и возвращает pdf-файл с заполненной формой Ф112ЭК для указанного заказа. Только для заказа с «наложенным платежом». 
+Если заказ не имеет данного атрибута, метод вернет ошибку. Если параметр sending-date не передается, берется текущая дата.
+
+```php
+<?php
+use Symfony\Component\Yaml\Yaml;
+use LapayGroup\RussianPost\Providers\OtpravkaApi;
+
+try {
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $result = $otpravkaApi->generateDocF112ek(123645924, OtpravkaApi::PRINT_FILE);
+    /*
+    GuzzleHttp\Psr7\UploadedFile Object
+    (
+        [clientFilename:GuzzleHttp\Psr7\UploadedFile:private] => f112.pdf
+        [clientMediaType:GuzzleHttp\Psr7\UploadedFile:private] => application/pdf; charset=UTF-8
+        [error:GuzzleHttp\Psr7\UploadedFile:private] => 0
+        [file:GuzzleHttp\Psr7\UploadedFile:private] =>
+        [moved:GuzzleHttp\Psr7\UploadedFile:private] =>
+        [size:GuzzleHttp\Psr7\UploadedFile:private] => 149702
+        [stream:GuzzleHttp\Psr7\UploadedFile:private] => GuzzleHttp\Psr7\Stream Object
+            (
+                [stream:GuzzleHttp\Psr7\Stream:private] => Resource id #56
+                [size:GuzzleHttp\Psr7\Stream:private] => 149702
+                [seekable:GuzzleHttp\Psr7\Stream:private] => 1
+                [readable:GuzzleHttp\Psr7\Stream:private] => 1
+                [writable:GuzzleHttp\Psr7\Stream:private] => 1
+                [uri:GuzzleHttp\Psr7\Stream:private] => php://temp
+                [customMetadata:GuzzleHttp\Psr7\Stream:private] => Array
+                    (
+                    )
+    
+            )
+    )*/
+}
+        
+catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
+  // Обработка ошибочного ответа от API ПРФ
+}
+
+catch (\Exception $e) {
+  // Обработка нештатной ситуации
+}
+```
+
+<a name="gendocorder"><h3>Генерация печатных форм для заказа</h3></a>
+Генерирует и возвращает pdf файл, который может содержать в зависимости от типа отправления:  
+ - форму ф7п (посылка, посылка-онлайн, бандероль, курьер-онлайн);
+ - форму Е-1 (EMS, EMS-оптимальное, Бизнес курьер, Бизнес курьер экспресс)
+ - конверт (письмо заказное).    
+ 
+Опционально прикрепляются формы: Ф112ЭК (отправление с наложенным платежом), Ф22 (посылка онлайн), уведомление (для заказного письма или бандероли).
+
+```php
+<?php
+use Symfony\Component\Yaml\Yaml;
+use LapayGroup\RussianPost\Providers\OtpravkaApi;
+
+try {
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $result = $otpravkaApi->generateDocOrderPrintForm(123645924, OtpravkaApi::PRINT_FILE, new DateTimeImmutable('now'));
+    /*
+    GuzzleHttp\Psr7\UploadedFile Object
+    (
+        [clientFilename:GuzzleHttp\Psr7\UploadedFile:private] => form.pdf
+        [clientMediaType:GuzzleHttp\Psr7\UploadedFile:private] => application/pdf; charset=UTF-8
+        [error:GuzzleHttp\Psr7\UploadedFile:private] => 0
+        [file:GuzzleHttp\Psr7\UploadedFile:private] =>
+        [moved:GuzzleHttp\Psr7\UploadedFile:private] =>
+        [size:GuzzleHttp\Psr7\UploadedFile:private] => 251338
+        [stream:GuzzleHttp\Psr7\UploadedFile:private] => GuzzleHttp\Psr7\Stream Object
+            (
+                [stream:GuzzleHttp\Psr7\Stream:private] => Resource id #70
+                [size:GuzzleHttp\Psr7\Stream:private] => 251338
+                [seekable:GuzzleHttp\Psr7\Stream:private] => 1
+                [readable:GuzzleHttp\Psr7\Stream:private] => 1
+                [writable:GuzzleHttp\Psr7\Stream:private] => 1
+                [uri:GuzzleHttp\Psr7\Stream:private] => php://temp
+                [customMetadata:GuzzleHttp\Psr7\Stream:private] => Array
+                    (
+                    )
+    
+            )
+    
+    )*/
+}
+        
+catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
+  // Обработка ошибочного ответа от API ПРФ
+}
+
+catch (\Exception $e) {
+  // Обработка нештатной ситуации
+}
+```
+
+<a name="gendocf103"><h3>Генерация печатной формы Ф103</h3></a>
+Генерирует и возвращает pdf файл с формой Ф103 для указанной партии.
+
+```php
+<?php
+use Symfony\Component\Yaml\Yaml;
+use LapayGroup\RussianPost\Providers\OtpravkaApi;
+
+try {
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $result = $otpravkaApi->generateDocF103(28, OtpravkaApi::PRINT_FILE);
+    /*
+    GuzzleHttp\Psr7\UploadedFile Object
+    (
+        [clientFilename:GuzzleHttp\Psr7\UploadedFile:private] => f103.pdf
+        [clientMediaType:GuzzleHttp\Psr7\UploadedFile:private] => application/pdf; charset=UTF-8
+        [error:GuzzleHttp\Psr7\UploadedFile:private] => 0
+        [file:GuzzleHttp\Psr7\UploadedFile:private] =>
+        [moved:GuzzleHttp\Psr7\UploadedFile:private] =>
+        [size:GuzzleHttp\Psr7\UploadedFile:private] => 131856
+        [stream:GuzzleHttp\Psr7\UploadedFile:private] => GuzzleHttp\Psr7\Stream Object
+            (
+                [stream:GuzzleHttp\Psr7\Stream:private] => Resource id #74
+                [size:GuzzleHttp\Psr7\Stream:private] => 131856
+                [seekable:GuzzleHttp\Psr7\Stream:private] => 1
+                [readable:GuzzleHttp\Psr7\Stream:private] => 1
+                [writable:GuzzleHttp\Psr7\Stream:private] => 1
+                [uri:GuzzleHttp\Psr7\Stream:private] => php://temp
+                [customMetadata:GuzzleHttp\Psr7\Stream:private] => Array
+                    (
+                    )
+    
+            )
+    
+    )*/
+}
+        
+catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
+  // Обработка ошибочного ответа от API ПРФ
+}
+
+catch (\Exception $e) {
+  // Обработка нештатной ситуации
+}
+```
+
+<a name="senddocf103"><h3>Подготовка и отправка электронной формы Ф103</h3></a>
+Присваивает уникальную версию партии для дальнейшего приема этой партии сотрудниками ОПС. 
+Отправляет по e-mail электронную форму Ф103 в ОПС для регистрации.
+
+```php
+<?php
+use Symfony\Component\Yaml\Yaml;
+use LapayGroup\RussianPost\Providers\OtpravkaApi;
+
+try {
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $result = $otpravkaApi->sendingF103form(28); // return boolean
+}
+        
+catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
+  // Обработка ошибочного ответа от API ПРФ
+}
+
+catch (\Exception $e) {
+  // Обработка нештатной ситуации
+}
+```
+
+<a name="gendocact"><h3>Генерация печатной формы акта осмотра содержимого</h3></a>
+Генерирует и возвращает pdf файл с формой акта осмотра содержимого для указанной партии.       
+
+**Важно! Дананя функция работает только, если включена услуга проверки комплектности по отправлению.**  
+
+```php
+<?php
+use Symfony\Component\Yaml\Yaml;
+use LapayGroup\RussianPost\Providers\OtpravkaApi;
+
+try {
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $result = $otpravkaApi->generateDocCheckingAct(28, OtpravkaApi::PRINT_FILE);
+    // TODO если у Вас есть пример ответа, просьба приложить его через pull request :)
+}
+        
+catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
+  // Обработка ошибочного ответа от API ПРФ
+}
+
+catch (\Exception $e) {
+  // Обработка нештатной ситуации
+}
+```
 
 
 <a name="archive"><h1>Архив</h1></a>   
@@ -1974,7 +2267,6 @@ catch (\Exception $e) {
 <a name="warehouse"><h1>Долгосрочное хранение</h1></a>     
   
 **!!!Данный раздел не работает в API Почты России!!!**    
-
 
 
 Реализует функции [API](https://otpravka.pochta.ru/specification#/long-term-archive-search_shipments) Почты России для работы с данными. 
