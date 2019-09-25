@@ -91,7 +91,8 @@
 - 0.6.0 - Долгожданная работа с заказами, подробнее [тут](https://github.com/lapaygroup/RussianPost/releases/tag/0.6.0);  
 - 0.6.5 - Реализованы функции работы с архивом;  
 - 0.6.6 - Исправлено формирование и проверка параметров для запроса на создание заказа;
-- 0.7.0 - Описание можно посмотреть [тут](https://github.com/lapaygroup/RussianPost/releases/tag/0.7.0).
+- 0.7.0 - Описание можно посмотреть [тут](https://github.com/lapaygroup/RussianPost/releases/tag/0.7.0);
+- 0.7.1 - Доработана генерация RussianPostException, спасибо [toporchillo](https://github.com/toporchillo) за исправление. Добавлена расширенная информация в логировании.
 
 
 # Установка  
