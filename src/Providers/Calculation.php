@@ -33,21 +33,23 @@ class Calculation implements LoggerAwareInterface
     {
         switch ($type) {
             case 'GET':
+                $request = http_build_query($params);
                 if ($this->logger) {
-                    $this->logger->info('Russian Post Tariff API request: '.http_build_query($params));
+                    $this->logger->info('Russian Post Tariff API request: '.$request);
                 }
                 $response = $this->httpClient->get($method, ['query' => $params]);
                 break;
             case 'POST':
+                $request = json_encode($params);
                 if ($this->logger) {
-                    $this->logger->info('Russian Post Tariff API request: '.json_encode($params));
+                    $this->logger->info('Russian Post Tariff API request: '.$request);
                 }
                 $response = $this->httpClient->post($method, ['json' => $params]);
                 break;
         }
 
         if ($response->getStatusCode() != 200 && $response->getStatusCode() != 404 && $response->getStatusCode() != 400)
-            throw new RussianPostException('Неверный код ответа от сервера Почты России при вызове метода '.$method.': ' . $response->getStatusCode(), $response->getStatusCode(), $response->getBody()->getContents());
+            throw new RussianPostException('Неверный код ответа от сервера Почты России при вызове метода '.$method.': ' . $response->getStatusCode(), $response->getStatusCode(), $response->getBody()->getContents(), $request);
 
         $json = $response->getBody()->getContents();
 
@@ -58,13 +60,13 @@ class Calculation implements LoggerAwareInterface
         $resp = json_decode($json, true);
 
         if (empty($resp))
-            throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' пришел пустой ответ', $response->getStatusCode(), $response->getBody()->getContents());
+            throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' пришел пустой ответ', $response->getStatusCode(), $response->getBody()->getContents(), $request);
 
         if ($response->getStatusCode() == 404 && !empty($resp['code']))
-            throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' получена ошибка: '.$resp['sub-code'] . " (".$resp['code'].")", $response->getStatusCode(), $response->getBody()->getContents());
+            throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' получена ошибка: '.$resp['sub-code'] . " (".$resp['code'].")", $response->getStatusCode(), $response->getBody()->getContents(), $request);
 
         if ($response->getStatusCode() == 400 && !empty($resp['error']))
-            throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' получена ошибка: '.$resp['error'] . " (".$resp['status'].")", $response->getStatusCode(), $response->getBody()->getContents());
+            throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' получена ошибка: '.$resp['error'] . " (".$resp['status'].")", $response->getStatusCode(), $response->getBody()->getContents(), $request);
 
         return $resp;
     }
