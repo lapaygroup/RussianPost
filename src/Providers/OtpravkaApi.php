@@ -79,16 +79,18 @@ class OtpravkaApi implements LoggerAwareInterface
 
         switch ($type) {
             case 'GET':
+                $request = http_build_query($params);
                 if ($this->logger) {
-                    $this->logger->info('Russian Post Otpravka API request: '.http_build_query($params));
+                    $this->logger->info('Russian Post Otpravka API request: '.$request);
                 }
                 $response = $client->get($method, ['query' => $params]);
                 break;
             case 'POST':
             case 'PUT':
             case 'DELETE':
+                $request = json_encode($params);
                 if ($this->logger) {
-                    $this->logger->info('Russian Post Otpravka API request: '.json_encode($params));
+                    $this->logger->info('Russian Post Otpravka API request: '.$request);
                 }
 
                 $response = $client->{strtolower($type)}($method, ['json' => $params]);
@@ -111,10 +113,10 @@ class OtpravkaApi implements LoggerAwareInterface
         }
 
         if (!in_array($response->getStatusCode(), [200,400,404,407]))
-            throw new RussianPostException('Неверный код ответа от сервера Почты России при вызове метода '.$method.': ' . $response->getStatusCode(), $response->getStatusCode(), $response_contents);
+            throw new RussianPostException('Неверный код ответа от сервера Почты России при вызове метода '.$method.': ' . $response->getStatusCode(), $response->getStatusCode(), $response_contents, $request);
 
         if (empty($response_contents))
-            throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' пришел пустой ответ', $response->getStatusCode(), $response_contents);
+            throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' пришел пустой ответ', $response->getStatusCode(), $response_contents, $request);
 
         if ($is_file) {
             preg_match('~=(.+)~', $response->getHeaderLine('Content-Disposition'), $matches_name);
@@ -134,16 +136,16 @@ class OtpravkaApi implements LoggerAwareInterface
         }
 
         if ($response->getStatusCode() == 407 && !empty($resp['status']) && $resp['status'] == 'ERROR')
-            throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' получена ошибка: '.$resp['message'] . " (".$resp['status'].")", $response->getStatusCode(), $response_contents);
+            throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' получена ошибка: '.$resp['message'] . " (".$resp['status'].")", $response->getStatusCode(), $response_contents, $request);
 
         if ($response->getStatusCode() == 404 && !empty($resp['code']))
-            throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' получена ошибка: '.$resp['sub-code'] . " (".$resp['code'].")", $response->getStatusCode(), $response_contents);
+            throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' получена ошибка: '.$resp['sub-code'] . " (".$resp['code'].")", $response->getStatusCode(), $response_contents, $request);
 
         if ($response->getStatusCode() == 400 && !empty($resp['error']))
-            throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' получена ошибка: '.$resp['error'] . " (".$resp['status'].")", $response->getStatusCode(), $response_contents);
+            throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' получена ошибка: '.$resp['error'] . " (".$resp['status'].")", $response->getStatusCode(), $response_contents, $request, $request);
 
         if (!empty($resp['error']))
-            throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' получена ошибка: '.$resp['error'] . " (".$resp['status'].")", $response->getStatusCode(), $response_contents);
+            throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' получена ошибка: '.$resp['error'] . " (".$resp['status'].")", $response->getStatusCode(), $response_contents, $request);
 
         return $resp;
     }
