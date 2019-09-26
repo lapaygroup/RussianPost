@@ -72,27 +72,27 @@
 
 <a name="links"><h1>Changelog</h1></a>
 
-- 0.2.0 - Расчет стоимости отправки тарификатором Почты России;   
-- 0.3.0 - Нормализация данных, упрощенный расчет стоимости отправки;    
-- 0.4.0 - Единичный и пакетный трекинг отправлений;  
-- 0.4.5 - Актуализация списка статусов, признак конечного статуса в пакетном трекинге;  
-- 0.4.6 - Было принято решение исключить зависимость с [symfony/yaml](https://packagist.org/packages/symfony/yaml) и понизить требуемую версию PHP до 5.5+. Подробнее в разделе [Конфигурация](#configfile);
-- 0.4.7 - Актуализация списка статусов;
-- 0.4.8 - Изменен адрес калькулятора Почты России, старый будет отключен 01.01.2019;
-- 0.4.9 - Исправлена ошибка выставления флага isFinal в пакетном трекинге отправлений, за обнаружение спасибо [Dmitry Sobchenko](https://github.com/sharpensteel);  
-- 0.4.10 - Актуализирован расчет стоимости пересылки (Упрощенная версия), за актуализацию спасибо [rik43](https://github.com/rik43);  
-- 0.4.11 - Актуализирован список статусов Почты России;  
-- 0.4.12 - Скорректировано описание упрощенной версии расчета тарифов, добавлен метод получения списка точек сдачи;  
-- 0.5.0 - Описание можно посмотреть [тут](https://github.com/lapaygroup/RussianPost/releases/tag/0.5.0);  
-- 0.5.1 - Описание можно посмотреть [тут](https://github.com/lapaygroup/RussianPost/releases/tag/0.5.1);  
-- 0.5.2 - Исправлена ошибка получения информации о сроках доставки в формате HTML;  
-- 0.5.3 - Описание можно посмотреть [тут](https://github.com/lapaygroup/RussianPost/releases/tag/0.5.3);  
-- 0.5.4 - Правки composer.json;  
-- 0.6.0 - Долгожданная работа с заказами, подробнее [тут](https://github.com/lapaygroup/RussianPost/releases/tag/0.6.0);  
+- 0.7.1 - Доработана генерация RussianPostException, спасибо [toporchillo](https://github.com/toporchillo) за исправление. Добавлена расширенная информация в логировании.  
+- 0.7.0 - Описание можно посмотреть [тут](https://github.com/lapaygroup/RussianPost/releases/tag/0.7.0);  
+- 0.6.6 - Исправлено формирование и проверка параметров для запроса на создание заказа;  
 - 0.6.5 - Реализованы функции работы с архивом;  
-- 0.6.6 - Исправлено формирование и проверка параметров для запроса на создание заказа;
-- 0.7.0 - Описание можно посмотреть [тут](https://github.com/lapaygroup/RussianPost/releases/tag/0.7.0);
-- 0.7.1 - Доработана генерация RussianPostException, спасибо [toporchillo](https://github.com/toporchillo) за исправление. Добавлена расширенная информация в логировании.
+- 0.6.0 - Долгожданная работа с заказами, подробнее [тут](https://github.com/lapaygroup/RussianPost/releases/tag/0.6.0);  
+- 0.5.4 - Правки composer.json;  
+- 0.5.3 - Описание можно посмотреть [тут](https://github.com/lapaygroup/RussianPost/releases/tag/0.5.3);  
+- 0.5.2 - Исправлена ошибка получения информации о сроках доставки в формате HTML;  
+- 0.5.1 - Описание можно посмотреть [тут](https://github.com/lapaygroup/RussianPost/releases/tag/0.5.1);  
+- 0.5.0 - Описание можно посмотреть [тут](https://github.com/lapaygroup/RussianPost/releases/tag/0.5.0);  
+- 0.4.12 - Скорректировано описание упрощенной версии расчета тарифов, добавлен метод получения списка точек сдачи;  
+- 0.4.11 - Актуализирован список статусов Почты России;  
+- 0.4.10 - Актуализирован расчет стоимости пересылки (Упрощенная версия), за актуализацию спасибо [rik43](https://github.com/rik43);  
+- 0.4.9 - Исправлена ошибка выставления флага isFinal в пакетном трекинге отправлений, за обнаружение спасибо [Dmitry Sobchenko](https://github.com/sharpensteel);    
+- 0.4.8 - Изменен адрес калькулятора Почты России, старый будет отключен 01.01.2019;  
+- 0.4.7 - Актуализация списка статусов;  
+- 0.4.6 - Было принято решение исключить зависимость с [symfony/yaml](https://packagist.org/packages/symfony/yaml) и понизить требуемую версию PHP до 5.5+. Подробнее в разделе [Конфигурация](#configfile);  
+- 0.4.5 - Актуализация списка статусов, признак конечного статуса в пакетном трекинге;  
+- 0.4.0 - Единичный и пакетный трекинг отправлений;  
+- 0.3.0 - Нормализация данных, упрощенный расчет стоимости отправки;  
+- 0.2.0 - Расчет стоимости отправки тарификатором Почты России;  
 
 
 # Установка  
@@ -234,9 +234,13 @@
 
 Лог в файле выглядит так:
 ```
-[2019-07-19 11:59:50] name.INFO: Russian Post Tariff API request: from=101000&to=101000&weight=100&sumoc=0&date=20190719&object=23030&jsontext=1 [] []
-[2019-07-19 11:59:51] name.INFO: Russian Post Tariff API response: {"caption": "Ошибки тарификации", "version": "1.10.30.323", "data": {"id": 23030, "typ": 23, "cat": 3, "dir": 0, "name": "Посылка онлайн обыкновенная", "seq": 50, "date": 20190719, "date-first": 20190101}, "error": ["Услуга \"Посылка онлайн обыкновенная\" не оказывается. Плата за доставку посылки онлайн (тариф 163): в 101000 МОСКВА не осуществляется (маршруты nt101000 и nt1000000001045). (1372)"], "errors": [{"msg":"Услуга \"Посылка онлайн обыкновенная\" не оказывается. Плата за доставку посылки онлайн (тариф 163): в 101000 МОСКВА не осуществляется (маршруты nt101000 и nt1000000001045).","code":1372}]} [] []
-[2019-07-19 12:14:10] name.INFO: Russian Post Tracking API request:   <?xml version="1.0" encoding="UTF-8"?> <env:Envelope xmlns:env="http://www.w3.org/2003/05/soap-envelope" xmlns:ns1="http://russianpost.org/operationhistory/data" xmlns:ns2="http://russianpost.org/operationhistory"><env:Body><ns2:getOperationHistory><ns1:OperationHistoryRequest><ns1:Barcode>10944022440321</ns1:Barcode><ns1:MessageType>0</ns1:MessageType><ns1:Language>RUS</ns1:Language></ns1:OperationHistoryRequest><ns1:AuthorizationHeader><ns1:login>login</ns1:login><ns1:password>password</ns1:password></ns1:AuthorizationHeader></ns2:getOperationHistory></env:Body></env:Envelope>  [] []
+[2019-09-26 12:00:59] name.INFO: Russian Post Tariff API GET request /v1/calculate: from=101000&to=101000&weight=100&sumoc=0&date=20190926&object=23030&jsontext=1 [] []
+[2019-09-26 12:01:04] name.INFO: Russian Post Tariff API GET response /v1/calculate: {"caption": "Ошибки тарификации", "version": "1.11.37.333", "data": {"id": 23030, "typ": 23, "cat": 3, "dir": 0, "name": "Посылка онлайн обыкновенная", "seq": 50, "date": 20190926, "date-first": 20190821}, "error": ["Неверное значение параметра \"Индекс места отправления\" (from). Не указано значение. (1301)"], "errors": [{"msg":"Неверное значение параметра \"Индекс места отправления\" (from). Не указано значение.","code":1301}]} {"Server":["nginx"],"Date":["Thu, 26 Sep 2019 12:00:53 GMT"],"Content-Type":["text/plain;charset=utf-8"],"Content-Length":["603"],"Connection":["keep-alive"],"Access-Control-Allow-Origin":["*"],"http_status":200} []
+
+[2019-09-26 11:59:10] name.INFO: Russian Post Otpravka API POST request /1.0/tariff: {"fragile":true,"index-from":109440,"index-to":644015,"mail-category":"ORDINARY","mail-type":"POSTAL_PARCEL","mass":1000,"payment-method":"CASHLESS","with-order-of-notice":false,"with-simple-notice":false} [] []
+[2019-09-26 11:59:11] name.INFO: Russian Post Otpravka API POST response /1.0/tariff: {   "delivery-time" : {     "max-days" : 3,     "min-days" : 1   },   "fragile-rate" : {     "rate" : 7075,     "vat" : 1415   },   "ground-rate" : {     "rate" : 30658,     "vat" : 6132   },   "notice-payment-method" : "CASHLESS",   "payment-method" : "CASHLESS",   "total-rate" : 30658,   "total-vat" : 6132 } {"Server":["nginx"],"Date":["Thu, 26 Sep 2019 11:59:11 GMT"],"Content-Type":["application/json;charset=UTF-8"],"Transfer-Encoding":["chunked"],"Connection":["keep-alive"],"Expires":["0"],"Cache-Control":["no-cache, no-store, max-age=0, must-revalidate"],"X-XSS-Protection":["1; mode=block"],"Pragma":["no-cache"],"X-Frame-Options":["DENY"],"X-Content-Type-Options":["nosniff"],"Strict-Transport-Security":["max-age=31536000; includeSubDomains"],"http_status":200} []
+
+[2019-07-19 12:14:10] name.INFO: Russian Post Tracking API request:   <?xml version="1.0" encoding="UTF-8"?> <env:Envelope xmlns:env="http://www.w3.org/2003/05/soap-envelope" xmlns:ns1="http://russianpost.org/operationhistory/data" xmlns:ns2="http://russianpost.org/operationhistory"><env:Body><ns2:getOperationHistory><ns1:OperationHistoryRequest><ns1:Barcode>10944022440321</ns1:Barcode><ns1:MessageType>0</ns1:MessageType><ns1:Language>RUS</ns1:Language></ns1:OperationHistoryRequest><ns1:AuthorizationHeader><ns1:login>login</ns1:login><ns1:password>password</ns1:password></ns1:AuthorizationHeader></ns2:getOperationHistory></env:Body></env:Envelope>  [] []    
 ```
 
 <a name="tracking"><h1>Трекинг почтовых отправлений (РПО)</h1></a>  
@@ -755,7 +759,7 @@ $list = $OtpravkaApi->shippingPoints();
 ```
 
 <a name="orders"><h1>Заказы</h1></a>   
-Реализует функции [API](https://otpravka.pochta.ru/specification#/orders-creating_order) Почты России для работы с данными. 
+Реализует функции [API](https://otpravka.pochta.ru/specification#/orders-creating_order) Почты России для работы с заказами. 
 Для работы данных функций необходимы аутентификационные данные. Подробнее в разделе [Конфигурация](#configfile).
 
 В случае возникновеня ошибок при обмене выбрасывает исключение *\LapayGroup\RussianPost\Exceptions\RussianPostException*
@@ -1153,7 +1157,7 @@ catch (\Exception $e) {
 ```
 
 <a name="party"><h1>Партии</h1></a>   
-Реализует функции [API](https://otpravka.pochta.ru/specification#/batches-create_batch_from_N_orders) Почты России для работы с данными. 
+Реализует функции [API](https://otpravka.pochta.ru/specification#/batches-create_batch_from_N_orders) Почты России для работы с партиями. 
 Для работы данных функций необходимы аутентификационные данные. Подробнее в разделе [Конфигурация](#configfile).
 
 В случае возникновеня ошибок при обмене выбрасывает исключение *\LapayGroup\RussianPost\Exceptions\RussianPostException*
@@ -1796,7 +1800,7 @@ catch (\Exception $e) {
 ```
 
 <a name="documents"><h1>Документы</h1></a>   
-Реализует функции [API](https://otpravka.pochta.ru/specification#/orders-creating_order) Почты России для работы с данными. 
+Реализует функции [API](https://otpravka.pochta.ru/specification#/documents-create_all_docs) Почты России для работы с документами. 
 Для работы данных функций необходимы аутентификационные данные. Подробнее в разделе [Конфигурация](#configfile).
 
 В случае возникновеня ошибок при обмене выбрасывает исключение *\LapayGroup\RussianPost\Exceptions\RussianPostException*
@@ -2096,7 +2100,7 @@ catch (\Exception $e) {
 
 
 <a name="archive"><h1>Архив</h1></a>   
-Реализует функции [API](https://otpravka.pochta.ru/specification#/documents-create_all_docs) Почты России для работы с данными. 
+Реализует функции [API](https://otpravka.pochta.ru/specification#/archive-search_batches) Почты России для работы с архивом. 
 Для работы данных функций необходимы аутентификационные данные. Подробнее в разделе [Конфигурация](#configfile).
 
 В случае возникновеня ошибок при обмене выбрасывает исключение *\LapayGroup\RussianPost\Exceptions\RussianPostException*
@@ -2258,7 +2262,7 @@ catch (\Exception $e) {
 ```
 
 <a name="ops_search"><h1>Поиск ОПС</h1></a>   
-Реализует функции [API](https://otpravka.pochta.ru/specification#/services-postoffice) Почты России для работы с данными. 
+Реализует функции [API](https://otpravka.pochta.ru/specification#/services-postoffice) Почты России для поиска ОПС. 
 Для работы данных функций необходимы аутентификационные данные. Подробнее в разделе [Конфигурация](#configfile).
 
 В случае возникновеня ошибок при обмене выбрасывает исключение *\LapayGroup\RussianPost\Exceptions\RussianPostException*
@@ -2270,7 +2274,7 @@ catch (\Exception $e) {
 **!!!Данный раздел не работает в API Почты России!!!**    
 
 
-Реализует функции [API](https://otpravka.pochta.ru/specification#/long-term-archive-search_shipments) Почты России для работы с данными. 
+Реализует функции [API](https://otpravka.pochta.ru/specification#/long-term-archive-search_shipments) Почты России для работы с долгосрочным хранением. 
 Для работы данных функций необходимы аутентификационные данные. Подробнее в разделе [Конфигурация](#configfile).
 
 В случае возникновеня ошибок при обмене выбрасывает исключение *\LapayGroup\RussianPost\Exceptions\RussianPostException*
@@ -2278,7 +2282,7 @@ catch (\Exception $e) {
 
 
 <a name="settings"><h1>Настройки</h1></a>  
-Реализует функции [API](https://otpravka.pochta.ru/specification#/settings-shipping_points) Почты России для работы с данными. 
+Реализует функции [API](https://otpravka.pochta.ru/specification#/settings-shipping_points) Почты России для работы с настройками. 
 Для работы данных функций необходимы аутентификационные данные. Подробнее в разделе [Конфигурация](#configfile).
 
 В случае возникновеня ошибок при обмене выбрасывает исключение *\LapayGroup\RussianPost\Exceptions\RussianPostException*
