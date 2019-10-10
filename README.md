@@ -1810,7 +1810,27 @@ catch (\Exception $e) {
 Все функции работы с документами принимают параметр action, который принимает два значения:  
  - OtpravkaApi::DOWNLOAD_FILE - выводит соответствующие header для скачивания файла в браузере;  
  - OtpravkaApi::PRINT_FILE - возврат объекта GuzzleHttp\Psr7\UploadedFile с данными о файле.  
+ 
+ 
+**Важно!** Перед печатью любого документа нужно зафиксировать изменения в партии вызовом функции *sendingF103form()*:  
+```php
+<?php
+use Symfony\Component\Yaml\Yaml;
+use LapayGroup\RussianPost\Providers\OtpravkaApi;
 
+try {
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $otpravkaApi->sendingF103form(28);
+}
+
+catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
+  // Обработка ошибочного ответа от API ПРФ
+}
+
+catch (\Exception $e) {
+  // Обработка нештатной ситуации
+}
+```
 
 <a name="gendocpackage"><h3>Генерация пакета документации</h3></a> 
 Генерирует и возвращает zip архив с 4-мя файлами:
