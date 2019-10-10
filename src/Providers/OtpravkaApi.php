@@ -121,6 +121,7 @@ class OtpravkaApi implements LoggerAwareInterface
             throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' пришел пустой ответ', $response->getStatusCode(), $response_contents, $request);
 
         if ($is_file) {
+            $response->getBody()->rewind();
             preg_match('~=(.+)~', $response->getHeaderLine('Content-Disposition'), $matches_name);
             return new UploadedFile(
                 $response->getBody(),
