@@ -70,8 +70,9 @@
   - [x] [Текущие точки сдачи](#settings_shipping_points)  
   - [x] [Текущие настройки пользователя](#get_settings)  
 
-<a name="links"><h1>Changelog</h1></a>
-
+<a name="links"><h1>Changelog</h1></a>  
+  
+- 0.7.3 - Исправлена ошибка при сохранении документов;  
 - 0.7.2 - Актуализирован список статусов отправлений Почты России;  
 - 0.7.1 - Доработана генерация RussianPostException, спасибо [toporchillo](https://github.com/toporchillo) за исправление. Добавлена расширенная информация в логировании;  
 - 0.7.0 - Описание можно посмотреть [тут](https://github.com/lapaygroup/RussianPost/releases/tag/0.7.0);  
