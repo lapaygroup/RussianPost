@@ -26,52 +26,106 @@ class OtpravkaApi implements LoggerAwareInterface
     const PRINT_TWO_SIDED = 'TWO_SIDED';
     const DOWNLOAD_FILE = 1;
     const PRINT_FILE = 2;
+    const OTPRAVKA = 1; // Endpoint отправки
+    const DELIVERY = 2; // Endpoint сроков доставки
+    const POSTOFFICE = 3; // Endpoint работы с ОПС
+
+    /** @var string */
+    private $token = null;
+
+    /** @var string */
+    private $key = null;
+
+    /** @var int  */
+    private $timeout = 60;
 
     /** @var \GuzzleHttp\Client  */
-    private $otpravkaClient;
+    private $otpravkaClient = null;
 
     /** @var \GuzzleHttp\Client  */
-    private $deliveryClient;
+    private $deliveryClient = null;
+
+    /** @var \GuzzleHttp\Client */
+    private $postOfficeClient = null;
 
     function __construct($config, $timeout = 60)
     {
-        $this->otpravkaClient = new \GuzzleHttp\Client([
-            'base_uri' => 'https://otpravka-api.pochta.ru/'.self::VERSION.'/',
-            'headers' => ['Authorization' => 'AccessToken '. $config['auth']['otpravka']['token'],
-                          'X-User-Authorization' => 'Basic '.$config['auth']['otpravka']['key'],
-                          'Content-Type' => 'application/json',
-                          'Accept' => 'application/json;charset=UTF-8'
-            ],
-            'timeout' => $timeout,
-            'http_errors' => false
-        ]);
+        $this->config = $config;
+        $this->timeout = $timeout;
+        $this->token = $config['auth']['otpravka']['token'];
+        $this->key = $config['auth']['otpravka']['key'];
+    }
 
-        $this->deliveryClient = new \GuzzleHttp\Client([
-            'base_uri'=>'https://delivery.pochta.ru/delivery/'.self::DELIVERY_VERSION.'/',
-            'timeout' => $timeout,
-            'http_errors' => false
-        ]);
+    private function checkApiClient($endpoint = 'otpravka')
+    {
+        switch ($endpoint) {
+            case self::OTPRAVKA:
+                if (!$this->otpravkaClient) {
+                    $this->otpravkaClient = new \GuzzleHttp\Client([
+                        'base_uri' => 'https://otpravka-api.pochta.ru/' . self::VERSION . '/',
+                        'headers' => ['Authorization' => 'AccessToken ' . $this->token,
+                            'X-User-Authorization' => 'Basic ' . $this->key,
+                            'Content-Type' => 'application/json',
+                            'Accept' => 'application/json;charset=UTF-8'
+                        ],
+                        'timeout' => $this->timeout,
+                        'http_errors' => false
+                    ]);
+                }
+                break;
+
+            case self::DELIVERY:
+                if (!$this->deliveryClient) {
+                    $this->deliveryClient = new \GuzzleHttp\Client([
+                        'base_uri' => 'https://delivery.pochta.ru/delivery/' . self::DELIVERY_VERSION . '/',
+                        'timeout' => $this->timeout,
+                        'http_errors' => false
+                    ]);
+                }
+                break;
+
+            case self::POSTOFFICE:
+                if (!$this->postOfficeClient) {
+                    $this->postOfficeClient = new \GuzzleHttp\Client([
+                        'base_uri' => 'https://otpravka-api.pochta.ru/postoffice/' . self::VERSION . '/',
+                        'headers' => ['Authorization' => 'AccessToken ' . $this->token,
+                            'X-User-Authorization' => 'Basic ' . $this->key,
+                            'Content-Type' => 'application/json',
+                            'Accept' => 'application/json;charset=UTF-8'
+                        ],
+                        'timeout' => $this->timeout,
+                        'http_errors' => false
+                    ]);
+                }
+                break;
+        }
     }
 
     /**
      * Инициализирует вызов к API
      *
-     * @param $method
-     * @param $params
+     * @param string $method - метод API
+     * @param array $params - параметры запроса
+     * @param null|string $endpoint - наименование адреса API
      * @return array | string | UploadedFile
      * @throws RussianPostException
      */
-    private function callApi($type, $method, $params = [], $endpoint = false)
+    private function callApi($type, $method, $params = [], $endpoint = null)
     {
         $is_file = false;
+        $this->checkApiClient($endpoint);
 
         switch ($endpoint) {
-            case 'otpravka':
+            case self::OTPRAVKA:
                 $client = $this->otpravkaClient;
                 break;
 
-            case 'delivery':
+            case self::DELIVERY:
                 $client = $this->deliveryClient;
+                break;
+
+            case self::POSTOFFICE:
+                $client = $this->postOfficeClient;
                 break;
 
             default:
@@ -134,7 +188,7 @@ class OtpravkaApi implements LoggerAwareInterface
 
         $resp = json_decode($response_contents, true);
 
-        if (empty($resp) && $endpoint == 'delivery' && json_last_error() == JSON_ERROR_SYNTAX) {
+        if (empty($resp) && $endpoint == self::DELIVERY && json_last_error() == JSON_ERROR_SYNTAX) {
             return $response_contents;
         }
 
@@ -145,7 +199,7 @@ class OtpravkaApi implements LoggerAwareInterface
             throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' получена ошибка: '.$resp['sub-code'] . " (".$resp['code'].")", $response->getStatusCode(), $response_contents, $request);
 
         if ($response->getStatusCode() == 400 && !empty($resp['error']))
-            throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' получена ошибка: '.$resp['error'] . " (".$resp['status'].")", $response->getStatusCode(), $response_contents, $request, $request);
+            throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' получена ошибка: '.$resp['error'] . " (".$resp['status'].")", $response->getStatusCode(), $response_contents, $request);
 
         if (!empty($resp['error']))
             throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' получена ошибка: '.$resp['error'] . " (".$resp['status'].")", $response->getStatusCode(), $response_contents, $request);
@@ -275,7 +329,7 @@ class OtpravkaApi implements LoggerAwareInterface
         $params['from'] = $index_from;
         $params['to'] = $index_to;
 
-        return $this->callApi('GET', 'calculate', $params, 'delivery');
+        return $this->callApi('GET', 'calculate', $params, self::DELIVERY);
     }
 
     /**
@@ -690,5 +744,95 @@ class OtpravkaApi implements LoggerAwareInterface
 
         if (!empty($response['error-code']))
             throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' получена ошибка: '.$response['error-code'].' (см. https://otpravka.pochta.ru/specification#/enums-errors)');
+    }
+
+    /**
+     * Поиск почтового отделения по индексу
+     *
+     * @param int $postal_code - Индекс почтового отделения
+     * @param null|string $latitude - Широта
+     * @param null|string $longitude - Долгота
+     * @param \DateTimeImmutable $current_date - Текущее время
+     * @param bool $filter_by_office_type - Фильтр по типам объектов в ответе. true: ГОПС, СОПС, ПОЧТОМАТ. false: все. Значение по-умолчанию - true.
+     * @param bool $ufps_postal_code - true: добавлять в ответ индекс УФПС для найдённого отделения, false: не добавлять. Значение по-умолчанию: false.
+     * @return array
+     * @throws RussianPostException
+     */
+    public function searchPostOfficeByIndex($postal_code, $latitude = null, $longitude = null, $current_date = null, $filter_by_office_type = true, $ufps_postal_code = false)
+    {
+        $params = [
+            'latitude' => $latitude,
+            'longitude' => $longitude,
+            'filter-by-office-type' => $filter_by_office_type,
+            'ufps-postal-code' => $ufps_postal_code
+        ];
+
+        if ($current_date)
+            $params['current-date-time'] = (new \DateTimeImmutable())->format('c');
+
+        return $this->callApi('GET', (string)$postal_code, $params, self::POSTOFFICE);
+    }
+
+    /**
+     * Поиск обслуживающего ОПС по адресу (Следует учесть, что чем точнее адрес, тем точнее будет поиск.)
+     *
+     * @param string $address - Строка с адресом
+     * @param int $count - Количество ближайших почтовых отделений в результате поиска
+     * @return array
+     * @throws RussianPostException
+     */
+    public function searchPostOfficeByAddress($address, $count = 3)
+    {
+        return $this->callApi('GET', 'by-address', [
+            'address' => $address,
+            'top' => $count
+        ], self::POSTOFFICE);
+    }
+
+    /**
+     * Поиск почтовых отделений по координатам
+     *
+     * @param array $params - массив параметров запроса согласно документации https://otpravka.pochta.ru/specification#/services-postoffice-nearby
+     * @return array
+     * @throws RussianPostException
+     */
+    public function searchPostOfficeByCoordinates($params)
+    {
+        return $this->callApi('GET', 'nearby', $params,self::POSTOFFICE);
+    }
+
+    /**
+     * Поиск почтовых сервисов ОПС с возможностью фильтра по группе сервисов
+     * Может возвращать как все доступные сервисы, так и сервисы определенной группы (например: Киберпочт@)
+     *
+     * @param int $post_code - Индекс почтового отделения
+     * @param string $service_group - Идентификатор группы сервисов
+     * @return array
+     * @throws RussianPostException
+     */
+    public function getPostOfficeServices($post_code, $service_group = null)
+    {
+        $method = $post_code.'/services';
+        if ($service_group) $method .= '/'.$service_group;
+
+        return $this->callApi('GET', $method, [], self::POSTOFFICE);
+    }
+
+    /**
+     * Поиск почтовых индексов в населённом пункте
+     *
+     * @param string $locality - Название населённого пункта (например Екатеринбург)
+     * @param string string $region - Область/край/республика, где расположен населённый пункт (например Свердловская)
+     * @param string string $district - Район, где расположен населённый пункт (для деревень, посёлков и т. д. - например Сухоложский)
+     * @return array
+     * @throws RussianPostException
+     */
+    public function getPostalCodesInLocality($locality, $region = '', $district = '')
+    {
+        return $this->callApi('GET', 'settlement.offices.codes', [
+            'settlement' => $locality,
+            'region' => $region,
+            'district' => $district
+        ], self::POSTOFFICE);
     }
 }

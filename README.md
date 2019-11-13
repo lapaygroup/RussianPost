@@ -58,12 +58,11 @@
   - [x] [Возврат партии из архива](#unarchiving_batch)  
   - [x] [Запрос данных о партиях в архиве](#get_archived_batch)  
 - [Поиск ОПС](#ops_search)  
-  - [ ] [По индексу](#)  
-  - [ ] [По адресу](#)  
-  - [ ] [Почтовые сервисы ОПС](#)  
-  - [ ] [Почтовые сервисы ОПС по идентификатору группы сервисов](#)  
-  - [ ] [По координатам](#)  
-  - [ ] [Поиск индексов в населенном пункте](#)  
+  - [x] [По индексу](#ops_search_by_index)  
+  - [x] [По адресу](#ops_search_by_address)  
+  - [x] [Почтовые сервисы ОПС](#get_ops_services)   
+  - [x] [По координатам](#ops_search_by_coord)  
+  - [x] [Поиск индексов в населенном пункте](#ops_search_in_locality)  
 - [Долгосрочное хранение (Не работает в API Почты России!)](#warehouse)
   - [ ] [Запрос данных о заказах в архиве](#)  
 - [Настройки](#settings)  
@@ -71,7 +70,8 @@
   - [x] [Текущие настройки пользователя](#get_settings)  
 
 <a name="links"><h1>Changelog</h1></a>  
-  
+- 0.8.0 - Описание можно посмотреть [тут](https://github.com/lapaygroup/RussianPost/releases/tag/0.8.0);  
+- 0.7.4 - Добавлено сохранение ошибок расчета тарифа в объект CalculateInfo с разделением на сообщение и код ошибки;    
 - 0.7.3 - Исправлена ошибка при сохранении документов;  
 - 0.7.2 - Актуализирован список статусов отправлений Почты России;  
 - 0.7.1 - Доработана генерация RussianPostException, спасибо [toporchillo](https://github.com/toporchillo) за исправление. Добавлена расширенная информация в логировании;  
@@ -126,6 +126,7 @@
 **objectId**, список параметров в **$params** и список дополнительных услуг **$service** берутся из массива **$categoryList**.
 ```php
 <?php
+try {
   $objectId = 2020; // Письмо с объявленной ценностью
   // Минимальный набор параметров для расчета стоимости отправления
   $params = [
@@ -141,12 +142,25 @@
 
   $TariffCalculation = new \LapayGroup\RussianPost\TariffCalculation();
   $calcInfo = $TariffCalculation->calculate($objectId, $params, $services);
+}
+
+catch (\LapayGroup\RussianPost\Exceptions\RussianPostTarrificatorException $e) {
+    // Обработка ошибок тарификатора 
+    $errors = $e->getErrors(); // Массив вида [['msg' => 'текст ошибки', 'code' => код ошибки]]
+}
+
+catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
+    // Обработка ошибочного ответа от API ПРФ
+}
+
+catch (\Exception $e) {
+    // Обработка нештатной ситуации
+}
+
 ?>
 ```
 **$calcInfo** - это объект класса *LapayGroup\RussianPost\CalculateInfo*
 Доступные методы:
- - *getError()* - возвращает флаг наличия ошибки при расчета (true - есть ошибка, false - нет ошибки)
- - *getErrorList()* - массив с текстовым описанием ошибок при расчете
  - *getCategoryItemId()* - ID вида отправления
  - *getCategoryItemName()* - название вида отправления
  - *getWeight()* - вес отправления в граммах
@@ -2289,6 +2303,305 @@ catch (\Exception $e) {
 
 В случае возникновеня ошибок при обмене выбрасывает исключение *\LapayGroup\RussianPost\Exceptions\RussianPostException*
 в котором будет текст и код ошибки от API Почты России и дамп сырого ответа с HTTP-кодом.  
+
+
+
+<a name="ops_search_by_index"><h3>Поиск почтового отделения по индексу</h3></a> 
+Возвращает информацию о ОПС.  
+
+```php
+<?php
+use Symfony\Component\Yaml\Yaml;
+use LapayGroup\RussianPost\Providers\OtpravkaApi;
+
+try {
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $result = $otpravkaApi->searchPostOfficeByIndex(115551, 0, 0);
+    /*
+    Array
+    (
+        [address-source] => Домодедовская ул, 20, к.3, стр.2
+        [distance] => 7059103.1165241
+        [holidays] => Array
+            (
+            )
+    
+        [is-closed] =>
+        [is-private-category] =>
+        [is-temporary-closed] =>
+        [latitude] => 55.612772
+        [longitude] => 37.704862
+        [postal-code] => 115551
+        [region] => Москва г
+        [settlement] => Москва
+        [type-code] => ГОПС
+        [type-id] => 8
+        [working-hours] => Array
+            (
+                [0] => Array
+                    (
+                        [begin-worktime] => 08:00:00.000
+                        [end-worktime] => 20:00:00.000
+                        [lunches] => Array
+                            (
+                            )
+    
+                        [weekday-id] => 1
+                    )
+    
+                [1] => Array
+                    (
+                        [begin-worktime] => 08:00:00.000
+                        [end-worktime] => 20:00:00.000
+                        [lunches] => Array
+                            (
+                            )
+    
+                        [weekday-id] => 2
+                    )
+    
+                [2] => Array
+                    (
+                        [begin-worktime] => 08:00:00.000
+                        [end-worktime] => 20:00:00.000
+                        [lunches] => Array
+                            (
+                            )
+    
+                        [weekday-id] => 3
+                    )
+    
+                [3] => Array
+                    (
+                        [begin-worktime] => 08:00:00.000
+                        [end-worktime] => 20:00:00.000
+                        [lunches] => Array
+                            (
+                            )
+    
+                        [weekday-id] => 4
+                    )
+    
+                [4] => Array
+                    (
+                        [begin-worktime] => 08:00:00.000
+                        [end-worktime] => 20:00:00.000
+                        [lunches] => Array
+                            (
+                            )
+    
+                        [weekday-id] => 5
+                    )
+    
+                [5] => Array
+                    (
+                        [begin-worktime] => 09:00:00.000
+                        [end-worktime] => 18:00:00.000
+                        [lunches] => Array
+                            (
+                            )
+    
+                        [weekday-id] => 6
+                    )
+    
+                [6] => Array
+                    (
+                        [begin-worktime] => 09:00:00.000
+                        [end-worktime] => 14:00:00.000
+                        [lunches] => Array
+                            (
+                            )
+    
+                        [weekday-id] => 7
+                    )
+    
+            )
+    
+        [works-on-saturdays] => 1
+        [works-on-sundays] => 1
+        [phones] => Array
+            (
+                [0] => Array
+                    (
+                        [is-fax] =>
+                        [phone-number] => 1000000
+                        [phone-town-code] => 800
+                        [phone-type-name] => Прочее
+                    )
+    
+            )
+    
+        [service-groups] => Array
+            (
+                [0] => Array
+                    (
+                        [group-id] => 2101
+                        [group-name] => Почтовые услуги
+                    )
+    
+                [1] => Array
+                    (
+                        [group-id] => 2315
+                        [group-name] => Коммерческие услуги
+                    )
+    
+                [2] => Array
+                    (
+                        [group-id] => 2259
+                        [group-name] => Финансовые услуги
+                    )
+    
+            )
+    
+    )*/
+}
+        
+catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
+  // Обработка ошибочного ответа от API ПРФ
+}
+
+catch (\Exception $e) {
+  // Обработка нештатной ситуации
+}
+```
+
+<a name="ops_search_by_address"><h3>Поиск обслуживающего ОПС по адресу</h3></a> 
+Возвращает список почтовых индексов ОПС и признак является ли переданный адрес точным адресом ОПС.
+
+```php
+<?php
+use Symfony\Component\Yaml\Yaml;
+use LapayGroup\RussianPost\Providers\OtpravkaApi;
+
+try {
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $result = $otpravkaApi->searchPostOfficeByAddress('Санкт-Петербург, улица Победы, 15к1');
+    /*
+    Array
+    (
+        [is-matched] =>
+        [postoffices] => Array
+            (
+                [0] => 196070
+            )
+    
+    )
+    */
+}
+        
+catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
+  // Обработка ошибочного ответа от API ПРФ
+}
+
+catch (\Exception $e) {
+  // Обработка нештатной ситуации
+}
+```
+
+<a name="get_ops_services"><h3>Поиск почтовых сервисов ОПС</h3></a> 
+Может возвращать как все доступные сервисы, так и сервисы определенной группы (например: Киберпочт@).
+
+```php
+<?php
+use Symfony\Component\Yaml\Yaml;
+use LapayGroup\RussianPost\Providers\OtpravkaApi;
+
+try {
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $result = $otpravkaApi->getPostOfficeServices(196070);
+    $result = $otpravkaApi->getPostOfficeServices(196070, 2101); // С фильтром по группе
+    /*
+    Array
+    (
+        [0] => Array
+            (
+                [code] => 1090900
+                [group-id] => 2101
+                [name] => Хранение и возврат почтовых отправлений, периодических изданий: Абонирование ячейки абонементного почтового шкафа, Возврат посылок, Возврат РПО (кроме посылок), Хранение РПО в ОПС
+            )
+    
+        [1] => Array
+            (
+                [code] => 1090200
+                [group-id] => 2101
+                [name] => Информирование отправителей и получателей РПО, ЕМS -отправлений об их статусе: SMS-уведомление, Заказное уведомление о вручении внутреннего  РПО, Простое уведомление о вручении внутреннего РПО, Простое уведомление о получении международного почтового отправления, Электронное уведомление о вручении внутреннего РПО
+            )
+    
+        [2] => Array
+            (
+                [code] => 1090100
+                [group-id] => 2101
+                [name] => Доставка и оказание услуг по адресу расположения (проживания) клиента: Доставка посылок и мелких пакетов по местонахождению клиента
+            )
+    */
+}
+        
+catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
+  // Обработка ошибочного ответа от API ПРФ
+}
+
+catch (\Exception $e) {
+  // Обработка нештатной ситуации
+}
+```
+
+<a name="ops_search_by_coord"><h3>Поиск почтовых отделений по координатам</h3></a> 
+Возвращает список ОПС по переданному массиву параметров согласно [документации](массив параметров запроса согласно документации https://otpravka.pochta.ru/specification#/services-postoffice-nearby).  
+
+```php
+<?php
+use Symfony\Component\Yaml\Yaml;
+use LapayGroup\RussianPost\Providers\OtpravkaApi;
+
+try {
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $result = $otpravkaApi->searchPostOfficeByCoordinates($params); // $params - массив параметров поиска
+    /*
+        Ответ аналогичен функции searchPostOfficeByIndex только список.
+    */
+}
+        
+catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
+  // Обработка ошибочного ответа от API ПРФ
+}
+
+catch (\Exception $e) {
+  // Обработка нештатной ситуации
+}
+```
+
+
+<a name="ops_search_in_locality"><h3>Поиск почтовых индексов в населённом пункте/h3></a> 
+Возвращает список индексов.   
+
+```php
+<?php
+use Symfony\Component\Yaml\Yaml;
+use LapayGroup\RussianPost\Providers\OtpravkaApi;
+
+try {
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $result = $otpravkaApi->getPostalCodesInLocality('Екатеринбург');
+    /*
+    Array
+    (
+        [0] => 620000
+        [1] => 620002
+        [2] => 620004
+        [3] => 620007
+        [4] => 620010
+        [5] => 620012
+    */
+}
+        
+catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
+  // Обработка ошибочного ответа от API ПРФ
+}
+
+catch (\Exception $e) {
+  // Обработка нештатной ситуации
+}
+```
 
 
 <a name="warehouse"><h1>Долгосрочное хранение</h1></a>     

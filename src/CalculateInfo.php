@@ -19,9 +19,6 @@ class CalculateInfo
     private $service = 0.00; // Дополнительные услуги
     private $serviceNds = 0.00; // Дополнительные услуги с НДС
     private $tariffList = []; // Список тарифов
-    private $error = false; //Флаг наличия ошибки
-    private $errorList = []; // Массив ошибок в текстовом виде
-    private $errorListDetails = []; // Массив ошибок с разбивкой на сообщение и код
 
     /**
      * @return string
@@ -277,43 +274,6 @@ class CalculateInfo
     public function setServiceNds($serviceNds)
     {
         $this->serviceNds = number_format($serviceNds / 100, 2, '.', '');
-    }
-
-    /**
-     * @return boolean
-     */
-    public function getError()
-    {
-        return $this->error;
-    }
-
-    /**
-     * @return array
-     * @deprecated Будет заменен на исключение в версии 8.0
-     */
-    public function getErrorList()
-    {
-        return $this->errorList;
-    }
-
-    /**
-     * @deprecated Будет заменен на исключение в версии 8.0
-     * @return array
-     */
-    public function getFullErrorList()
-    {
-        return $this->errorListDetails;
-    }
-
-    /**
-     * @param array $errorList - массив строк ошибок от ПРФ
-     * @param array $errorListDetails - массив ошибок от ПРФ с разбивкой на сообщение и код
-     */
-    public function setError($errorList, $errorListDetails = null) {
-        $this->error = true;
-        $this->errorList = $errorList;
-        if ($errorListDetails)
-            $this->errorListDetails = $errorListDetails;
     }
 
     public static function mb_ucfirst($string)
