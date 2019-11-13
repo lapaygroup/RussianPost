@@ -47,7 +47,7 @@ class TariffInfo
             $this->setTotalNds($rawData['total-vat']);
 
         if (!empty($rawData['avia-rate']) && !empty($rawData['avia-rate']['rate'])) {
-            $this->getAviaRate($rawData['avia-rate']['rate']);
+            $this->setAviaRate($rawData['avia-rate']['rate']);
         }
 
         if (!empty($rawData['avia-rate']) && !empty($rawData['avia-rate']['vat'])) {

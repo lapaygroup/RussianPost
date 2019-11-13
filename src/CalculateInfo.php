@@ -21,6 +21,7 @@ class CalculateInfo
     private $tariffList = []; // Список тарифов
     private $error = false; //Флаг наличия ошибки
     private $errorList = []; // Массив ошибок в текстовом виде
+    private $errorListDetails = []; // Массив ошибок с разбивкой на сообщение и код
 
     /**
      * @return string
@@ -288,15 +289,31 @@ class CalculateInfo
 
     /**
      * @return array
+     * @deprecated Будет заменен на исключение в версии 8.0
      */
     public function getErrorList()
     {
         return $this->errorList;
     }
 
-    public function setError($errorList) {
+    /**
+     * @deprecated Будет заменен на исключение в версии 8.0
+     * @return array
+     */
+    public function getFullErrorList()
+    {
+        return $this->errorListDetails;
+    }
+
+    /**
+     * @param array $errorList - массив строк ошибок от ПРФ
+     * @param array $errorListDetails - массив ошибок от ПРФ с разбивкой на сообщение и код
+     */
+    public function setError($errorList, $errorListDetails = null) {
         $this->error = true;
         $this->errorList = $errorList;
+        if ($errorListDetails)
+            $this->errorListDetails = $errorListDetails;
     }
 
     public static function mb_ucfirst($string)
