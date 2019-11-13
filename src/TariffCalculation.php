@@ -79,7 +79,7 @@ class TariffCalculation implements LoggerAwareInterface
 
             }
         } else {
-            $calculateInfo->setError($resultRaw['error']);
+            $calculateInfo->setError($resultRaw['error'], $resultRaw['errors']);
         }
 
         return $calculateInfo;
