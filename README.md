@@ -28,6 +28,7 @@
   - [x] [Отображение баланса](#show_balance)   
   - [x] [Неблагонадёжный получатель](#untrustworthy_recipient)    
 - [Заказы](#orders)  
+  - [x] [Получение списка ПВЗ](#get_pvz_list)    
   - [x] [Создание заказов](#create_orders)    
   - [x] [Редактирование заказа](#edit_order)   
   - [x] [Удаление заказов](#delete_orders)   
@@ -70,6 +71,7 @@
   - [x] [Текущие настройки пользователя](#get_settings)  
 
 <a name="links"><h1>Changelog</h1></a>  
+- 0.8.1 - Добавлена функция [получения списка ПВЗ](#get_pvz_list) для ЕКОМ, исправлена ошибка создания http-клиента к API;  
 - 0.8.0 - Описание можно посмотреть [тут](https://github.com/lapaygroup/RussianPost/releases/tag/0.8.0);  
 - 0.7.4 - Добавлено сохранение ошибок расчета тарифа в объект CalculateInfo с разделением на сообщение и код ошибки;    
 - 0.7.3 - Исправлена ошибка при сохранении документов;  
@@ -780,6 +782,120 @@ $list = $OtpravkaApi->shippingPoints();
 
 В случае возникновеня ошибок при обмене выбрасывает исключение *\LapayGroup\RussianPost\Exceptions\RussianPostException*
 в котором будет текст и код ошибки от API Почты России и дамп сырого ответа с HTTP-кодом.
+
+<a name="get_pvz_list"><h3>Получение списка ПВЗ</h3></a>  
+Возвращает список ПВЗ для заказов ЕКОМ.  
+
+```php
+<?php
+use Symfony\Component\Yaml\Yaml;
+use LapayGroup\RussianPost\Providers\OtpravkaApi;
+
+try {
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $pvz_list = $otpravkaApi->getPvzList();
+    /*
+    Array
+    (
+        [0] => Array
+            (
+                [address] => Array
+                    (
+                        [addressType] => DEFAULT
+                        [house] => 186
+                        [index] => 656067
+                        [manualInput] =>
+                        [place] => г. Барнаул
+                        [region] => край Алтайский
+                        [street] => ул. Попова
+                    )
+    
+                [brand-name] => Почта России
+                [card-payment] =>
+                [cash-payment] =>
+                [closed] =>
+                [contents-checking] => 1
+                [delivery-point-index] => 656067
+                [delivery-point-type] => DELIVERY_POINT
+                [functionality-checking] =>
+                [id] => 33815
+                [latitude] => 53.341753
+                [legal-name] => УФПС Алтайского края - филиал ФГУП "Почта России", Барнаульский почтамт, Отделение почтовой связи Барнаул  656067
+                [legal-short-name] => БАРНАУЛ 67
+                [longitude] => 83.667594
+                [partial-redemption] =>
+                [temporary-closed] =>
+                [with-fitting] =>
+                [work-time] => Array
+                    (
+                        [0] => пн, открыто: 08:00 - 20:00
+                        [1] => вт, открыто: 08:00 - 20:00
+                        [2] => ср, открыто: 08:00 - 20:00
+                        [3] => чт, открыто: 08:00 - 20:00
+                        [4] => пт, открыто: 08:00 - 20:00
+                        [5] => сб, открыто: 09:00 - 18:00
+                        [6] => вс, выходной
+                    )
+    
+            )
+    
+        [1] => Array
+            (
+                [address] => Array
+                    (
+                        [addressType] => DEFAULT
+                        [corpus] => 2
+                        [house] => 8
+                        [index] => 119526
+                        [manualInput] =>
+                        [place] => г. Москва
+                        [region] => г. Москва
+                        [street] => ул. 26-ти Бакинских Комиссаров
+                    )
+    
+                [brand-name] => Почта России
+                [card-payment] =>
+                [cash-payment] =>
+                [closed] =>
+                [contents-checking] => 1
+                [delivery-point-index] => 119526
+                [delivery-point-type] => DELIVERY_POINT
+                [functionality-checking] =>
+                [id] => 35009
+                [latitude] => 55.659170
+                [legal-name] => УФПС г. Москвы-филиал ФГУП Почта России ММП 6 ОПС 526
+                [legal-short-name] => МОСКВА 526
+                [longitude] => 37.491359
+                [partial-redemption] =>
+                [temporary-closed] =>
+                [with-fitting] =>
+                [work-time] => Array
+                    (
+                        [0] => пн, открыто: 08:00 - 20:00
+                        [1] => вт, открыто: 08:00 - 20:00
+                        [2] => ср, открыто: 08:00 - 20:00
+                        [3] => чт, открыто: 08:00 - 20:00
+                        [4] => пт, открыто: 08:00 - 20:00
+                        [5] => сб, открыто: 09:00 - 18:00
+                        [6] => вс, открыто: 09:00 - 14:00
+                    )
+    
+            )
+    */
+}
+    
+catch (\InvalidArgumentException $e) {
+  // Обработка ошибки заполнения параметров
+}
+        
+catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
+  // Обработка ошибочного ответа от API ПРФ
+}
+
+catch (\Exception $e) {
+  // Обработка нештатной ситуации
+}
+```  
 
 <a name="create_orders"><h3>Создание заказа</h3></a> 
 Создает новый заказ. Автоматически рассчитывает и проставляет плату за пересылку.  

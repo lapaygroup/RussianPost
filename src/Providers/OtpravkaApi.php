@@ -56,8 +56,10 @@ class OtpravkaApi implements LoggerAwareInterface
         $this->key = $config['auth']['otpravka']['key'];
     }
 
-    private function checkApiClient($endpoint = 'otpravka')
+    private function checkApiClient($endpoint = self::OTPRAVKA)
     {
+        if (empty($endpoint)) $endpoint = self::OTPRAVKA;
+
         switch ($endpoint) {
             case self::OTPRAVKA:
                 if (!$this->otpravkaClient) {
@@ -362,6 +364,17 @@ class OtpravkaApi implements LoggerAwareInterface
         }
 
         return $this->callApi('POST', 'unreliable-recipient', $params);
+    }
+
+    /**
+     * Получение списка ПВЗ для ЕКОМ
+     *
+     * @return array
+     * @throws RussianPostException
+     */
+    public function getPvzList()
+    {
+        return $this->callApi('GET', 'delivery-point/findAll');
     }
 
     /**
