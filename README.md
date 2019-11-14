@@ -2662,7 +2662,7 @@ catch (\Exception $e) {
 ```
 
 <a name="ops_search_by_coord"><h3>Поиск почтовых отделений по координатам</h3></a> 
-Возвращает список ОПС по переданному массиву параметров согласно [документации](массив параметров запроса согласно документации https://otpravka.pochta.ru/specification#/services-postoffice-nearby).  
+Возвращает список ОПС по переданному массиву параметров согласно [документации](https://otpravka.pochta.ru/specification#/services-postoffice-nearby).  
 
 ```php
 <?php
@@ -2687,7 +2687,7 @@ catch (\Exception $e) {
 ```
 
 
-<a name="ops_search_in_locality"><h3>Поиск почтовых индексов в населённом пункте/h3></a> 
+<a name="ops_search_in_locality"><h3>Поиск почтовых индексов в населённом пункте</h3></a> 
 Возвращает список индексов.   
 
 ```php
