@@ -10,6 +10,14 @@ class TariffInfo
     private $aviaRate = 0; // Тариф без НДС (коп)
     private $aviaNds = 0; // НДС (коп)
 
+    // Плата за 'Проверку комплектности'
+    private $completenessCheckingRate = 0; // Тариф без НДС (коп);
+    private $completenessCheckingNds = 0; // НДС (коп)
+
+    // Плата за 'Проверку вложений'
+    private $contentsCheckingRate = 0; // Тариф без НДС (коп);
+    private $contentsCheckingNds = 0; // НДС (коп)
+
     // Примерные сроки доставки
     private $deliveryMinDays = 0; // Минимальное время доставки (дни)
     private $deliveryMaxDays = 0; // Максимальное время доставки (дни)
@@ -52,6 +60,22 @@ class TariffInfo
 
         if (!empty($rawData['avia-rate']) && !empty($rawData['avia-rate']['vat'])) {
             $this->setAviaNds($rawData['avia-rate']['vat']);
+        }
+
+        if (!empty($rawData['completeness-checking-rate']) && !empty($rawData['completeness-checking-rate']['rate'])) {
+            $this->setCompletenessCheckingRate($rawData['completeness-checking-rate']['rate']);
+        }
+
+        if (!empty($rawData['completeness-checking-rate']) && !empty($rawData['completeness-checking-rate']['vat'])) {
+            $this->setCompletenessCheckingNds($rawData['completeness-checking-rate']['vat']);
+        }
+
+        if (!empty($rawData['contents-checking-rate']) && !empty($rawData['contents-checking-rate']['rate'])) {
+            $this->setContentsCheckingRate($rawData['contents-checking-rate']['rate']);
+        }
+
+        if (!empty($rawData['contents-checking-rate']) && !empty($rawData['contents-checking-rate']['vat'])) {
+            $this->setContentsCheckingNds($rawData['contents-checking-rate']['vat']);
         }
 
         if (!empty($rawData['delivery-time']) && !empty($rawData['delivery-time']['min-days'])) {
@@ -133,6 +157,70 @@ class TariffInfo
     public function setTotalNds($totalNds)
     {
         $this->totalNds = $totalNds;
+    }
+
+    /**
+     * @return int
+     */
+    public function getCompletenessCheckingRate()
+    {
+        return $this->completenessCheckingRate;
+    }
+
+    /**
+     * @param int $completenessCheckingRate
+     */
+    public function setCompletenessCheckingRate($completenessCheckingRate)
+    {
+        $this->completenessCheckingRate = $completenessCheckingRate;
+    }
+
+    /**
+     * @return int
+     */
+    public function getCompletenessCheckingNds()
+    {
+        return $this->completenessCheckingNds;
+    }
+
+    /**
+     * @param int $completenessCheckingNds
+     */
+    public function setCompletenessCheckingNds($completenessCheckingNds)
+    {
+        $this->completenessCheckingNds = $completenessCheckingNds;
+    }
+
+    /**
+     * @return int
+     */
+    public function getContentsCheckingRate()
+    {
+        return $this->contentsCheckingRate;
+    }
+
+    /**
+     * @param int $contentsCheckingRate
+     */
+    public function setContentsCheckingRate($contentsCheckingRate)
+    {
+        $this->contentsCheckingRate = $contentsCheckingRate;
+    }
+
+    /**
+     * @param int $contentsCheckingNds
+     */
+    public function setContentsCheckingNds($contentsCheckingNds)
+    {
+        $this->contentsCheckingNds = $contentsCheckingNds;
+    }
+
+    /**
+     * @return int
+     */
+    public function getContentsCheckingNds()
+    {
+        return $this->contentsCheckingNds;
     }
 
     /**
