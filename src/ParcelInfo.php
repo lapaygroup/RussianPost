@@ -3,11 +3,16 @@ namespace LapayGroup\RussianPost;
 
 class ParcelInfo
 {
+    private $completenessChecking = false; // Признак услуги проверки комплектности
+    private $contentsChecking = false; // Признак услуги проверки комплектности
     private $courier = false; // Отметка 'Курьер'
     private $declaredValue = 0; // Объявленная ценность
+    private $deliveryPointIndex = null; // Идентификатор пункта выдачи заказов
     private $height = 0; // Линейная высота (сантиметры)
     private $length = 0; // Линейная длина (сантиметры)
     private $width = 0; // Линейная ширина (сантиметры)
+    private $dimensionType = null; // Типоразмер
+    private $entriesType = null; // Категория вложения https://otpravka.pochta.ru/specification#/enums-base-entries-type
     private $fragile = false; // Отметка 'Осторожно/Хрупко'
     private $indexTo = 101000; // Индекс места назначения (по умолчанию Москва)
     private $indexFrom = 101000; // Индекс места отправления (по умолчанию Москва)
@@ -27,8 +32,17 @@ class ParcelInfo
     public function getArray()
     {
         $array = [];
+        if ($this->completenessChecking)
+            $array['completeness-checking'] = $this->isCompletenessChecking();
+
+        if ($this->contentsChecking)
+            $array['contents-checking'] = $this->isContentsChecking();
+
         if ($this->courier)
             $array['courier'] = $this->isCourier();
+
+        if ($this->deliveryPointIndex)
+            $array['delivery-point-index'] = $this->getDeliveryPointIndex();
 
         if ($this->declaredValue)
             $array['declared-value'] = $this->getDeclaredValue();
@@ -38,6 +52,12 @@ class ParcelInfo
             $array['dimension']['length'] = $this->getLength();
             $array['dimension']['width']  = $this->getWidth();
         }
+        
+        if ($this->dimensionType)
+            $array['dimension-type'] = $this->getDimensionType();
+        
+        if ($this->entriesType)
+            $array['entries-type'] = $this->getEntriesType();
 
         if ($this->fragile)
             $array['fragile'] = $this->isFragile();
@@ -63,6 +83,38 @@ class ParcelInfo
         }
 
         return $array;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isCompletenessChecking()
+    {
+        return $this->completenessChecking;
+    }
+
+    /**
+     * @param bool $completenessChecking
+     */
+    public function setCompletenessChecking($completenessChecking)
+    {
+        $this->completenessChecking = $completenessChecking;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isContentsChecking()
+    {
+        return $this->contentsChecking;
+    }
+
+    /**
+     * @param bool $contentsChecking
+     */
+    public function setContentsChecking($contentsChecking)
+    {
+        $this->contentsChecking = $contentsChecking;
     }
 
     /**
@@ -95,6 +147,22 @@ class ParcelInfo
     public function setDeclaredValue($declaredValue)
     {
         $this->declaredValue = $declaredValue;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getDeliveryPointIndex()
+    {
+        return $this->deliveryPointIndex;
+    }
+
+    /**
+     * @param string|null $deliveryPointIndex
+     */
+    public function setDeliveryPointIndex($deliveryPointIndex)
+    {
+        $this->deliveryPointIndex = $deliveryPointIndex;
     }
 
     /**
@@ -143,6 +211,38 @@ class ParcelInfo
     public function setWidth($width)
     {
         $this->width = $width;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getDimensionType()
+    {
+        return $this->dimensionType;
+    }
+
+    /**
+     * @param string|null $dimensionType
+     */
+    public function setDimensionType($dimensionType)
+    {
+        $this->dimensionType = $dimensionType;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getEntriesType()
+    {
+        return $this->entriesType;
+    }
+
+    /**
+     * @param string|null $entriesType
+     */
+    public function setEntriesType($entriesType)
+    {
+        $this->entriesType = $entriesType;
     }
 
     /**
