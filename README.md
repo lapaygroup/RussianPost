@@ -70,6 +70,7 @@
   - [x] [Текущие настройки пользователя](#get_settings)  
 
 <a name="links"><h1>Changelog</h1></a>  
+- 0.8.3 - Доработана поддержка расчета тарифов для посылок EKOM, спасибо [Konstantin Shevsky](https://github.com/Shevsky) за доработку;
 - 0.8.2 - Актуализированы параметры запроса и ответа тарификатора, за актуализацию выражаем благодарность [Konstantin Shevsky](https://github.com/Shevsky);
 - 0.8.1 - Добавлена функция [получения списка ПВЗ](#get_pvz_list) для ЕКОМ, исправлена ошибка создания http-клиента к API;  
 - 0.8.0 - Описание можно посмотреть [тут](https://github.com/lapaygroup/RussianPost/releases/tag/0.8.0);  
