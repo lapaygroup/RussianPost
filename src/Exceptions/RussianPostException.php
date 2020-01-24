@@ -69,10 +69,7 @@ class RussianPostException extends \Exception
      */
     public function getErrorCode()
     {
-        if (array_key_exists('code', $this->response))
-            return $this->response['code'];
-
-        return '';
+        return !empty($this->response['code']) ? $this->response['code'] : '';
     }
 
     /**
@@ -80,10 +77,7 @@ class RussianPostException extends \Exception
      */
     public function getErrorDescription()
     {
-        if (array_key_exists('desc', $this->response))
-            return $this->response['desc'];
-
-        return '';
+        return !empty($this->response['desc']) ? $this->response['desc'] : '';
     }
 
     /**
@@ -91,9 +85,6 @@ class RussianPostException extends \Exception
      */
     public function getErrorSubCode()
     {
-        if (array_key_exists('sub-code', $this->response))
-            return $this->response['sub-code'];
-
-        return '';
+        return !empty($this->response['sub-code']) ? $this->response['sub-code'] : '';
     }
 }
