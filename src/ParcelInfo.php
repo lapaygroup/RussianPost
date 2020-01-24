@@ -8,6 +8,7 @@ class ParcelInfo
     private $courier = false; // Отметка 'Курьер'
     private $declaredValue = 0; // Объявленная ценность
     private $deliveryPointIndex = null; // Идентификатор пункта выдачи заказов
+    private $goodsValue = 0; // Стоимость (для ЕКОМ)
     private $height = 0; // Линейная высота (сантиметры)
     private $length = 0; // Линейная длина (сантиметры)
     private $width = 0; // Линейная ширина (сантиметры)
@@ -24,7 +25,9 @@ class ParcelInfo
     private $transportType = null; // Вид транспортировки https://otpravka.pochta.ru/specification#/enums-base-transport-type
     private $notify = false; // Отметка 'С заказным уведомлением'
     private $simpleNotify = false; // Отметка 'С простым уведомлением'
-  
+    private $functionalityChecking = false; // Признак услуги проверки работоспособности (для ЕКОМ)
+    private $withFitting = false; // Признак услуги 'Возможность примерки' (для ЕКОМ)
+
     /**
      * Возвращает данные по отправлению в виде массива для API ПРФ
      * @return array
@@ -43,6 +46,9 @@ class ParcelInfo
 
         if ($this->deliveryPointIndex)
             $array['delivery-point-index'] = $this->getDeliveryPointIndex();
+
+        if ($this->goodsValue)
+            $array['goods-value'] = $this->getGoodsValue();
 
         if ($this->declaredValue)
             $array['declared-value'] = $this->getDeclaredValue();
@@ -73,6 +79,8 @@ class ParcelInfo
 
         $array['with-order-of-notice'] = $this->isNotify();
         $array['with-simple-notice'] = $this->isSimpleNotify();
+        $array['functionality-checking'] = $this->isFunctionalityChecking();
+        $array['with-fitting'] = $this->isWithFitting();
 
         if (null !== $smsNotice = $this->getSmsNoticeRecipient()) {
             $array['sms-notice-recipient'] = (int)$smsNotice;
@@ -163,6 +171,22 @@ class ParcelInfo
     public function setDeliveryPointIndex($deliveryPointIndex)
     {
         $this->deliveryPointIndex = $deliveryPointIndex;
+    }
+
+    /**
+     * @return int
+     */
+    public function getGoodsValue()
+    {
+        return $this->goodsValue;
+    }
+
+    /**
+     * @param int $goodsValue
+     */
+    public function setGoodsValue($goodsValue)
+    {
+        $this->goodsValue = $goodsValue;
     }
 
     /**
@@ -387,6 +411,38 @@ class ParcelInfo
     public function setSimpleNotify($simpleNotify)
     {
         $this->simpleNotify = $simpleNotify;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isFunctionalityChecking()
+    {
+        return $this->functionalityChecking;
+    }
+
+    /**
+     * @param bool $functionalityChecking
+     */
+    public function setFunctionalityChecking($functionalityChecking)
+    {
+        $this->functionalityChecking = $functionalityChecking;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isWithFitting()
+    {
+        return $this->withFitting;
+    }
+
+    /**
+     * @param bool $withFitting
+     */
+    public function setWithFitting($withFitting)
+    {
+        $this->withFitting = $withFitting;
     }
 
     /**
