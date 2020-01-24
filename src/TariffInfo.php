@@ -26,6 +26,10 @@ class TariffInfo
     private $fragileRate = 0; // Тариф без НДС (коп)
     private $fragileNds = 0; // НДС (коп)
 
+    // Плата за услугу проверки работоспособности
+    private $functionalityCheckingRate = 0; // Тариф без НДС (коп)
+    private $functionalityCheckingNds = 0; // НДС (коп)
+
     // Плата за пересылку
     private $groundRate = 0; // Тариф без НДС (коп)
     private $groundNds = 0; // НДС (коп)
@@ -41,6 +45,10 @@ class TariffInfo
     // Надбавка за негабарит при весе более 10кг
     private $oversizeRate = 0; // Тариф без НДС (коп)
     private $oversizeNds = 0; // НДС (коп)
+    
+    // Плата за услугу примерки
+    private $withFittingRate = 0; // Тариф без НДС (коп);
+    private $withFittingNds = 0; // НДС (коп)
 
     /**
      * TariffInfo constructor
@@ -93,6 +101,14 @@ class TariffInfo
         if (!empty($rawData['fragile-rate']) && !empty($rawData['fragile-rate']['vat'])) {
             $this->setFragileNds($rawData['fragile-rate']['vat']);
         }
+        
+        if (!empty($rawData['functionality-checking-rate']) && !empty($rawData['functionality-checking-rate']['rate'])) {
+            $this->setFunctionalityCheckingRate($rawData['functionality-checking-rate']['rate']);
+        }
+        
+        if (!empty($rawData['functionality-checking-rate']) && !empty($rawData['functionality-checking-rate']['vat'])) {
+            $this->setFunctionalityCheckingNds($rawData['functionality-checking-rate']['vat']);
+        }
 
         if (!empty($rawData['ground-rate']) && !empty($rawData['ground-rate']['rate'])) {
             $this->setGroundRate($rawData['ground-rate']['rate']);
@@ -124,6 +140,14 @@ class TariffInfo
 
         if (!empty($rawData['oversize-rate']) && !empty($rawData['oversize-rate']['vat'])) {
             $this->setOversizeNds($rawData['oversize-rate']['vat']);
+        }
+
+        if (!empty($rawData['with-fitting-rate']) && !empty($rawData['with-fitting-rate']['rate'])) {
+            $this->setWithFittingRate($rawData['with-fitting-rate']['rate']);
+        }
+        
+        if (!empty($rawData['with-fitting-rate']) && !empty($rawData['with-fitting-rate']['vat'])) {
+            $this->setWithFittingNds($rawData['with-fitting-rate']['vat']);
         }
     }
 
@@ -322,6 +346,38 @@ class TariffInfo
     /**
      * @return int
      */
+    public function getFunctionalityCheckingRate()
+    {
+        return $this->functionalityCheckingRate;
+    }
+
+    /**
+     * @param int $functionalityCheckingRate
+     */
+    public function setFunctionalityCheckingRate($functionalityCheckingRate)
+    {
+        $this->functionalityCheckingRate = $functionalityCheckingRate;
+    }
+
+    /**
+     * @return int
+     */
+    public function getFunctionalityCheckingNds()
+    {
+        return $this->functionalityCheckingNds;
+    }
+
+    /**
+     * @param int $functionalityCheckingNds
+     */
+    public function setFunctionalityCheckingNds($functionalityCheckingNds)
+    {
+        $this->functionalityCheckingNds = $functionalityCheckingNds;
+    }
+
+    /**
+     * @return int
+     */
     public function getGroundRate()
     {
         return $this->groundRate;
@@ -445,5 +501,37 @@ class TariffInfo
     public function setOversizeNds($oversizeNds)
     {
         $this->oversizeNds = $oversizeNds;
+    }
+
+    /**
+     * @return int
+     */
+    public function getWithFittingRate()
+    {
+        return $this->withFittingRate;
+    }
+
+    /**
+     * @param int $withFittingRate
+     */
+    public function setWithFittingRate($withFittingRate)
+    {
+        $this->withFittingRate = $withFittingRate;
+    }
+
+    /**
+     * @return int
+     */
+    public function getWithFittingNds()
+    {
+        return $this->withFittingNds;
+    }
+
+    /**
+     * @param int $withFittingNds
+     */
+    public function setWithFittingNds($withFittingNds)
+    {
+        $this->withFittingNds = $withFittingNds;
     }
 }

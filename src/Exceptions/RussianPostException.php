@@ -9,14 +9,26 @@ class RussianPostException extends \Exception
     private $raw_response = null;
 
     /**
+     * @var array
+     */
+    private $response = [];
+
+    /**
      * @var string
      */
-    private $raw_request  = null;
+    private $raw_request = null;
 
     public function __construct($message = "", $code = 0, $raw_response = null, $raw_request = null, $previous = null)
     {
         $this->raw_request = $raw_request;
         $this->raw_response = $raw_response;
+
+        $response = json_decode($this->getRawResponse(), true);
+        if ($response !== null && json_last_error() === JSON_ERROR_NONE)
+        {
+            $this->response = $response;
+        }
+
         parent::__construct($message, $code, $previous);
     }
 
@@ -50,5 +62,29 @@ class RussianPostException extends \Exception
     public function setRawRequest($raw_request)
     {
         $this->raw_request = $raw_request;
+    }
+
+    /**
+     * @return string
+     */
+    public function getErrorCode()
+    {
+        return !empty($this->response['code']) ? $this->response['code'] : '';
+    }
+
+    /**
+     * @return string
+     */
+    public function getErrorDescription()
+    {
+        return !empty($this->response['desc']) ? $this->response['desc'] : '';
+    }
+
+    /**
+     * @return string
+     */
+    public function getErrorSubCode()
+    {
+        return !empty($this->response['sub-code']) ? $this->response['sub-code'] : '';
     }
 }

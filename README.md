@@ -22,6 +22,7 @@
   - [x] [Нормализация ФИО](#clean_fio)  
   - [x] [Нормализация телефона](#clean_phone)  
   - [x] [Расчет стоимости пересылки (Упрощенная версия)](#calc_delivery_tariff) 
+  - [x] [Расчет стоимости пересылки ЕКОМ](#calc_delivery_tariff_ecom) 
   - [x] [Расчет сроков доставки](#calc_delivery_period)  
   - [x] [Отображение баланса](#show_balance)   
   - [x] [Неблагонадёжный получатель](#untrustworthy_recipient)    
@@ -616,6 +617,57 @@ $list = $OtpravkaApi->shippingPoints();
 **$parcelInfo** - это объект класса *LapayGroup\RussianPost\ParcelInfo* содержащий данные по отправлению.
 **$tariffInfo** - это объект класса *LapayGroup\RussianPost\tariffInfo* содержащий данные по расчитанному тарифу.
 
+<a name="calc_delivery_tariff_ecom"><h3>Расчет стоимости пересылки ЕКОМ</h3></a>
+
+Стоимость пересылки для ЕКОМ расчитывается по аналогичному вышеуказанному алгоритму, за исключением некоторых входных параметров.
+
+**Пример вызова:**
+```php
+<?php
+  use Symfony\Component\Yaml\Yaml;
+  use LapayGroup\RussianPost\Providers\OtpravkaApi;
+  use LapayGroup\RussianPost\ParcelInfo;
+  
+  try {
+      $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+      
+      $parcelInfo = new ParcelInfo();
+      $parcelInfo->setIndexFrom($list[0]['operator-postcode']); // Индекс пункта сдачи из функции $OtpravkaApi->shippingPoints()
+      $parcelInfo->setMailCategory('ORDINARY'); // https://otpravka.pochta.ru/specification#/enums-base-mail-category
+      $parcelInfo->setWeight(1000);
+      $parcelInfo->setFragile(true);
+      
+      // Параметры только для ЕКОМ
+      $parcelInfo->setMailType('ECOM'); // Вид РПО ЕКОМ https://otpravka.pochta.ru/specification#/enums-base-mail-type
+      $parcelInfo->setDeliveryPointIndex(644015); // Вместо индекса назначения указывается индекс ПВЗ
+      $parcelInfo->setEntriesType('SALE_OF_GOODS'); // Категория вложения https://otpravka.pochta.ru/specification#/enums-base-entries-type
+      $parcelInfo->setFunctionalityChecking(true); // Признак услуги проверки работоспособности
+      $parcelInfo->setGoodsValue(1588000); // Стоимость
+      $parcelInfo->setWithFitting(true); // Признак услуги 'Возможность примерки'
+    
+      $tariffInfo = $otpravkaApi->getDeliveryTariff($parcelInfo);
+      echo $tariffInfo->getTotalRate()/100 . ' руб.';
+      
+      /*
+       LapayGroup\RussianPost\TariffInfo Object
+       (
+           [functionalityCheckingRate:LapayGroup\RussianPost\TariffInfo:private] => 30658
+           [functionalityCheckingNds:LapayGroup\RussianPost\TariffInfo:private] => 6132
+           [withFittingRate:LapayGroup\RussianPost\TariffInfo:private] => 0
+           [withFittingNds:LapayGroup\RussianPost\TariffInfo:private] => 0
+       )
+       */
+  }
+          
+  catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
+      // Обработка ошибочного ответа от API ПРФ
+  }
+  
+  catch (\Exception $e) {
+      // Обработка нештатной ситуации
+  }
+?>
+```
 
 <a name="calc_delivery_period"><h3>Расчет сроков доставки</h3></a>  
 
