@@ -194,8 +194,11 @@ class OtpravkaApi implements LoggerAwareInterface
             return $response_contents;
         }
 
-        if ($response->getStatusCode() != 200 && !empty($resp['code']))
-            throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' получена ошибка: '.$resp['sub-code'] . " (".$resp['code'].")", $response->getStatusCode(), $response_contents, $request);
+        if ($response->getStatusCode() != 200 && !empty($resp['code'])) {
+            $desc = !empty($resp['sub-code']) ? $resp['sub-code'] : '';
+            if (empty($desc) && !empty($resp['desc'])) $desc = $resp['desc'];
+            throw new RussianPostException('От сервера Почты России при вызове метода ' . $method . ' получена ошибка: ' . $desc . " (" . $resp['code'] . ")", $response->getStatusCode(), $response_contents, $request);
+        }
 
         if ($response->getStatusCode() == 407 && !empty($resp['status']) && $resp['status'] == 'ERROR')
             throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' получена ошибка: '.$resp['message'] . " (".$resp['status'].")", $response->getStatusCode(), $response_contents, $request);
