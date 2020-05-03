@@ -4,6 +4,8 @@ namespace LapayGroup\RussianPost\Providers;
 use LapayGroup\RussianPost\AddressList;
 use LapayGroup\RussianPost\Entity\Order;
 use LapayGroup\RussianPost\Entity\Recipient;
+use LapayGroup\RussianPost\Entity\ReturnShipment;
+use LapayGroup\RussianPost\Enum\OpsObjectType;
 use LapayGroup\RussianPost\Exceptions\RussianPostException;
 use LapayGroup\RussianPost\FioList;
 use LapayGroup\RussianPost\PhoneList;
@@ -18,17 +20,17 @@ class OtpravkaApi implements LoggerAwareInterface
 {
     use LoggerAwareTrait;
 
-    const VERSION = '1.0';
-    const DELIVERY_VERSION = 'v1';
+    const VERSION           = '1.0';
+    const DELIVERY_VERSION  = 'v1';
     const PRINT_TYPE_PAPER  = 'PAPER';
     const PRINT_TYPE_THERMO = 'THERMO';
-    const PRINT_ONE_SIDED = 'ONE_SIDED';
-    const PRINT_TWO_SIDED = 'TWO_SIDED';
-    const DOWNLOAD_FILE = 1;
-    const PRINT_FILE = 2;
-    const OTPRAVKA = 1; // Endpoint отправки
-    const DELIVERY = 2; // Endpoint сроков доставки
-    const POSTOFFICE = 3; // Endpoint работы с ОПС
+    const PRINT_ONE_SIDED   = 'ONE_SIDED';
+    const PRINT_TWO_SIDED   = 'TWO_SIDED';
+    const DOWNLOAD_FILE     = 1;
+    const PRINT_FILE        = 2;
+    const OTPRAVKA          = 1; // Endpoint отправки
+    const DELIVERY          = 2; // Endpoint сроков доставки
+    const POSTOFFICE        = 3; // Endpoint работы с ОПС
 
     /** @var string */
     private $token = null;
@@ -68,7 +70,7 @@ class OtpravkaApi implements LoggerAwareInterface
                         'headers' => ['Authorization' => 'AccessToken ' . $this->token,
                             'X-User-Authorization' => 'Basic ' . $this->key,
                             'Content-Type' => 'application/json',
-                            'Accept' => 'application/json;charset=UTF-8'
+                            // 'Accept' => 'application/json;charset=UTF-8'
                         ],
                         'timeout' => $this->timeout,
                         'http_errors' => false
@@ -149,6 +151,7 @@ class OtpravkaApi implements LoggerAwareInterface
                 if ($this->logger) {
                     $this->logger->info("Russian Post Otpravka API {$type} request /".self::VERSION."/{$method}: ".$request);
                 }
+
                 /** @var ResponseInterface $response */
                 $response = $client->{strtolower($type)}($method, ['json' => $params]);
                 break;
@@ -159,7 +162,7 @@ class OtpravkaApi implements LoggerAwareInterface
         $content_type = $response->getHeaderLine('Content-Type');
         $response_contents = $response->getBody()->getContents();
 
-        if (preg_match('~^application/(pdf|zip)~', $content_type, $matches_type)) {
+        if (preg_match('~^application/(pdf|zip|octet-stream)~', $content_type, $matches_type)) {
             $is_file = true;
             if ($this->logger) {
                 $this->logger->info("Russian Post Otpravka API {$type} response /".self::VERSION."/{$method}: получен файл с расширением ".$matches_type[1], $headers);
@@ -170,7 +173,7 @@ class OtpravkaApi implements LoggerAwareInterface
             }
         }
 
-        if (!in_array($response->getStatusCode(), [200,400,404,407]))
+        if (!in_array($response->getStatusCode(), [200,400,404,406,407]))
             throw new RussianPostException('Неверный код ответа от сервера Почты России при вызове метода '.$method.': ' . $response->getStatusCode(), $response->getStatusCode(), $response_contents, $request);
 
         if (empty($response_contents))
@@ -199,6 +202,9 @@ class OtpravkaApi implements LoggerAwareInterface
             if (empty($desc) && !empty($resp['desc'])) $desc = $resp['desc'];
             throw new RussianPostException('От сервера Почты России при вызове метода ' . $method . ' получена ошибка: ' . $desc . " (" . $resp['code'] . ")", $response->getStatusCode(), $response_contents, $request);
         }
+
+        if ($response->getStatusCode() == 406 && !empty($resp['status']) && !empty($resp['message']))
+            throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' получена ошибка: '.$resp['message'] . " (".$resp['status'].")", $response->getStatusCode(), $response_contents, $request);
 
         if ($response->getStatusCode() == 407 && !empty($resp['status']) && $resp['status'] == 'ERROR')
             throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' получена ошибка: '.$resp['message'] . " (".$resp['status'].")", $response->getStatusCode(), $response_contents, $request);
@@ -380,7 +386,7 @@ class OtpravkaApi implements LoggerAwareInterface
     /**
      * Создание заказов
      *
-     * @param array $orders - массив объектов Order
+     * @param Order[] $orders - массив объектов Order
      * @return array
      * @throws RussianPostException
      */
@@ -847,5 +853,75 @@ class OtpravkaApi implements LoggerAwareInterface
             'region' => $region,
             'district' => $district
         ], self::POSTOFFICE);
+    }
+
+    /**
+     * Выгружает данные ОПС, ПВЗ, Почтоматов из Паспорта ОПС.
+     * Генерирует и возвращает zip архив с текстовым файлом TYPEdd_MMMM_yyyy.txt, где:
+     * TYPE - тип объекта
+     * dd_MMMM_yyyy - время создания архива
+     *
+     * @param string $type - Тип объекта
+     * @return UploadedFile
+     * @throws RussianPostException
+     */
+    public function getPostOfficeFromPassport($type = OpsObjectType::ALL)
+    {
+        return $this->callApi('GET', 'unloading-passport/zip', ['type' => $type]);
+    }
+
+    /**
+     * Создание возвратного отправления для ранее созданного отправления
+     *
+     * @param string $rpo - ШПИ отправления
+     * @param string $mail_type - Вид РПО (https://otpravka.pochta.ru/specification#/enums-base-mail-type)
+     * @return array
+     * @throws RussianPostException
+     */
+    public function returnShipment($rpo, $mail_type = 'UNDEFINED')
+    {
+        return $this->callApi('PUT', 'returns',
+            [
+                'direct-barcode' => $rpo,
+                'mail-type' => $mail_type
+            ]
+        );
+    }
+
+    /**
+     * Создание отдельного возвратного отправления
+     *
+     * @param ReturnShipment[] $return_shipments - массив объектов ReturnShipment
+     * @return array
+     * @throws RussianPostException
+     */
+    public function createReturnShipment($return_shipments)
+    {
+        return $this->callApi('PUT', 'returns/return-without-direct', $return_shipments);
+    }
+
+    /**
+     * Удаляет отдельное возвратное отправление
+     *
+     * @param string $rpo - ШПИ возвратного отправления
+     * @return array
+     * @throws RussianPostException
+     */
+    public function deleteReturnShipment($rpo)
+    {
+        return $this->callApi('DELETE', 'returns/delete-separate-return?barcode='.$rpo);
+    }
+
+    /**
+     * Редактирование отдельного возвратного отправления
+     *
+     * @param ReturnShipment $return_shipment - данные заказа
+     * @param string $rpo - ШПИ возвратного отправления
+     * @return array|string
+     * @throws RussianPostException
+     */
+    public function editReturnShipment($return_shipment, $rpo)
+    {
+        return $this->callApi('POST', 'returns/'.$rpo, $return_shipment->asArr());
     }
 }

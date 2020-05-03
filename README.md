@@ -63,13 +63,21 @@
   - [x] [Почтовые сервисы ОПС](#get_ops_services)   
   - [x] [По координатам](#ops_search_by_coord)  
   - [x] [Поиск индексов в населенном пункте](#ops_search_in_locality)  
+  - [x] [Выгрузка из паспорта ОПС](#ops-unloading-passport)    
 - [Долгосрочное хранение (Не работает в API Почты России!)](#warehouse)
   - [ ] [Запрос данных о заказах в архиве](#)  
+- [Возвраты](#returns)
+  - [x] [Создание возвратного отправления для ранее созданного отправления](#return-by-pro)  
+  - [x] [Создание отдельного возвратного отправления](#return-without-rpo)  
+  - [x] [Удаление отдельного возвратного отправления](#return-delete)    
+  - [x] [Редактирование отдельного возвратного отправления](#return-edit)   
 - [Настройки](#settings)  
   - [x] [Текущие точки сдачи](#settings_shipping_points)  
   - [x] [Текущие настройки пользователя](#get_settings)  
 
 <a name="links"><h1>Changelog</h1></a>    
+- 0.9.0 - Актуализация списка статусов отправления, легкий возврат, выгрузка из паспорта ОПС, подробнее [тут](https://github.com/lapaygroup/RussianPost/releases/tag/0.9.0);  
+- 0.8.6 - Исправление ошибки API отправки с desc в ответе вместо sub-code;  
 - 0.8.5 - Зависимость с Guzzle 6.3+ вместо строгой 6.3;  
 - 0.8.3 - Доработана поддержка расчета тарифов для посылок EKOM, спасибо [Konstantin Shevsky](https://github.com/Shevsky) за доработку;
 - 0.8.2 - Актуализированы параметры запроса и ответа тарификатора, за актуализацию выражаем благодарность [Konstantin Shevsky](https://github.com/Shevsky);
@@ -641,7 +649,7 @@ $list = $OtpravkaApi->shippingPoints();
       
       // Параметры только для ЕКОМ
       $parcelInfo->setMailType('ECOM'); // Вид РПО ЕКОМ https://otpravka.pochta.ru/specification#/enums-base-mail-type
-      $parcelInfo->setDeliveryPointIndex(644015); // Вместо индекса назначения указывается индекс ПВЗ
+      $parcelInfo->setDeliveryPointindex(644015); // Вместо индекса назначения указывается индекс ПВЗ
       $parcelInfo->setEntriesType('SALE_OF_GOODS'); // Категория вложения https://otpravka.pochta.ru/specification#/enums-base-entries-type
       $parcelInfo->setFunctionalityChecking(true); // Признак услуги проверки работоспособности
       $parcelInfo->setGoodsValue(1588000); // Стоимость
@@ -2772,6 +2780,57 @@ catch (\Exception $e) {
 }
 ```
 
+<a name="ops-unloading-passport"><h3>Выгрузка из паспорта ОПС</h3></a> 
+Выгружает данные ОПС, ПВЗ, Почтоматов из Паспорта ОПС.  
+Генерирует и возвращает zip архив с текстовым файлом TYPEdd_MMMM_yyyy.txt, где:  
+* TYPE - тип объекта  
+* dd_MMMM_yyyy - время создания архива   
+
+**Входные параметры:** 
+- *$type* - [Тип объекта ОПС](Enum/OpsObjectType.php).  
+
+```php
+<?php
+use Symfony\Component\Yaml\Yaml;
+use LapayGroup\RussianPost\Providers\OtpravkaApi;
+
+try {
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $result = $otpravkaApi->getPostOfficeFromPassport(\LapayGroup\RussianPost\Enum\OpsObjectType::OPS);
+    /*
+    GuzzleHttp\Psr7\UploadedFile Object
+    (
+        [clientFilename:GuzzleHttp\Psr7\UploadedFile:private] => OPS02_May_2020.zip.octet-stream
+        [clientMediaType:GuzzleHttp\Psr7\UploadedFile:private] => application/octet-stream; charset=UTF-8
+        [error:GuzzleHttp\Psr7\UploadedFile:private] => 0
+        [file:GuzzleHttp\Psr7\UploadedFile:private] =>
+        [moved:GuzzleHttp\Psr7\UploadedFile:private] =>
+        [size:GuzzleHttp\Psr7\UploadedFile:private] => 4203382
+        [stream:GuzzleHttp\Psr7\UploadedFile:private] => GuzzleHttp\Psr7\Stream Object
+            (
+                [stream:GuzzleHttp\Psr7\Stream:private] => Resource id #56
+                [size:GuzzleHttp\Psr7\Stream:private] => 4203382
+                [seekable:GuzzleHttp\Psr7\Stream:private] => 1
+                [readable:GuzzleHttp\Psr7\Stream:private] => 1
+                [writable:GuzzleHttp\Psr7\Stream:private] => 1
+                [uri:GuzzleHttp\Psr7\Stream:private] => php://temp
+                [customMetadata:GuzzleHttp\Psr7\Stream:private] => Array
+                    (
+                    )
+    
+            )
+    )*/
+}
+        
+catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
+  // Обработка ошибочного ответа от API ПРФ
+}
+
+catch (\Exception $e) {
+  // Обработка нештатной ситуации
+}
+```
+
 
 <a name="warehouse"><h1>Долгосрочное хранение</h1></a>     
   
@@ -2783,6 +2842,220 @@ catch (\Exception $e) {
 
 В случае возникновеня ошибок при обмене выбрасывает исключение *\LapayGroup\RussianPost\Exceptions\RussianPostException*
 в котором будет текст и код ошибки от API Почты России и дамп сырого ответа с HTTP-кодом.  
+
+
+
+<a name="returns"><h1>Возвраты</h1></a>  
+Реализует функции [API](https://otpravka.pochta.ru/specification#/returns-create_for_direct) Почты России для работы с услугой Легкий возврат. 
+Для работы данных функций необходимы аутентификационные данные. Подробнее в разделе [Конфигурация](#configfile).
+
+В случае возникновеня ошибок при обмене выбрасывает исключение *\LapayGroup\RussianPost\Exceptions\RussianPostException*
+в котором будет текст и код ошибки от API Почты России и дамп сырого ответа с HTTP-кодом.  
+
+<a name="return-by-pro"><h3>Создание возвратного отправления для ранее созданного отправления</h3></a> 
+Создает возвратное отправление (ЛВ) для уже созданного в ЛК отправления.     
+
+**Входные параметры:**
+- *$rpo* - ШПИ прямого отправления;  
+- *$mail_type* - Вид РПО. [См. Вид РПО](Enum/MailType.php).    
+
+
+**Пример получения списка текущих точек сдачи:**
+```php
+<?php
+use Symfony\Component\Yaml\Yaml;
+use LapayGroup\RussianPost\Providers\OtpravkaApi;
+
+$otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+$result = $otpravkaApi->returnShipment(123456, \LapayGroup\RussianPost\Enum\MailType::UNDEFINED);
+
+// Успешный ответ
+/*Array
+(
+    [return-barcode] => 1234567890 // ШПИ возвратного отправления
+)
+
+// Ответ с ошибкой
+/*Array
+(
+    [errors] => Array
+        (
+            [0] => Array
+                (
+                    [code] => DIRECT_SHIPMENT_NOT_FOUND
+                    [description] => Прямое отправление не найдено
+                )
+
+        )
+
+)*/
+```
+
+
+<a name="return-without-rpo"><h3>Создание отдельного возвратного отправления</h3></a> 
+Создает возвратное отправление (ЛВ) без прямого.  
+Метод asArr() проверяет заполнение необходимых для создания возвратного отправления полей и в случае незаполнения выбрасывает \InvalidArgumentException.  
+
+**Пример создания заказа:**
+```php
+<?php
+use Symfony\Component\Yaml\Yaml;
+use LapayGroup\RussianPost\Providers\OtpravkaApi;
+
+try {
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    
+    $addressFrom = new \LapayGroup\RussianPost\Entity\AddressReturn();
+    $addressFrom->setAddressType(\LapayGroup\RussianPost\Enum\AddressType::DEFAULT);
+    $addressFrom->setIndex(125009);
+    $addressFrom->setPlace('Москва');
+    $addressFrom->setRegion('Москва');
+
+    $addressTo = new \LapayGroup\RussianPost\Entity\AddressReturn();
+    $addressTo->setAddressType(\LapayGroup\RussianPost\Enum\AddressType::DEFAULT);
+    $addressTo->setIndex(115551);
+    $addressTo->setPlace('Москва');
+    $addressTo->setRegion('Москва');
+
+    $return_shipment = new \LapayGroup\RussianPost\Entity\ReturnShipment();
+    $return_shipment->setMailType(\LapayGroup\RussianPost\Enum\MailType::UNDEFINED);
+    $return_shipment->setSenderName('Иванов Иван');
+    $return_shipment->setRecipientName('Петров Петр');
+    $return_shipment->setOrderNum(1234);
+    $return_shipment->setAddressFrom($addressFrom);
+    $return_shipment->setAddressTo($addressTo);
+
+    $result = $otpravkaApi->createReturnShipment([$return_shipment->asArr()]);
+    
+    // Успешный ответ
+    // TODO добавьте в PR, если у кого есть реальный пример, пожалуйста :-)
+    
+    // Ответ с ошибкой
+    /*Array
+    (
+        [0] => Array
+        (
+            [errors] => Array
+            (
+                [0] => Array
+                (
+                    [code] => FREE_ER_ADDRESS_NOT_ENABLED
+                    [description] => Свободный ввод адреса не доступен
+                        )
+
+                )
+
+            [position] => 0
+        )
+    )*/
+}
+    
+catch (\InvalidArgumentException $e) {
+  // Обработка ошибки заполнения параметров
+}
+        
+catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
+  // Обработка ошибочного ответа от API ПРФ
+}
+
+catch (\Exception $e) {
+  // Обработка нештатной ситуации
+}
+```
+
+<a name="return-delete"><h3>Удаление отдельного возвратного отправления</h3></a> 
+Удаляет отдельное возвратное отправление.     
+
+**Входные параметры:**
+- *$rpo* - ШПИ возвратного отправления.
+
+**Выходные параметры:**
+- *code* - [Код ошибки](https://otpravka.pochta.ru/specification#/enums-returns-errors);  
+- *description* - Описание ошибки.  
+
+
+**Пример получения списка текущих точек сдачи:**
+```php
+<?php
+use Symfony\Component\Yaml\Yaml;
+use LapayGroup\RussianPost\Providers\OtpravkaApi;
+
+$otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+$result = $otpravkaApi->deleteReturnShipment(123456);
+   
+/*Array
+(
+    [code] => RETURN_SHIPMENT_NOT_FOUND
+    [description] => Возвратное отправление не найдено
+)*/
+```
+
+<a name="return-edit"><h3>Редактирование отдельного возвратного отправления</h3></a> 
+Редактирование отдельного возвратного отправления (ЛВ).  
+Метод asArr() проверяет заполнение необходимых для создания возвратного отправления полей и в случае незаполнения выбрасывает \InvalidArgumentException.  
+
+**Пример создания заказа:**
+```php
+<?php
+use Symfony\Component\Yaml\Yaml;
+use LapayGroup\RussianPost\Providers\OtpravkaApi;
+
+try {
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    
+    $addressFrom = new \LapayGroup\RussianPost\Entity\AddressReturn();
+    $addressFrom->setAddressType(\LapayGroup\RussianPost\Enum\AddressType::DEFAULT);
+    $addressFrom->setIndex(125009);
+    $addressFrom->setPlace('Москва');
+    $addressFrom->setRegion('Москва');
+
+    $addressTo = new \LapayGroup\RussianPost\Entity\AddressReturn();
+    $addressTo->setAddressType(\LapayGroup\RussianPost\Enum\AddressType::DEFAULT);
+    $addressTo->setIndex(115551);
+    $addressTo->setPlace('Москва');
+    $addressTo->setRegion('Москва');
+
+    $return_shipment = new \LapayGroup\RussianPost\Entity\ReturnShipment();
+    $return_shipment->setMailType(\LapayGroup\RussianPost\Enum\MailType::UNDEFINED);
+    $return_shipment->setSenderName('Иванов Иван');
+    $return_shipment->setRecipientName('Петров Петр');
+    $return_shipment->setOrderNum(1234);
+    $return_shipment->setAddressFrom($addressFrom);
+    $return_shipment->setAddressTo($addressTo);
+
+    $result = $otpravkaApi->editReturnShipment($return_shipment, 123456);
+    
+    // Успешный ответ
+    // TODO добавьте в PR, если у кого есть реальный пример, пожалуйста :-)
+    
+    // Ответ с ошибкой
+    /* Array
+    (
+        [errors] => Array
+            (
+                [0] => Array
+                    (
+                        [code] => FREE_ER_ADDRESS_NOT_ENABLED
+                        [description] => Свободный ввод адреса не доступен
+                    )
+
+            )
+
+    )*/
+}
+    
+catch (\InvalidArgumentException $e) {
+  // Обработка ошибки заполнения параметров
+}
+        
+catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
+  // Обработка ошибочного ответа от API ПРФ
+}
+
+catch (\Exception $e) {
+  // Обработка нештатной ситуации
+}
+```
 
 
 <a name="settings"><h1>Настройки</h1></a>  

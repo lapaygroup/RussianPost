@@ -4,6 +4,7 @@ namespace LapayGroup\RussianPost;
 /**
  * Class PostType
  * @package LapayGroup\RussianPost
+ * @deprecated will be removed in version 1.0. Use this class LapayGroup\RussianPost\Enum\PostType
  *
  * Данные из справочника https://delivery.pochta.ru/calc_rpo_delivery_api.pdf
  */
