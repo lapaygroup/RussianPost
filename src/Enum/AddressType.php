@@ -8,8 +8,8 @@ namespace LapayGroup\RussianPost\Enum;
  */
 class AddressType
 {
-    public const DEFAULT = 'DEFAULT'; // Стандартный (улица, дом, квартира)
-    public const PO_BOX  = 'PO_BOX';  // Абонентский ящик
-    public const DEMAND  = 'DEMAND';  // До востребования
-    public const UNIT    = 'UNIT';    // Для военных частей
+    const DEFAULT = 'DEFAULT'; // Стандартный (улица, дом, квартира)
+    const PO_BOX  = 'PO_BOX';  // Абонентский ящик
+    const DEMAND  = 'DEMAND';  // До востребования
+    const UNIT    = 'UNIT';    // Для военных частей
 }

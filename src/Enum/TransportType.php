@@ -8,9 +8,9 @@ namespace LapayGroup\RussianPost\Enum;
  */
 class TransportType
 {
-    public const SURFACE  = 'SURFACE';  // Подарок
-    public const AVIA     = 'AVIA';     // Документы
-    public const COMBINED = 'COMBINED'; // Продажа товара
-    public const EXPRESS  = 'EXPRESS';  // Коммерческий образец
-    public const STANDARD = 'STANDARD'; // Прочее
+    const SURFACE  = 'SURFACE';  // Подарок
+    const AVIA     = 'AVIA';     // Документы
+    const COMBINED = 'COMBINED'; // Продажа товара
+    const EXPRESS  = 'EXPRESS';  // Коммерческий образец
+    const STANDARD = 'STANDARD'; // Прочее
 }

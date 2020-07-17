@@ -53,6 +53,7 @@
   - [x] [Генерация печатной формы Ф103](#gendocf103)  
   - [x] [Подготовка и отправка электронной формы Ф103](#senddocf103)  
   - [x] [Генерация акта осмотра содержимого](#gendocact)  
+  - [x] [Генерация возвратного ярлыка на одной печатной странице](#genreturnlabel)  
 - [Архив](#archive) 
   - [x] [Перевод партии в архив](#archiving_batch)  
   - [x] [Возврат партии из архива](#unarchiving_batch)  
@@ -75,7 +76,8 @@
   - [x] [Текущие точки сдачи](#settings_shipping_points)  
   - [x] [Текущие настройки пользователя](#get_settings)  
 
-<a name="links"><h1>Changelog</h1></a>    
+<a name="links"><h1>Changelog</h1></a>  
+- 0.9.1 - Актуализация списка статусов отправления, добавлена генерация печатных форм для заказа до формирования партии, подробнее [тут](https://github.com/lapaygroup/RussianPost/releases/tag/0.9.1); 
 - 0.9.0 - Актуализация списка статусов отправления, легкий возврат, выгрузка из паспорта ОПС, подробнее [тут](https://github.com/lapaygroup/RussianPost/releases/tag/0.9.0);  
 - 0.8.6 - Исправление ошибки API отправки с desc в ответе вместо sub-code;  
 - 0.8.5 - Зависимость с Guzzle 6.3+ вместо строгой 6.3;  
@@ -1057,7 +1059,6 @@ use LapayGroup\RussianPost\Entity\Order;
 try {
     $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
     
-    $orders = [];
     $order = new Order();
     $order->setIndexTo(115551);
     $order->setPostOfficeCode(109012);
@@ -1072,7 +1073,6 @@ try {
     $order->setStreetTo('Каширское шоссе');
     $order->setRoomTo('1');
     $order->setSurname('Иванов');
-    $orders[] = $order->asArr();
     
     $result = $otpravkaApi->editOrder($order, 115322331);
     
@@ -2174,6 +2174,7 @@ catch (\Exception $e) {
  
 Опционально прикрепляются формы: Ф112ЭК (отправление с наложенным платежом), Ф22 (посылка онлайн), уведомление (для заказного письма или бандероли).
 
+**ВАЖНО:** Для генерации печатных форм до формирования партии в третьем параметре **batch** необходимо передавать **false**.  
 ```php
 <?php
 use Symfony\Component\Yaml\Yaml;
@@ -2181,7 +2182,11 @@ use LapayGroup\RussianPost\Providers\OtpravkaApi;
 
 try {
     $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
-    $result = $otpravkaApi->generateDocOrderPrintForm(123645924, OtpravkaApi::PRINT_FILE, new DateTimeImmutable('now'));
+    // Генерация печатных форм до формирования партии
+    $result = $otpravkaApi->generateDocOrderPrintForm(123645924, OtpravkaApi::PRINT_FILE, false, new DateTimeImmutable('now'));
+    // Генерация печатных форм после формирования партии
+    $result = $otpravkaApi->generateDocOrderPrintForm(123645924, OtpravkaApi::PRINT_FILE, true, new DateTimeImmutable('now'));
+
     /*
     GuzzleHttp\Psr7\UploadedFile Object
     (
@@ -2299,6 +2304,30 @@ use LapayGroup\RussianPost\Providers\OtpravkaApi;
 try {
     $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
     $result = $otpravkaApi->generateDocCheckingAct(28, OtpravkaApi::PRINT_FILE);
+    // TODO если у Вас есть пример ответа, просьба приложить его через pull request :)
+}
+        
+catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
+  // Обработка ошибочного ответа от API ПРФ
+}
+
+catch (\Exception $e) {
+  // Обработка нештатной ситуации
+}
+```
+
+
+<a name="genreturnlabel"><h3>Генерация возвратного ярлыка на одной печатной странице</h3></a>
+Генерирует и возвращает pdf файл возвратного ярлыка на одной печатной странице.            
+
+```php
+<?php
+use Symfony\Component\Yaml\Yaml;
+use LapayGroup\RussianPost\Providers\OtpravkaApi;
+
+try {
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $result = $otpravkaApi->generateReturnLabel(123456, OtpravkaApi::PRINT_FILE, OtpravkaApi::PRINT_TYPE_PAPER);
     // TODO если у Вас есть пример ответа, просьба приложить его через pull request :)
 }
         

@@ -8,8 +8,8 @@ namespace LapayGroup\RussianPost\Enum;
  */
 class OpsObjectType
 {
-    public const ALL  = 'ALL'; // Все объекты
-    public const OPS  = 'OPS'; // ОПС
-    public const PVZ  = 'PVZ'; // ПВЗ
-    public const APS  = 'APS'; // Почтаматы
+    const ALL  = 'ALL'; // Все объекты
+    const OPS  = 'OPS'; // ОПС
+    const PVZ  = 'PVZ'; // ПВЗ
+    const APS  = 'APS'; // Почтаматы
 }

@@ -695,25 +695,31 @@ class OtpravkaApi implements LoggerAwareInterface
      * @return string|UploadedFile
      * @throws RussianPostException
      */
-    public function generateDocF112ek($order_id, $action)
+    public function generateDocF112ek($order_id, $action = self::PRINT_FILE)
     {
         $file = $this->callApi('GET', 'forms/'.$order_id.'/f112pdf');
         return $this->fileAction($file, $action);
     }
 
     /**
-     * Генерация печатных форм для заказа (до формирования партии)
+     * Генерация печатных форм для заказа
      *
      * @param int $order_id - уникальный идентификатор заказа
      * @param int $action - действие с файлом
+     * @param bool $batch - false (до формирования партии), true (после формирования партии)
      * @param \DateTimeImmutable $sending_date
      * @param string $print_type - тип печати (термопечать или на бумаге)
      * @return string|UploadedFile
      * @throws RussianPostException
      */
-    public function generateDocOrderPrintForm($order_id, $action, $sending_date = null, $print_type = null)
+    public function generateDocOrderPrintForm($order_id, $action, $batch = true, $sending_date = null, $print_type = null)
     {
-        $file = $this->callApi('GET', 'forms/'.$order_id.'/forms', [
+        if ($batch)
+            $uri = 'forms/'.$order_id.'/forms';
+        else
+            $uri = 'forms/backlog/'.$order_id.'/forms';
+
+        $file = $this->callApi('GET', $uri, [
             'sending-date' => $sending_date->format('Y-m-d'),
             'print-type' => $print_type
         ]);
@@ -763,6 +769,21 @@ class OtpravkaApi implements LoggerAwareInterface
 
         if (!empty($response['error-code']))
             throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' получена ошибка: '.$response['error-code'].' (см. https://otpravka.pochta.ru/specification#/enums-errors)');
+    }
+
+    /**
+     * Генерирует и возвращает PDF-файл возвратного ярлыка на одной печатной странице
+     *
+     * @param string $rpo - ШПИ отправления
+     * @param int $action - действие с файлом
+     * @param string $print_type - тип печати (термо или на бумаге)
+     * @return string|UploadedFile
+     * @throws RussianPostException
+     */
+    public function generateReturnLabel($rpo, $action = self::PRINT_FILE, $print_type = self::PRINT_TYPE_PAPER)
+    {
+        $file = $this->callApi('GET', 'forms/'.$rpo.'/easy-return-pdf');
+        return $this->fileAction($file, $action);
     }
 
     /**

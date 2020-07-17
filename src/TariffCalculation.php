@@ -43,6 +43,9 @@ class TariffCalculation implements LoggerAwareInterface
 
         if (empty($resultRaw['transid'])) $resultRaw['transid'] = Null;
         if (empty($resultRaw['transname'])) $resultRaw['transname'] = Null;
+        if (!isset($resultRaw['weight'])) $resultRaw['weight'] = Null;
+        if (!isset($resultRaw['name'])) $resultRaw['name'] = Null;
+        if (!isset($resultRaw['pay'])) $resultRaw['pay'] = Null;
 
         $calculateInfo->setVersion($resultRaw['version']);
         $calculateInfo->setCategoryItemId($resultRaw['id']);
@@ -52,18 +55,18 @@ class TariffCalculation implements LoggerAwareInterface
         $calculateInfo->setTransportationName($resultRaw['transname']);
         $calculateInfo->setPay($resultRaw['pay']);
         $calculateInfo->setPayNds($resultRaw['paynds']);
-        $paymark = ! empty($resultRaw['paymark']) ? $resultRaw['paymark'] : 0.00;
+        $paymark = !empty($resultRaw['paymark']) ? $resultRaw['paymark'] : 0.00;
         $calculateInfo->setPayMark($paymark);
-        if (! empty($resultRaw['ground'])) {
+        if (!empty($resultRaw['ground'])) {
             $calculateInfo->setGround($resultRaw['ground']['val']);
             $calculateInfo->setGroundNds($resultRaw['ground']['valnds']);
         }
-        if (! empty($resultRaw['cover'])) {
+        if (!empty($resultRaw['cover'])) {
             $calculateInfo->setCover($resultRaw['cover']['val']);
             $calculateInfo->setCoverNds($resultRaw['cover']['valnds']);
         }
 
-        if (! empty($resultRaw['service'])) {
+        if (!empty($resultRaw['service'])) {
             $calculateInfo->setService($resultRaw['service']['val']);
             $calculateInfo->setServiceNds($resultRaw['service']['valnds']);
         }
@@ -71,9 +74,9 @@ class TariffCalculation implements LoggerAwareInterface
         foreach ($resultRaw['tariff'] as $tariffInfo) {
             foreach ($tariffInfo as $key => $paramInfo) {
                 if (is_array($paramInfo)) {
-                    $valMark = ! empty($tariffInfo[$key]['valmark']) ? $tariffInfo[$key]['valmark'] : 0;
-                    $val = ! empty($tariffInfo[$key]['val']) ? $tariffInfo[$key]['val'] : 0;
-                    $valNds = ! empty($tariffInfo[$key]['valnds']) ? $tariffInfo[$key]['valnds'] : 0;
+                    $valMark = !empty($tariffInfo[$key]['valmark']) ? $tariffInfo[$key]['valmark'] : 0;
+                    $val     = !empty($tariffInfo[$key]['val']) ? $tariffInfo[$key]['val'] : 0;
+                    $valNds  = !empty($tariffInfo[$key]['valnds']) ? $tariffInfo[$key]['valnds'] : 0;
                 }
             }
 

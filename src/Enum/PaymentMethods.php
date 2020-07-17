@@ -8,9 +8,9 @@ namespace LapayGroup\RussianPost\Enum;
  */
 class PaymentMethods
 {
-    public const CASHLESS             = 'CASHLESS';            // Безналичный расчет
-    public const STAMP                = 'STAMP';               // Оплата марками
-    public const FRANKING             = 'FRANKING';            // Франкирование
-    public const TO_FRANKING          = 'TO_FRANKING';         // На франкировку
-    public const ONLINE_PAYMENT_MARK  = 'ONLINE_PAYMENT_MARK'; // Знак онлайн оплаты
+    const CASHLESS             = 'CASHLESS';            // Безналичный расчет
+    const STAMP                = 'STAMP';               // Оплата марками
+    const FRANKING             = 'FRANKING';            // Франкирование
+    const TO_FRANKING          = 'TO_FRANKING';         // На франкировку
+    const ONLINE_PAYMENT_MARK  = 'ONLINE_PAYMENT_MARK'; // Знак онлайн оплаты
 }

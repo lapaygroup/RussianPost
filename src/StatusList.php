@@ -7,7 +7,7 @@ use LapayGroup\RussianPost\Exceptions\StatusValidationException;
 class StatusList
 {
     // Карта сопоставления статусов по кодам статуса и подстатуса
-    private $statusMap = [
+    private $status_map = [
         '1' => [ // Прием
             '1' => 'Единичный',
             '2' => 'Партионный',
@@ -17,6 +17,7 @@ class StatusList
             '6' => 'По ведомости в СЦ (сортировочном центре',
             '7' => 'Упрощенный предзаполненный',
             '8' => 'Упрощенный предоплаченный',
+            '9' => 'В соответствие с Поручением экспедитору',
         ],
         '2' => [ // Вручение
             '0' => '',
@@ -34,6 +35,10 @@ class StatusList
             '12' => 'Адресату с контролем ответа курьером', // Конечный
             '13' => 'Вручение адресату по ПЭП', // Конечный
             '14' => 'Для передачи на оцифровку', // Конечный
+            '15' => 'Адресату Экспедитором', // Конечный
+            '16' => 'Отправителю Экспедитором', // Конечный
+            '17' => 'Адресату почтальоном по ПЭП', // Конечный
+            '18' => 'Адресату курьером по ПЭП' // Конечный
         ],
         '3' => [ // Возврат
             '1' => 'Истёк срок хранения',
@@ -51,6 +56,7 @@ class StatusList
             '13' => 'Для проведения таможенных операций',
             '14' => 'Распоряжение ЭТП',
             '15' => 'Частичный выкуп',
+            '16' => 'По согласованию с адресатом'
         ],
         '4' => [ // Досылка почты
             '1' => 'По заявлению пользователя',
@@ -60,13 +66,14 @@ class StatusList
             '5' => 'Передача на временное хранение',
             '6' => 'Передача в невостребованные',
             '7' => 'По техническим причинам',
+            '8' => 'По согласованию с адресатом',
         ],
         '5' => [ // Невручение
             '1' => 'Утрачено', // Конечный
             '2' => 'Изъято', // Конечный
             '3' => 'Засылка',
             '8' => 'Решение таможни',
-            '9' => 'Доставка по указанному адресу не осуществляется'
+            '9' => '(зарезервировано)'
         ],
         '6' => [ // Хранение
             '1' => 'До востребования',
@@ -131,7 +138,9 @@ class StatusList
             '46' => 'Резерв',
             '47' => 'Приостановлена обработка по 115-ФЗ',
             '48' => 'Присвоено место адресного хранения',
-            '49' => 'Направлено в пункт выдачи'
+            '49' => 'Направлено в пункт выдачи',
+            '50' => 'Отправка запроса в Колл-центр',
+            '51' => 'Фиксация веса после таможенного осмотра'
         ],
         '9' => [ // Импорт международной почты (БЕЗ АТРИБУТА)
             '0' => 'Импорт международной почты'
@@ -441,7 +450,7 @@ class StatusList
         ],
     ];
 
-    private $statusNameList = [
+    private $status_name_list = [
                                 1 => 'Прием',
                                 2 => 'Вручение',
                                 3 => 'Возврат',
@@ -489,19 +498,23 @@ class StatusList
                                 45 => 'Отказ от отправки электронного уведомления получателем',
                                 46 => 'Отмена присвоения идентификатора',
                                 47 => 'Подтверждение возможности приема',
-                                48 => 'Частичное вручение'
+                                48 => 'Частичное вручение',
+                                49 => 'Отказ в продлении срока хранения',
+                                50 => 'Неудачная доставка в АПС',
+                                51 => 'Неудачная доставка в ПВЗ',
+                                52 => 'Отказ в резервировании ячейки АПС',
                             ];
 
     /**
      * Проверяет признак конечного статуса
      * @return bool
      */
-    public function isFinal($statusId, $substatusId = 0)
+    public function isFinal($status_id, $substatus_id = 0)
     {
-        if (!$substatusId) $substatusId = 0;
+        if (!$substatus_id) $substatus_id = 0;
 
         $finalList = [
-            2 => [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,13,14],
+            2 => [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,13,14,15,16,17,18],
             5 => [1, 2],
             15 => [0],
             16 => [0],
@@ -509,41 +522,41 @@ class StatusList
             18 => [0]
         ];
 
-        return isset($finalList[$statusId]) && in_array($substatusId, $finalList[$statusId]);
+        return isset($finalList[$status_id]) && in_array($substatus_id, $finalList[$status_id]);
     }
 
     /**
      * Функция по коду статуса или статуса и подстатуса возвращает информацию по статусу
-     * @param $statusId код статуса
-     * @param $substatusId код подстатуса (Если не передан, то вернет информацию только по статусу)
-     * @param string $statusName название статуса (Если не передан, то возьмет название из справочника)
+     * @param int $status_id код статуса
+     * @param int $substatus_id код подстатуса (Если не передан, то вернет информацию только по статусу)
+     * @param string $status_name название статуса (Если не передан, то возьмет название из справочника)
      * @return array
      */
-    public function getInfo($statusId, $substatusId=false, $statusName = false)
+    public function getInfo($status_id, $substatus_id = false, $status_name = false)
     {
-        //Проверяем, что передан существующий код статуса
-        if (empty($this->statusMap[$statusId])) {
+        // Проверяем, что передан существующий код статуса
+        if (empty($this->status_map[$status_id])) {
             throw new StatusValidationException('Неверный код статуса', 404);
         }
 
-        //Проверяем, что передан существующий код подстатуса
-        if (isset($substatusId) && empty($this->statusMap[$statusId][$substatusId])) {
+        // Проверяем, что передан существующий код подстатуса
+        if (isset($substatus_id) && empty($this->status_map[$status_id][$substatus_id])) {
             throw new StatusValidationException('Неверный код подстатуса', 405);
         }
 
-        if (empty($statusName))
-            $statusName = !empty($this->statusNameList[$statusId]) ? $this->statusNameList[$statusId] : 'Не определено';
+        if (empty($status_name))
+            $status_name = !empty($this->status_name_list[$status_id]) ? $this->status_name_list[$status_id] : 'Не определено';
 
-        $result['statusName'] = $statusName;
-        $result['statusId'] = $statusId;
-        $result['isFinal'] = $this->isFinal($statusId, $substatusId);
+        $result['statusName'] = $status_name;
+        $result['statusId'] = $status_id;
+        $result['isFinal'] = $this->isFinal($status_id, $substatus_id);
 
-        if (isset($substatusId)) {
-            $result['substatusId'] = $substatusId;
-            if(!empty($this->statusMap[$statusId][$substatusId])) {
-                $result['substatusName'] = $this->statusMap[$statusId][$substatusId];
-            } elseif (!empty($this->statusMap[$statusId][0])) {
-                $result['substatusName'] = $this->statusMap[$statusId][0];
+        if (isset($substatus_id)) {
+            $result['substatusId'] = $substatus_id;
+            if(!empty($this->status_map[$status_id][$substatus_id])) {
+                $result['substatusName'] = $this->status_map[$status_id][$substatus_id];
+            } elseif (!empty($this->status_map[$status_id][0])) {
+                $result['substatusName'] = $this->status_map[$status_id][0];
             } else {
                 $result['substatusName'] = 'Не определено';
             }
