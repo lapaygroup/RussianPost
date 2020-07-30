@@ -10,6 +10,7 @@ Class CustomsDeclarationItem
     /** @var string  */
     private $description = ''; // Наименование товара
     private $tnved_code = ''; // Код ТНВЭД
+    private $trademark = ''; //Торговая марка
     private $weight = 0; // Вес вложения в граммах
     /** @var int|null  */
     private $value = null; // Цена товара (вкл. НДС) в копейках
@@ -109,4 +110,22 @@ Class CustomsDeclarationItem
     {
         $this->value = $value;
     }
+
+    /**
+     * @return string
+     */
+    public function getTrademark()
+    {
+        return $this->trademark;
+    }
+
+    /**
+     * @param string $trademark
+     */
+    public function setTrademark($trademark)
+    {
+        $this->trademark = $trademark;
+    }
+
+
 }
