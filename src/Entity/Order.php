@@ -361,6 +361,7 @@ Class Order
                     $cd_order_item['country-code'] = (int)$cd_item->getCountryCode();
                     $cd_order_item['description'] = $cd_item->getDescription();
                     $cd_order_item['tnved-code'] = $cd_item->getTnvedCode();
+                    $cd_order_item['trademark'] = $cd_item->getTrademark();
                     $cd_order_item['weight'] = (int)$cd_item->getWeight();
                     if (!is_null($cd_item->getValue()))
                         $cd_order_item['value'] = (int)$cd_item->getValue();
