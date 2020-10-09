@@ -1,6 +1,7 @@
 <?php
 namespace LapayGroup\RussianPost\Providers;
 
+use LapayGroup\RussianPost\Exceptions\StatusValidationException;
 use LapayGroup\RussianPost\Exceptions\TrackingException;
 use LapayGroup\RussianPost\StatusList;
 use Psr\Log\LoggerAwareInterface;
@@ -242,9 +243,16 @@ class Tracking implements LoggerAwareInterface
             }
 
             foreach ($item as &$operation) {
-                $statusInfo = $statusList->getInfo($operation->OperTypeID, $operation->OperCtgID);
-                $operation->OperCtgName = $statusInfo['substatusName'];
-                $operation->isFinal = $statusInfo['isFinal'];
+                try {
+                    $statusInfo = $statusList->getInfo($operation->OperTypeID, $operation->OperCtgID);
+                    $operation->OperCtgName = $statusInfo['substatusName'];
+                    $operation->isFinal = $statusInfo['isFinal'];
+                }
+
+                catch (StatusValidationException $e) {
+                    $operation->OperCtgName = $e->getMessage();
+                    $operation->isFinal = false;
+                }
             }
 
             $result[$rpo] = $item;

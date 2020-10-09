@@ -179,7 +179,8 @@ class StatusList
             '25' => 'Засыл отправления',
             '26' => 'За смертью получателя',
             '27' => 'Национальный праздник',
-            '28' => 'Утрата'
+            '28' => 'Утрата',
+            '29' => 'По распоряжению адресата'
         ],
         '13' => [ // Регистрация отправки (БЕЗ АТРИБУТА)
             '0' => 'Регистрация отправки'
@@ -536,12 +537,12 @@ class StatusList
     {
         // Проверяем, что передан существующий код статуса
         if (empty($this->status_map[$status_id])) {
-            throw new StatusValidationException('Неверный код статуса', 404);
+            throw new StatusValidationException('Неверный код статуса: '.$status_id, 404);
         }
 
         // Проверяем, что передан существующий код подстатуса
         if (isset($substatus_id) && empty($this->status_map[$status_id][$substatus_id])) {
-            throw new StatusValidationException('Неверный код подстатуса', 405);
+            throw new StatusValidationException('Неверный код подстатуса: статус '.$status_id.', подстатус '.$substatus_id, 405);
         }
 
         if (empty($status_name))
