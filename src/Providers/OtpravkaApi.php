@@ -82,7 +82,7 @@ class OtpravkaApi implements LoggerAwareInterface
             case self::DELIVERY:
                 if (!$this->deliveryClient) {
                     $this->deliveryClient = new \GuzzleHttp\Client([
-                        'base_uri' => 'https://delivery.pochta.ru/delivery/' . self::DELIVERY_VERSION . '/',
+                        'base_uri' => 'https://delivery.pochta.ru/delivery/',
                         'timeout' => $this->timeout,
                         'http_errors' => false
                     ]);
@@ -92,7 +92,7 @@ class OtpravkaApi implements LoggerAwareInterface
             case self::POSTOFFICE:
                 if (!$this->postOfficeClient) {
                     $this->postOfficeClient = new \GuzzleHttp\Client([
-                        'base_uri' => 'https://otpravka-api.pochta.ru/postoffice/' . self::V1 . '/',
+                        'base_uri' => 'https://otpravka-api.pochta.ru/postoffice/',
                         'headers' => ['Authorization' => 'AccessToken ' . $this->token,
                             'X-User-Authorization' => 'Basic ' . $this->key,
                             'Content-Type' => 'application/json',
