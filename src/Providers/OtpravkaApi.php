@@ -32,6 +32,7 @@ class OtpravkaApi implements LoggerAwareInterface
     const OTPRAVKA          = 1; // Endpoint отправки
     const DELIVERY          = 2; // Endpoint сроков доставки
     const POSTOFFICE        = 3; // Endpoint работы с ОПС
+    const OTPRAVKA_2        = 4; // Endpoint отправки для получения заказа методом 2
 
     /** @var string */
     private $token = null;
@@ -41,6 +42,9 @@ class OtpravkaApi implements LoggerAwareInterface
 
     /** @var int  */
     private $timeout = 60;
+
+    /** @var \GuzzleHttp\Client */
+    private $otpravkaClient2 = null;
 
     /** @var \GuzzleHttp\Client  */
     private $otpravkaClient = null;
@@ -59,7 +63,7 @@ class OtpravkaApi implements LoggerAwareInterface
         $this->key = $config['auth']['otpravka']['key'];
     }
 
-    private function checkApiClient($version, $endpoint = self::OTPRAVKA)
+    private function checkApiClient($endpoint = self::OTPRAVKA)
     {
         if (empty($endpoint)) $endpoint = self::OTPRAVKA;
 
@@ -67,7 +71,22 @@ class OtpravkaApi implements LoggerAwareInterface
             case self::OTPRAVKA:
                 if (!$this->otpravkaClient) {
                     $this->otpravkaClient = new \GuzzleHttp\Client([
-                        'base_uri' => 'https://otpravka-api.pochta.ru/' . $version . '/',
+                        'base_uri' => 'https://otpravka-api.pochta.ru/' . self::VERSION . '/',
+                        'headers' => ['Authorization' => 'AccessToken ' . $this->token,
+                            'X-User-Authorization' => 'Basic ' . $this->key,
+                            'Content-Type' => 'application/json',
+                            // 'Accept' => 'application/json;charset=UTF-8'
+                        ],
+                        'timeout' => $this->timeout,
+                        'http_errors' => false
+                    ]);
+                }
+                break;
+
+            case self::OTPRAVKA_2:
+                if (!$this->otpravkaClient2) {
+                    $this->otpravkaClient2 = new \GuzzleHttp\Client([
+                        'base_uri' => 'https://otpravka-api.pochta.ru/' . self::VERSION_2 . '/',
                         'headers' => ['Authorization' => 'AccessToken ' . $this->token,
                             'X-User-Authorization' => 'Basic ' . $this->key,
                             'Content-Type' => 'application/json',
@@ -82,7 +101,7 @@ class OtpravkaApi implements LoggerAwareInterface
             case self::DELIVERY:
                 if (!$this->deliveryClient) {
                     $this->deliveryClient = new \GuzzleHttp\Client([
-                        'base_uri' => 'https://delivery.pochta.ru/delivery/' . $version . '/',
+                        'base_uri' => 'https://delivery.pochta.ru/delivery/' . self::DELIVERY_VERSION . '/',
                         'timeout' => $this->timeout,
                         'http_errors' => false
                     ]);
@@ -92,7 +111,7 @@ class OtpravkaApi implements LoggerAwareInterface
             case self::POSTOFFICE:
                 if (!$this->postOfficeClient) {
                     $this->postOfficeClient = new \GuzzleHttp\Client([
-                        'base_uri' => 'https://otpravka-api.pochta.ru/postoffice/' . $version . '/',
+                        'base_uri' => 'https://otpravka-api.pochta.ru/postoffice/' . self::VERSION . '/',
                         'headers' => ['Authorization' => 'AccessToken ' . $this->token,
                             'X-User-Authorization' => 'Basic ' . $this->key,
                             'Content-Type' => 'application/json',
@@ -109,22 +128,26 @@ class OtpravkaApi implements LoggerAwareInterface
     /**
      * Инициализирует вызов к API
      *
-     * @param $type - тип запроса
      * @param string $method - метод API
-     * @param $version - версия метода API
      * @param array $params - параметры запроса
      * @param null|string $endpoint - наименование адреса API
      * @return array | string | UploadedFile
      * @throws RussianPostException
      */
-    private function callApi($type, $method, $params = [], $endpoint = null, $version = self::VERSION)
+    private function callApi($type, $method, $params = [], $endpoint = null)
     {
         $is_file = false;
-        $this->checkApiClient($version, $endpoint);
+        $this->checkApiClient($endpoint);
+        $version = self::VERSION;
 
         switch ($endpoint) {
             case self::OTPRAVKA:
                 $client = $this->otpravkaClient;
+                break;
+
+            case self::OTPRAVKA_2:
+                $client = $this->otpravkaClient2;
+                $version = self::VERSION_2;
                 break;
 
             case self::DELIVERY:
@@ -143,7 +166,7 @@ class OtpravkaApi implements LoggerAwareInterface
             case 'GET':
                 $request = http_build_query($params);
                 if ($this->logger) {
-                    $this->logger->info("Russian Post Otpravka API {$type} request /". $version ."/{$method}: " . $request);
+                    $this->logger->info("Russian Post Otpravka API {$type} request /".$version."/{$method}: ".$request);
                 }
                 $response = $client->get($method, ['query' => $params]);
                 break;
@@ -152,7 +175,7 @@ class OtpravkaApi implements LoggerAwareInterface
             case 'DELETE':
                 $request = json_encode($params);
                 if ($this->logger) {
-                    $this->logger->info("Russian Post Otpravka API {$type} request /" . $version . "/{$method}: ".$request);
+                    $this->logger->info("Russian Post Otpravka API {$type} request /".$version."/{$method}: ".$request);
                 }
 
                 /** @var ResponseInterface $response */
@@ -168,11 +191,11 @@ class OtpravkaApi implements LoggerAwareInterface
         if (preg_match('~^application/(pdf|zip|octet-stream)~', $content_type, $matches_type)) {
             $is_file = true;
             if ($this->logger) {
-                $this->logger->info("Russian Post Otpravka API {$type} response /". $version ."/{$method}: получен файл с расширением ".$matches_type[1], $headers);
+                $this->logger->info("Russian Post Otpravka API {$type} response /".$version."/{$method}: получен файл с расширением ".$matches_type[1], $headers);
             }
         } else {
             if ($this->logger) {
-                $this->logger->info("Russian Post Otpravka API {$type} response /". $version ."/{$method}: " . $response_contents, $headers);
+                $this->logger->info("Russian Post Otpravka API {$type} response /".$version."/{$method}: " . $response_contents, $headers);
             }
         }
 
@@ -340,7 +363,7 @@ class OtpravkaApi implements LoggerAwareInterface
         $params['from'] = $index_from;
         $params['to'] = $index_to;
 
-        return $this->callApi('GET', 'calculate', $params, self::DELIVERY, self::DELIVERY_VERSION);
+        return $this->callApi('GET', 'calculate', $params, self::DELIVERY);
     }
 
     /**
@@ -410,7 +433,7 @@ class OtpravkaApi implements LoggerAwareInterface
      */
     public function createOrdersWithBarCodes($orders)
     {
-        return $this->callApi('PUT', 'user/backlog', $orders, null, self::VERSION_2);
+        return $this->callApi('PUT', 'user/backlog', $orders, self::OTPRAVKA_2);
     }
 
 

@@ -29,7 +29,7 @@
 - [Заказы](#orders)  
   - [x] [Получение списка ПВЗ](#get_pvz_list)    
   - [x] [Создание заказов](#create_orders)  
-  - [ ] [Создание заказов (v2)](#create_orders_v2)  
+  - [x] [Создание заказов (v2)](#create_orders_v2)  
   - [x] [Редактирование заказа](#edit_order)   
   - [x] [Удаление заказов](#delete_orders)   
   - [x] [Поиск заказа](#search_order)  
@@ -1051,9 +1051,90 @@ catch (\Exception $e) {
   // Обработка нештатной ситуации
 }
 ```  
+<a name="create_orders_v2"><h3>Создание заказов (v2)</h3></a>
+Создает новый заказ. Автоматически рассчитывает и проставляет плату за пересылку.
+Возвращает ШПИ, номер в системе отправителя, номер в системе Почты РФ.
 
+**Пример создания заказа:**
+```php
+<?php
+use Symfony\Component\Yaml\Yaml;
+use LapayGroup\RussianPost\Providers\OtpravkaApi;
+use LapayGroup\RussianPost\Entity\Order;
+
+try {
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    
+    $orders = [];
+    $order = new Order();
+    $order->setIndexTo(115551);
+    $order->setPostOfficeCode(109012);
+    $order->setGivenName('Иван');
+    $order->setHouseTo('92');
+    $order->setCorpusTo('3');
+    $order->setMass(1000);
+    $order->setOrderNum('2');
+    $order->setPlaceTo('Москва');
+    $order->setRecipientName('Иванов Иван');
+    $order->setRegionTo('Москва');
+    $order->setStreetTo('Каширское шоссе');
+    $order->setRoomTo('1');
+    $order->setSurname('Иванов');
+    $orders[] = $order->asArr();
+    
+    $result = $otpravkaApi->createOrdersWithBarCodes($orders);
+    
+    // Успешный ответ
+    /*Array
+    (
+        [orders] => Array
+            (
+                [barcode] => 80093053624992
+                [order-num] => 3
+                [result-id] => 310115153
+            )
+    )
+    */
+    
+    // Ответ с ошибкой
+    /*Array
+    (
+        [errors] => Array
+            (
+                [0] => Array
+                    (
+                        [error-codes] => Array
+                            (
+                                [0] => Array
+                                    (   
+                                        [code] => EMPTY_INDEX_TO
+                                        [description] => Почтовый индекс не указан
+                                    )
+    
+                            )
+    
+                        [position] => 0
+                    )
+    
+            )
+    
+    )*/
+}
+    
+catch (\InvalidArgumentException $e) {
+  // Обработка ошибки заполнения параметров
+}
+        
+catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
+  // Обработка ошибочного ответа от API ПРФ
+}
+
+catch (\Exception $e) {
+  // Обработка нештатной ситуации
+}
+```
 <a name="edit_order"><h3>Редактирование заказа</h3></a> 
-Изменение ранее созданного заказа. Автоматически рассчитывает и проставляет плату за пересылку.  
+Изменение ранее созданного заказа. Автоматически рассчитывает и проставляет плату за пересылку.
 
 ```php
 <?php
