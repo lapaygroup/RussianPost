@@ -120,6 +120,8 @@ Class Order
     private $with_simple_notice = null; // Отметка 'С простым уведомлением'
     /** @var boolean|null  */
     private $wo_mail_rank = null; // Отметка "Без разряда"
+    /** @var string|null */
+    private $raw_address = null; // Необработанный адрес получателя
 
     /**
      * Возвращает массив параметров заказа для запроса
@@ -291,6 +293,9 @@ Class Order
 
         if (!is_null($this->getWoMailRank()))
             $request['wo-mail-rank'] = (bool)$this->getWoMailRank();
+
+        if (!is_null($this->getRawAddress()))
+            $request['raw-address'] = $this->getRawAddress();
 
         if (!empty($this->items)) {
             $request['goods']['items'] = [];
@@ -1299,5 +1304,21 @@ Class Order
     public function setWoMailRank($wo_mail_rank)
     {
         $this->wo_mail_rank = $wo_mail_rank;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getRawAddress()
+    {
+        return $this->raw_address;
+    }
+
+    /**
+     * @param $raw_address
+     */
+    public function setRawAddress($raw_address)
+    {
+        $this->raw_address = $raw_address;
     }
 }
