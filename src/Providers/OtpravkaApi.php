@@ -145,7 +145,7 @@ class OtpravkaApi implements LoggerAwareInterface
                 if ($this->logger) {
                     $this->logger->info("Russian Post Otpravka API {$type} request /".$version."/{$method}: ".$request);
                 }
-                $response = $client->get($method, ['query' => $params]);
+                $response = $client->get($version.'/'.$method, ['query' => $params]);
                 break;
             case 'POST':
             case 'PUT':
