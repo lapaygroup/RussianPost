@@ -825,7 +825,7 @@ class OtpravkaApi implements LoggerAwareInterface
         if ($current_date)
             $params['current-date-time'] = (new \DateTimeImmutable())->format('c');
 
-        return $this->callApi('GET', (string)$postal_code, $params, self::POSTOFFICE);
+        return $this->callApi('GET', (string)$postal_code, $params, self::V1, self::POSTOFFICE);
     }
 
     /**
@@ -841,7 +841,7 @@ class OtpravkaApi implements LoggerAwareInterface
         return $this->callApi('GET', 'by-address', [
             'address' => $address,
             'top' => $count
-        ], self::POSTOFFICE);
+        ], self::V1, self::POSTOFFICE);
     }
 
     /**
@@ -853,7 +853,7 @@ class OtpravkaApi implements LoggerAwareInterface
      */
     public function searchPostOfficeByCoordinates($params)
     {
-        return $this->callApi('GET', 'nearby', $params,self::POSTOFFICE);
+        return $this->callApi('GET', 'nearby', $params, self::V1, self::POSTOFFICE);
     }
 
     /**
@@ -870,7 +870,7 @@ class OtpravkaApi implements LoggerAwareInterface
         $method = $post_code.'/services';
         if ($service_group) $method .= '/'.$service_group;
 
-        return $this->callApi('GET', $method, [], self::POSTOFFICE);
+        return $this->callApi('GET', $method, [], self::V1, self::POSTOFFICE);
     }
 
     /**
@@ -888,7 +888,7 @@ class OtpravkaApi implements LoggerAwareInterface
             'settlement' => $locality,
             'region' => $region,
             'district' => $district
-        ], self::POSTOFFICE);
+        ], self::V1, self::POSTOFFICE);
     }
 
     /**
