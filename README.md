@@ -78,6 +78,7 @@
   - [x] [Текущие настройки пользователя](#get_settings)  
 
 <a name="links"><h1>Changelog</h1></a>  
+- 0.9.9 - Исправлена ошибка при переключении клиента в трекинге. За исправление спасибо [Alliance-X](https://github.com/Alliance-X);    
 - 0.9.8 - Исправлены функции для работы с ОПС. За обнаружение и исправление спасибо [Sergey Voronov](https://github.com/srgvrnv);    
 - 0.9.7 - Исправлена работы GET методов API. За обнаружение спасибо [GrayWolfy](https://github.com/GrayWolfy);    
 - 0.9.6 - Добавлена функция создания заказа V2 с возвратом ШК и номеров клиентской ИС, спасибо [GrayWolfy](https://github.com/GrayWolfy) за помощь;   
