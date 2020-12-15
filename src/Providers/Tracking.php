@@ -49,14 +49,14 @@ class Tracking implements LoggerAwareInterface
         $this->service = $service;
 
         if($service != 'pack') {
-            $this->wsdl .= '/tracking-web-static/rtm34_wsdl.xml';
+            $wsdl = $this->wsdl . '/tracking-web-static/rtm34_wsdl.xml';
             $soapVersion = SOAP_1_2;
         } else {
-            $this->wsdl .= '/tracking-web-static/fc_wsdl.xml';
+            $wsdl = $this->wsdl . '/tracking-web-static/fc_wsdl.xml';
             $soapVersion = SOAP_1_1;
         }
 
-        $this->client = new \SoapClient($this->wsdl, array(
+        $this->client = new \SoapClient($wsdl, array(
                 'trace' => 1,
                 'soap_version' => $soapVersion,
                 'use' => SOAP_LITERAL,
