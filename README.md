@@ -229,7 +229,9 @@ catch (\Exception $e) {
 Для использования сервисов Почты России, не считая [тарификатор](#tariffs), необходимы аутентификационные данные.
 Их можно хранить в [ассоциативном массиве](config.php.example) или [yaml-файле](config.yaml.example). В примерах ниже я буду использовать yaml-файл, а парсить его с помощью [symfony/yaml](https://packagist.org/packages/symfony/yaml).    
 
-Информацию о аутентификационных данных можно получить [здесь](https://otpravka.pochta.ru/specification#/authorization-token) и [здесь](https://otpravka.pochta.ru/specification#/authorization-key).  
+Информацию о аутентификационных данных можно получить [здесь](https://otpravka.pochta.ru/specification#/authorization-token) и [здесь](https://otpravka.pochta.ru/specification#/authorization-key).   
+
+На запросы к API отправки Почтой России установлены лимиты на количество запросов в сутки. Для их увеличения необходимо написать письмо на почту support.parcel@russianpost.ru.    
 
 
 <a name="debugging"><h1>Отладка</h1></a>  
