@@ -78,6 +78,7 @@
   - [x] [Текущие настройки пользователя](#get_settings)  
 
 <a name="links"><h1>Changelog</h1></a>  
+- 0.9.10 - Добавлена поддержка флага useOnlineBalance в методе отправки электронной формы Ф103;    
 - 0.9.9 - Исправлена ошибка при переключении клиента в трекинге. За исправление спасибо [Alliance-X](https://github.com/Alliance-X);    
 - 0.9.8 - Исправлены функции для работы с ОПС. За обнаружение и исправление спасибо [Sergey Voronov](https://github.com/srgvrnv);    
 - 0.9.7 - Исправлена работы GET методов API. За обнаружение спасибо [GrayWolfy](https://github.com/GrayWolfy);    
@@ -2115,6 +2116,8 @@ use LapayGroup\RussianPost\Providers\OtpravkaApi;
 try {
     $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
     $otpravkaApi->sendingF103form(28);
+    $otpravkaApi->sendingF103form(28, true); // С онлайн балансом 
+
 }
 
 catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {

@@ -773,12 +773,16 @@ class OtpravkaApi implements LoggerAwareInterface
      * Подготовка и отправка электронной формы Ф103
      *
      * @param string $batch_name - наименование партии
+     * @param boolean $online_balance - признак использования онлайн баланса
      * @return boolean
      * @throws RussianPostException
      */
-    public function sendingF103form($batch_name)
+    public function sendingF103form($batch_name, $online_balance = false)
     {
         $method = 'batch/'.$batch_name.'/checkin';
+        if ($online_balance)
+            $method .= '?useOnlineBalance=true';
+
         $response = $this->callApi('POST', $method);
         if (!empty($response['f103-sent'])) return true;
 
