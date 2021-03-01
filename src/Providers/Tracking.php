@@ -70,7 +70,7 @@ class Tracking implements LoggerAwareInterface
      * Получение подробной информации обо всех операциях, совершенных над отправлением
      * @param $rpo - ШК отправления
      * @param string $lang - Язык названия операций (RUS, ENG)
-     * @return \stdClass
+     * @return \stdClass[]
      * @throws \SoapFault
      */
     public function getOperationsByRpo($rpo, $lang = 'RUS')
@@ -100,6 +100,8 @@ class Tracking implements LoggerAwareInterface
         }
 
         $result = $response->OperationHistoryData;
+
+        if (!isset($result->historyRecord)) return [];
 
         if (!is_array($result->historyRecord))
             $result->historyRecord = [$result->historyRecord];
