@@ -100,7 +100,10 @@ class Tracking implements LoggerAwareInterface
         }
 
         $result = $response->OperationHistoryData;
-
+        
+        if (!isset($result->historyRecord))
+            throw new TrackingException('Информация об отправлении ('.$rpo.') временно недоступна.');
+        
         if (!is_array($result->historyRecord))
             $result->historyRecord = [$result->historyRecord];
 
