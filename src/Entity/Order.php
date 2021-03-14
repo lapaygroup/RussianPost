@@ -21,8 +21,9 @@ Class Order
     private $region_to = ''; // * Область, регион получателя
     /** @var string|null  */
     private $area_to = null; // Район получателя
-    /** @var string  */
+    /** @var string|null  */
     private $place_to = ''; // * Населенный пункт
+    /** @var string|null  */
     private $street_to = null; // * Улица получателя
     /** @var string|null  */
     private $branch_name = null; // Идентификатор подразделения
@@ -120,6 +121,8 @@ Class Order
     private $with_simple_notice = null; // Отметка 'С простым уведомлением'
     /** @var boolean|null  */
     private $wo_mail_rank = null; // Отметка "Без разряда"
+    /** @var string|null  */
+    private $comment = null; // Комментарий к заказу
 
     /**
      * Возвращает массив параметров заказа для запроса
@@ -291,6 +294,9 @@ Class Order
 
         if (!is_null($this->getWoMailRank()))
             $request['wo-mail-rank'] = (bool)$this->getWoMailRank();
+
+        if (!is_null($this->getComment()))
+            $request['comment'] = $this->getComment();
 
         if (!empty($this->items)) {
             $request['goods']['items'] = [];
@@ -1299,5 +1305,21 @@ Class Order
     public function setWoMailRank($wo_mail_rank)
     {
         $this->wo_mail_rank = $wo_mail_rank;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getComment()
+    {
+        return $this->comment;
+    }
+
+    /**
+     * @param string|null $comment
+     */
+    public function setComment($comment)
+    {
+        $this->comment = $comment;
     }
 }
