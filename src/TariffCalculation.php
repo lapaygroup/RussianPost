@@ -18,17 +18,18 @@ class TariffCalculation implements LoggerAwareInterface
      * @param array $params - массив данных по отправлению
      * @param array $services - массив ID услуг
      * @param string $date - дата расчета тарифа (необязательный параметр)
+     * @param int $timeout - время ожидания ответа от api (необязательный параметр)
      * @return CalculateInfo результат расчета тарифа
      * @throws RussianPostException
      * @throws RussianPostTarrificatorException
      * @throws \GuzzleHttp\Exception\GuzzleException
      */
-    public function calculate($object_id, $params, $services = [], $date=false)
+    public function calculate($object_id, $params, $services = [], $date=false, $timeout = 60)
     {
         if (empty($date)) $date = date('Ymd');
         $params['date'] = $date;
 
-        $calculation = new Calculation();
+        $calculation = new Calculation($timeout);
         if ($this->logger) {
             $calculation->setLogger($this->logger);
         }
