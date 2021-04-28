@@ -10,6 +10,9 @@ use Psr\Log\LoggerAwareTrait;
 class TariffCalculation implements LoggerAwareInterface
 {
     use LoggerAwareTrait;
+    
+    /** @var int  */
+    private $timeout = 60;
 
     /**
      * Расчет тарифа
@@ -18,6 +21,7 @@ class TariffCalculation implements LoggerAwareInterface
      * @param array $params - массив данных по отправлению
      * @param array $services - массив ID услуг
      * @param string $date - дата расчета тарифа (необязательный параметр)
+     * @param int $timeout - время ожидания ответа от api (необязательный параметр)
      * @return CalculateInfo результат расчета тарифа
      * @throws RussianPostException
      * @throws RussianPostTarrificatorException
@@ -28,7 +32,7 @@ class TariffCalculation implements LoggerAwareInterface
         if (empty($date)) $date = date('Ymd');
         $params['date'] = $date;
 
-        $calculation = new Calculation();
+        $calculation = new Calculation($this->timeout);
         if ($this->logger) {
             $calculation->setLogger($this->logger);
         }
@@ -90,5 +94,21 @@ class TariffCalculation implements LoggerAwareInterface
         }
 
         return $calculateInfo;
+    }
+    
+    /**
+     * @return int
+     */
+    public function getTimeout()
+    {
+        return $this->timeout;
+    }
+
+    /**
+     * @param int $timeout - таймаут ожидания ответа
+     */
+    public function setTimeout($timeout)
+    {
+        $this->timeout = $timeout;
     }
 }
