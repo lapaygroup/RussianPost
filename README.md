@@ -77,7 +77,8 @@
   - [x] [Текущие точки сдачи](#settings_shipping_points)  
   - [x] [Текущие настройки пользователя](#get_settings)  
 
-<a name="links"><h1>Changelog</h1></a>
+<a name="links"><h1>Changelog</h1></a>.  
+- 0.9.15 - Добавлена возможность задать таймаут в тарификаторе. За исправление спасибо [DarWiM](https://github.com/DarWiM);  
 - 0.9.14 - Добавлена поддержка Guzzle 7.3 в зависимостях Composer;  
 - 0.9.13 - Добавлено поле [комментарий к заказу](src/Entity/Order.php#L125) при создании заказа V1 и V2;   
 - 0.9.12 - Исправлена ошибка с отсутствующим $result->historyRecord в ответе API Почты. За исправление спасибо [Nikita Burichenko](https://github.com/nb-nortus);   
