@@ -11,6 +11,8 @@ Class Item
 {
     /** @var string|null  */
     private $code = null; // Код (маркировка) товара
+    /** @var int  */
+    private $lineattr = 1; // Признак предмета расчета. См. Справочнк признаков предмета расчета
     /** @var string  */
     private $description = ''; // Наименование товара
     /** @var int|null  */
@@ -43,6 +45,22 @@ Class Item
     public function setCode($code)
     {
         $this->code = $code;
+    }
+    
+    /**
+     * @return int
+     */
+    public function getLineAttr()
+    {
+        return $this->lineattr;
+    }
+    
+    /**
+     * @param int
+     */
+    public function setLineAttr($lineattr)
+    {
+        $this->lineattr = $lineattr;
     }
 
     /**
