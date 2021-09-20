@@ -329,6 +329,9 @@ Class Order
 
                 if (!is_null($item->getVatRate()))
                     $order_item['vat-rate'] = (int)$item->getVatRate();
+                
+                if (!is_null($item->getLineAttr()))
+                    $order_item['lineattr'] = (int)$item->getLineAttr();
 
                 $request['goods']['items'][] = $order_item;
             }
