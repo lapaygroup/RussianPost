@@ -309,6 +309,18 @@ Class Order
                 if (!is_null($item->getCode()))
                     $order_item['code'] = $item->getCode();
 
+                if (!is_null($item->getСountryCode()))
+                    $order_item['country-code'] = $item->getСountryCode();
+
+                if (!is_null($item->getLineAttr()))
+                    $order_item['lineattr'] = (int)$item->getLineAttr();
+
+                if (!is_null($item->getPayAttr()))
+                    $order_item['payattr'] = (int)$item->getPayAttr();
+
+                if (!is_null($item->getGoodsType()))
+                    $order_item['goods-type'] = (string)$item->getGoodsType();
+
                 if (!is_null($item->getInsrValue()))
                     $order_item['insr-value'] = (int)$item->getInsrValue();
 
@@ -329,9 +341,15 @@ Class Order
 
                 if (!is_null($item->getVatRate()))
                     $order_item['vat-rate'] = (int)$item->getVatRate();
-                
-                if (!is_null($item->getLineAttr()))
-                    $order_item['lineattr'] = (int)$item->getLineAttr();
+
+                if (!is_null($item->getСustomsDeclarationNumber()))
+                    $order_item['customs-declaration-number'] = (string)$item->getСustomsDeclarationNumber();
+
+                if (!is_null($item->getExcise()))
+                    $order_item['excise'] = (string)$item->getExcise();
+
+                if (!is_null($item->getWeight()))
+                    $order_item['weight'] = (int)$item->getWeight();
 
                 $request['goods']['items'][] = $order_item;
             }
