@@ -90,7 +90,7 @@ class Item
      */
     public function setPayAttr($payattr)
     {
-        $this->lineattr = $payattr;
+        $this->payattr = $payattr;
     }
 
     /**
@@ -106,7 +106,7 @@ class Item
      */
     public function setGoodsType($goods_type)
     {
-        $this->lineattr = $goods_type;
+        $this->goods_type = $goods_type;
     }
 
     /**
@@ -122,7 +122,7 @@ class Item
      */
     public function setСountryCode($country_code)
     {
-        $this->code = $country_code;
+        $this->country_code = $country_code;
     }
 
     /**
@@ -137,7 +137,7 @@ class Item
      */
     public function setСustomsDeclarationNumber($customs_declaration_number)
     {
-        $this->code = $customs_declaration_number;
+        $this->customs_declaration_number = $customs_declaration_number;
     }
     /**
      * @return int|null
@@ -151,7 +151,7 @@ class Item
      */
     public function setExcise($excise)
     {
-        $this->code = $excise;
+        $this->excise = $excise;
     }
 
 
@@ -312,6 +312,6 @@ class Item
      */
     public function setWeight($weight)
     {
-        $this->vat_rate = $weight;
+        $this->weight = $weight;
     }
 }
