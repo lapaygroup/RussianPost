@@ -1,4 +1,5 @@
 <?php
+
 namespace LapayGroup\RussianPost\Entity;
 
 /**
@@ -7,10 +8,22 @@ namespace LapayGroup\RussianPost\Entity;
  * Class Item
  * @package LapayGroup\RussianPost\Entity
  */
-Class Item
+class Item
 {
     /** @var string|null  */
     private $code = null; // Код (маркировка) товара
+    /** @var int|null  */
+    private $lineattr = null; // Признак предмета расчета. См. Справочнк признаков предмета расчета
+    /** @var int|null  */
+    private $payattr  = null; // Признак способа расчета. См. Признаки способов расчета
+    /** @var string  */
+    private $goods_type = null; // Признак товар или услуга. См. Тип вложения
+    /** @var int|null  */
+    private $country_code = null; // Код страны происхождения. См. Список стран
+    /** @var string|null  */
+    private $customs_declaration_number = null; // Номер таможенной декларации
+    /** @var int|null  */
+    private $excise = null; // Акциз
     /** @var string  */
     private $description = ''; // Наименование товара
     /** @var int|null  */
@@ -28,6 +41,9 @@ Class Item
     private $value = 0; // Цена товара (вкл. НДС)
     /** @var int  */
     private $vat_rate = -1; // Ставка НДС: Без НДС(-1), 0, 10, 20
+    /** @var int|null  */
+    private $weight = null; // Вес товара (в граммах)
+
 
     /**
      * @return string|null
@@ -44,6 +60,100 @@ Class Item
     {
         $this->code = $code;
     }
+
+    /**
+     * @return int|null
+     */
+    public function getLineAttr()
+    {
+        return $this->lineattr;
+    }
+
+    /**
+     * @param int|null $lineattr
+     */
+    public function setLineAttr($lineattr)
+    {
+        $this->lineattr = $lineattr;
+    }
+
+    /**
+     * @return int|null
+     */
+    public function getPayAttr()
+    {
+        return $this->payattr;
+    }
+
+    /**
+     * @param int|null $payattr
+     */
+    public function setPayAttr($payattr)
+    {
+        $this->lineattr = $payattr;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getGoodsType()
+    {
+        return $this->goods_type;
+    }
+
+    /**
+     * @param string|null $goods_type
+     */
+    public function setGoodsType($goods_type)
+    {
+        $this->lineattr = $goods_type;
+    }
+
+    /**
+     * @return int|null
+     */
+    public function getСountryCode()
+    {
+        return $this->country_code;
+    }
+
+    /**
+     * @param int|null $country_code
+     */
+    public function setСountryCode($country_code)
+    {
+        $this->code = $country_code;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getСustomsDeclarationNumber()
+    {
+        return $this->customs_declaration_number;
+    }
+    /**
+     * @param string|null $customs_declaration_number
+     */
+    public function setСustomsDeclarationNumber($customs_declaration_number)
+    {
+        $this->code = $customs_declaration_number;
+    }
+    /**
+     * @return int|null
+     */
+    public function getExcise()
+    {
+        return $this->excise;
+    }
+    /**
+     * @param int|null $excise
+     */
+    public function setExcise($excise)
+    {
+        $this->code = $excise;
+    }
+
 
     /**
      * @return string
@@ -187,5 +297,21 @@ Class Item
     public function setVatRate($vat_rate)
     {
         $this->vat_rate = $vat_rate;
+    }
+
+    /**
+     * @return int|null
+     */
+    public function getWeight()
+    {
+        return $this->weight;
+    }
+
+    /**
+     * @param int|null $weight
+     */
+    public function setWeight($weight)
+    {
+        $this->vat_rate = $weight;
     }
 }
