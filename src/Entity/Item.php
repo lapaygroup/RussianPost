@@ -312,6 +312,6 @@ class Item
      */
     public function setWeight($weight)
     {
-        $this->vat_rate = $weight;
+        $this->weight = $weight;
     }
 }
