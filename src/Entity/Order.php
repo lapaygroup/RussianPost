@@ -396,21 +396,21 @@ Class Order
                     $request['customs-declaration']['customs-entries'][] = $cd_order_item;
                 }
             }
+        }
 
-            if (!empty($this->ecomData)) {
-                $request['ecom-data'] = [];
-                if (!is_null($this->ecomData->getDeliveryPointIndex()))
-                    $request['ecom-data']['delivery-point-index'] = $this->ecomData->getDeliveryPointIndex();
+        if (!empty($this->ecomData)) {
+            $request['ecom-data'] = [];
+            if (!is_null($this->ecomData->getDeliveryPointIndex()))
+                $request['ecom-data']['delivery-point-index'] = $this->ecomData->getDeliveryPointIndex();
 
-                if (!is_null($this->ecomData->getDeliveryRate()))
-                    $request['ecom-data']['delivery-rate'] = (int)$this->ecomData->getDeliveryRate();
+            if (!is_null($this->ecomData->getDeliveryRate()))
+                $request['ecom-data']['delivery-rate'] = (int)$this->ecomData->getDeliveryRate();
 
-                if (!is_null($this->ecomData->getDeliveryVatRate()))
-                    $request['ecom-data']['delivery-vat-rate'] = (int)$this->ecomData->getDeliveryVatRate();
+            if (!is_null($this->ecomData->getDeliveryVatRate()))
+                $request['ecom-data']['delivery-vat-rate'] = (int)$this->ecomData->getDeliveryVatRate();
 
-                if (!is_null($this->ecomData->getServices()))
-                    $request['ecom-data']['services'] = $this->ecomData->getServices();
-            }
+            if (!is_null($this->ecomData->getServices()))
+                $request['ecom-data']['services'] = $this->ecomData->getServices();
         }
 
         return $request;
