@@ -78,6 +78,7 @@
   - [x] [Текущие настройки пользователя](#get_settings)  
 
 <a name="links"><h1>Changelog</h1></a>  
+- 0.9.19 - Добавлена поддержка Guzzle 7.4 в зависимостях Composer; 
 - 0.9.18 - Испралвена передача ecom-data. За исправление спасибо [Stanislav Naumuk](https://github.com/sstuzzi);   
 - 0.9.17 - Испралвены ошибки в сеттерах у Item.php. За исправление спасибо [SERGEY](https://github.com/AntistressStore);
 - 0.9.16 - Актуализированы свойства вложения в заказ. За исправление спасибо [SERGEY](https://github.com/AntistressStore);  
