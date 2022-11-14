@@ -8,9 +8,9 @@ namespace LapayGroup\RussianPost\Enum;
  */
 class TransportType
 {
-    const SURFACE  = 'SURFACE';  // Подарок
-    const AVIA     = 'AVIA';     // Документы
-    const COMBINED = 'COMBINED'; // Продажа товара
-    const EXPRESS  = 'EXPRESS';  // Коммерческий образец
-    const STANDARD = 'STANDARD'; // Прочее
+    const SURFACE  = 'SURFACE';  // Наземный
+    const AVIA     = 'AVIA';     // Авиа
+    const COMBINED = 'COMBINED'; // Комбинированный
+    const EXPRESS  = 'EXPRESS';  // Системой ускоренной почты
+    const STANDARD = 'STANDARD'; // Используется для отправлений "EMS Оптимальное"
 }
