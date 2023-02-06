@@ -51,6 +51,9 @@ class OtpravkaApi implements LoggerAwareInterface
     /** @var \GuzzleHttp\Client */
     private $postOfficeClient = null;
 
+    /** @var array */
+    private $config = null;
+
     function __construct($config, $timeout = 60)
     {
         $this->config = $config;
