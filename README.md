@@ -9,7 +9,7 @@
 
 # SDK для интеграции с программным комплексом [Почты России](https://www.pochta.ru/support/business/api).  
 
-Посмотреть все проекты или подарить автору кофе можно [тут](https://lapay.group/opensource).   
+Посмотреть все проекты или подарить автору кофе можно [тут](https://lapaygroup.ru/opensource).   
 
 # Содержание    
 - [Changelog](#changelog)  
