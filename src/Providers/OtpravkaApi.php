@@ -1,7 +1,6 @@
 <?php
 namespace LapayGroup\RussianPost\Providers;
 
-use GuzzleHttp\Client;
 use LapayGroup\RussianPost\AddressList;
 use LapayGroup\RussianPost\Entity\Order;
 use LapayGroup\RussianPost\Entity\Recipient;
@@ -43,20 +42,24 @@ class OtpravkaApi implements LoggerAwareInterface
     /** @var int  */
     private $timeout = 60;
 
-    /** @var Client  */
+    /** @var \GuzzleHttp\Client  */
     private $otpravkaClient = null;
 
-    /** @var Client  */
+    /** @var \GuzzleHttp\Client  */
     private $deliveryClient = null;
 
-    /** @var Client */
+    /** @var \GuzzleHttp\Client */
     private $postOfficeClient = null;
 
-    function __construct($token, $key , $timeout = 60)
+    /** @var array */
+    private $config = null;
+
+    function __construct($config, $timeout = 60)
     {
+        $this->config = $config;
         $this->timeout = $timeout;
-        $this->token = $token;
-        $this->key = $key;
+        $this->token = $config['auth']['otpravka']['token'];
+        $this->key = $config['auth']['otpravka']['key'];
     }
 
     private function checkApiClient($endpoint = self::OTPRAVKA)
@@ -66,7 +69,7 @@ class OtpravkaApi implements LoggerAwareInterface
         switch ($endpoint) {
             case self::OTPRAVKA:
                 if (!$this->otpravkaClient) {
-                    $this->otpravkaClient = new Client([
+                    $this->otpravkaClient = new \GuzzleHttp\Client([
                         'base_uri' => 'https://otpravka-api.pochta.ru/',
                         'headers' => ['Authorization' => 'AccessToken ' . $this->token,
                             'X-User-Authorization' => 'Basic ' . $this->key,
@@ -81,7 +84,7 @@ class OtpravkaApi implements LoggerAwareInterface
 
             case self::DELIVERY:
                 if (!$this->deliveryClient) {
-                    $this->deliveryClient = new Client([
+                    $this->deliveryClient = new \GuzzleHttp\Client([
                         'base_uri' => 'https://delivery.pochta.ru/delivery/',
                         'timeout' => $this->timeout,
                         'http_errors' => false
@@ -91,7 +94,7 @@ class OtpravkaApi implements LoggerAwareInterface
 
             case self::POSTOFFICE:
                 if (!$this->postOfficeClient) {
-                    $this->postOfficeClient = new Client([
+                    $this->postOfficeClient = new \GuzzleHttp\Client([
                         'base_uri' => 'https://otpravka-api.pochta.ru/postoffice/',
                         'headers' => ['Authorization' => 'AccessToken ' . $this->token,
                             'X-User-Authorization' => 'Basic ' . $this->key,
