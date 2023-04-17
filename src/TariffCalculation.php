@@ -10,15 +10,16 @@ use Psr\Log\LoggerAwareTrait;
 class TariffCalculation implements LoggerAwareInterface
 {
     use LoggerAwareTrait;
-    
+
     /** @var int  */
     private $timeout = 60;
 
     /**
-     * Расчет тарифа
+     * Расчет тарифа V2
      *
      * @param int $object_id - ID типа почтового отправления
      * @param array $params - массив данных по отправлению
+     * @param boolean $delivery_period - Считать ли сроки доставки
      * @param array $services - массив ID услуг
      * @param string $date - дата расчета тарифа (необязательный параметр)
      * @param int $timeout - время ожидания ответа от api (необязательный параметр)
@@ -27,7 +28,7 @@ class TariffCalculation implements LoggerAwareInterface
      * @throws RussianPostTarrificatorException
      * @throws \GuzzleHttp\Exception\GuzzleException
      */
-    public function calculate($object_id, $params, $services = [], $date=false)
+    public function calculate($object_id, $params, $delivery_period = false, $services = [], $date = false)
     {
         if (empty($date)) $date = date('Ymd');
         $params['date'] = $date;
@@ -35,6 +36,12 @@ class TariffCalculation implements LoggerAwareInterface
         $calculation = new Calculation($this->timeout);
         if ($this->logger) {
             $calculation->setLogger($this->logger);
+        }
+
+        if (!$delivery_period) {
+            $resultRaw = $calculation->getTariff($object_id, $params, $services);
+        } else {
+            $resultRaw = $calculation->getTariffAndDeliveryPeriod($object_id, $params, $services);
         }
 
         $resultRaw = $calculation->getTariff($object_id, $params, $services);
@@ -59,8 +66,7 @@ class TariffCalculation implements LoggerAwareInterface
         $calculateInfo->setTransportationName($resultRaw['transname']);
         $calculateInfo->setPay($resultRaw['pay']);
         $calculateInfo->setPayNds($resultRaw['paynds']);
-        $paymark = !empty($resultRaw['paymark']) ? $resultRaw['paymark'] : 0.00;
-        $calculateInfo->setPayMark($paymark);
+
         if (!empty($resultRaw['ground'])) {
             $calculateInfo->setGround($resultRaw['ground']['val']);
             $calculateInfo->setGroundNds($resultRaw['ground']['valnds']);
@@ -75,27 +81,26 @@ class TariffCalculation implements LoggerAwareInterface
             $calculateInfo->setServiceNds($resultRaw['service']['valnds']);
         }
 
-        foreach ($resultRaw['tariff'] as $tariffInfo) {
-            foreach ($tariffInfo as $key => $paramInfo) {
-                if (is_array($paramInfo)) {
-                    $valMark = !empty($tariffInfo[$key]['valmark']) ? $tariffInfo[$key]['valmark'] : 0;
-                    $val     = !empty($tariffInfo[$key]['val']) ? $tariffInfo[$key]['val'] : 0;
-                    $valNds  = !empty($tariffInfo[$key]['valnds']) ? $tariffInfo[$key]['valnds'] : 0;
-                }
+        foreach ($resultRaw['items'] as $itemInfo) {
+            if (!empty($itemInfo['tariff'])) {
+                $val     = !empty($itemInfo['tariff']['val']) ? $itemInfo['tariff']['val'] : 0;
+                $valNds  = !empty($itemInfo['tariff']['valnds']) ? $itemInfo['tariff']['valnds'] : 0;
+                $calculateInfo->addTariff(new Tariff($itemInfo['tariff']['id'], $itemInfo['tariff']['name'], $val, $valNds));
             }
 
-            $calculateInfo->addTariff(new Tariff($tariffInfo['id'],
-                    $tariffInfo['name'],
-                    $val,
-                    $valNds,
-                    $valMark
-                )
-            );
+            if ($itemInfo['id'] == 5204 && !empty($itemInfo['delivery']['min']) && $itemInfo['delivery']['max']) {
+                $calculateInfo->setDeliveryPeriodMin($itemInfo['delivery']['min']);
+                $calculateInfo->setDeliveryPeriodMin($itemInfo['delivery']['max']);
+            }
+
+            if ($itemInfo['id'] == 5304 && !empty($itemInfo['delivery']['deadline'])) {
+                $calculateInfo->setDeliveryDeadLine($itemInfo['delivery']['deadline']);
+            }
         }
 
         return $calculateInfo;
     }
-    
+
     /**
      * @return int
      */

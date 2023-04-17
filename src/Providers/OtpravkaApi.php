@@ -330,6 +330,7 @@ class OtpravkaApi implements LoggerAwareInterface
      * @param $index_to
      * @return array
      * @throws RussianPostException
+     * @deprecated use TariffCalculation->calculate()
      */
     public function getDeliveryPeriod($post_type, $index_from, $index_to, $as_html = false)
     {
