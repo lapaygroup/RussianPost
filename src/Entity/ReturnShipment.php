@@ -45,24 +45,30 @@ Class ReturnShipment
         if (!is_a($this->address_from,AddressReturn::class))
             throw new \InvalidArgumentException('Адрес отправителя долежен быть объектом '.AddressReturn::class);
 
-        if (!is_a($this->address_to,AddressReturn::class))
+        if (!empty($this->address_to) && !is_a($this->address_to,AddressReturn::class))
             throw new \InvalidArgumentException('Адрес получателя долежен быть объектом '.AddressReturn::class);
 
         $params = [];
         $params['address-from']   = $this->address_from->asArr();
-        $params['address-to']     = $this->address_to->asArr();
         $params['mail-type']      = $this->mail_type;
         $params['recipient-name'] = $this->recipient_name;
         $params['sender-name']    = $this->sender_name;
 
-        if (!is_null($this->insr_value))
+        if (!empty($this->address_to)) {
+            $params['address-to'] = $this->address_to->asArr();
+        }
+
+        if (!is_null($this->insr_value)) {
             $params['insr-value'] = $this->insr_value;
+        }
 
-        if (!is_null($this->order_num))
+        if (!is_null($this->order_num)) {
             $params['order-num'] = $this->order_num;
+        }
 
-        if (!is_null($this->postoffice_code))
+        if (!is_null($this->postoffice_code)) {
             $params['postoffice-code'] = $this->postoffice_code;
+        }
 
         return $params;
     }
