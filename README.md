@@ -78,6 +78,7 @@
   - [x] [Текущие настройки пользователя](#get_settings)
 
 <a name="links"><h1>Changelog</h1></a>
+- 0.9.22 - Добавлена поддержка Guzzle 7.8 в зависимостях Composer;
 - 0.9.21 - Обновлены зависимости [psr/log](https://github.com/lapaygroup/RussianPost/pull/47), решение [issue #46](https://github.com/lapaygroup/RussianPost/issues/46), актуализирован список статусов отправлений, добавлены новые конечные статусы Почты России;
 - 0.9.20 - Исправлена совместимость с PHP 8.2 и добавлена поддержка Guzzle 7.5 в зависимостях Composer. За исправление спасибо [NickMitin](https://github.com/NickMitin);
 - 0.9.19 - Добавлена поддержка Guzzle 7.4 в зависимостях Composer;
