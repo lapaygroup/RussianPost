@@ -379,17 +379,6 @@ class OtpravkaApi implements LoggerAwareInterface
     }
 
     /**
-     * Получение списка ПВЗ для ЕКОМ
-     *
-     * @return array
-     * @throws RussianPostException
-     */
-    public function getPvzList()
-    {
-        return $this->callApi('GET', 'delivery-point/findAll');
-    }
-
-    /**
      * Создание заказов
      *
      * @param Order[] $orders - массив объектов Order
