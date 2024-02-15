@@ -3,7 +3,7 @@ namespace LapayGroup\RussianPost;
 
 class CalculateInfo
 {
-    private $version='1.21.2.479'; // Версия тарификатора
+    private $version='2.16.11.700'; // Версия тарификатора
     private $categoryItemId = 0; // ID категории
     private $categoryItemName = 0; // Название категории
     private $weight = 0.00; // Вес отправления в граммах
@@ -264,7 +264,7 @@ class CalculateInfo
     }
 
     /**
-     * @return null
+     * @return int
      */
     public function getDeliveryPeriodMin()
     {
@@ -272,7 +272,7 @@ class CalculateInfo
     }
 
     /**
-     * @param null $deliveryPeriodMin
+     * @param int $deliveryPeriodMin
      */
     public function setDeliveryPeriodMin($deliveryPeriodMin)
     {
@@ -280,7 +280,7 @@ class CalculateInfo
     }
 
     /**
-     * @return null
+     * @return int
      */
     public function getDeliveryPeriodMax()
     {
@@ -288,7 +288,7 @@ class CalculateInfo
     }
 
     /**
-     * @param null $deliveryPeriodMax
+     * @param int $deliveryPeriodMax
      */
     public function setDeliveryPeriodMax($deliveryPeriodMax)
     {
@@ -296,7 +296,7 @@ class CalculateInfo
     }
 
     /**
-     * @return null
+     * @return \DateTime
      */
     public function getDeliveryDeadLine()
     {
@@ -304,11 +304,11 @@ class CalculateInfo
     }
 
     /**
-     * @param null $deliveryDeadLine
+     * @param string $deliveryDeadLine
      */
     public function setDeliveryDeadLine($deliveryDeadLine)
     {
-        $this->deliveryDeadLine = $deliveryDeadLine;
+        $this->deliveryDeadLine = new \DateTime($deliveryDeadLine);
     }
 
     public static function mb_ucfirst($string)

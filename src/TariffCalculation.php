@@ -44,8 +44,6 @@ class TariffCalculation implements LoggerAwareInterface
             $resultRaw = $calculation->getTariffAndDeliveryPeriod($object_id, $params, $services);
         }
 
-        $resultRaw = $calculation->getTariff($object_id, $params, $services);
-
         $calculateInfo = new CalculateInfo();
 
         if (!empty($resultRaw['errors']))
@@ -81,20 +79,18 @@ class TariffCalculation implements LoggerAwareInterface
             $calculateInfo->setServiceNds($resultRaw['service']['valnds']);
         }
 
+        if (!empty($resultRaw['delivery'])) {
+            $calculateInfo->setDeliveryPeriodMin($resultRaw['delivery']['min']);
+            $calculateInfo->setDeliveryPeriodMax($resultRaw['delivery']['max']);
+            $calculateInfo->setDeliveryDeadLine($resultRaw['delivery']['deadline']);
+        }
+
         foreach ($resultRaw['items'] as $itemInfo) {
             if (!empty($itemInfo['tariff'])) {
                 $val     = !empty($itemInfo['tariff']['val']) ? $itemInfo['tariff']['val'] : 0;
                 $valNds  = !empty($itemInfo['tariff']['valnds']) ? $itemInfo['tariff']['valnds'] : 0;
-                $calculateInfo->addTariff(new Tariff($itemInfo['tariff']['id'], $itemInfo['tariff']['name'], $val, $valNds));
-            }
-
-            if ($itemInfo['id'] == 5204 && !empty($itemInfo['delivery']['min']) && $itemInfo['delivery']['max']) {
-                $calculateInfo->setDeliveryPeriodMin($itemInfo['delivery']['min']);
-                $calculateInfo->setDeliveryPeriodMin($itemInfo['delivery']['max']);
-            }
-
-            if ($itemInfo['id'] == 5304 && !empty($itemInfo['delivery']['deadline'])) {
-                $calculateInfo->setDeliveryDeadLine($itemInfo['delivery']['deadline']);
+                $valMark  = !empty($itemInfo['tariff']['valmark']) ? $itemInfo['tariff']['valmark'] : 0;
+                $calculateInfo->addTariff(new Tariff($itemInfo['id'], $itemInfo['name'], $val, $valNds, $valMark));
             }
         }
 

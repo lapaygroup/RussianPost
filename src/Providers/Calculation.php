@@ -37,7 +37,7 @@ class Calculation implements LoggerAwareInterface
             case 'GET':
                 $request = http_build_query($params);
                 if ($this->logger) {
-                     $this->logger->info("Russian Post Tariff API {$type} request /" . self::VERSION . "/{$method}: " . $request);
+                    $this->logger->info("Russian Post Tariff API {$type} request /" . self::VERSION . "/{$method}: " . $request);
                 }
                 $response = $this->httpClient->get($method, ['query' => $params]);
                 break;

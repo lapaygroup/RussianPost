@@ -21,7 +21,7 @@ class FioList implements \IteratorAggregate
         $this->idList[$id] = true;
     }
 
-    public function getIterator()
+    public function getIterator(): \Traversable
     {
         if (empty($this->stack))
             throw new \InvalidArgumentException('Список ФИО пуст');
