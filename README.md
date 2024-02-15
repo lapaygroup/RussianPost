@@ -23,7 +23,6 @@
   - [x] [Нормализация телефона](#clean_phone)
   - [x] [Расчет стоимости пересылки (Упрощенная версия)](#calc_delivery_tariff)
   - [x] [Расчет стоимости пересылки ЕКОМ](#calc_delivery_tariff_ecom)
-  - [x] [Расчет сроков доставки](#calc_delivery_period)
   - [x] [Отображение баланса](#show_balance)
   - [x] [Неблагонадёжный получатель](#untrustworthy_recipient)
 - [Заказы](#orders)
@@ -78,6 +77,7 @@
   - [x] [Текущие настройки пользователя](#get_settings)
 
 <a name="links"><h1>Changelog</h1></a>
+- 1.0.0 - Описание можно посмотреть [тут](https://github.com/lapaygroup/RussianPost/releases/tag/1.0.0);
 - 0.9.23 - Добавлена поддержка Guzzle 7.*;
 - 0.9.22 - Добавлена поддержка Guzzle 7.8 в зависимостях Composer;
 - 0.9.21 - Обновлены зависимости [psr/log](https://github.com/lapaygroup/RussianPost/pull/47), решение [issue #46](https://github.com/lapaygroup/RussianPost/issues/46), актуализирован список статусов отправлений, добавлены новые конечные статусы Почты России;
@@ -164,21 +164,69 @@
 ```php
 <?php
 try {
-  $objectId = 2020; // Письмо с объявленной ценностью
-  // Минимальный набор параметров для расчета стоимости отправления
-  $params = [
-              'weight' => 20, // Вес в граммах
-              'sumoc' => 10000, // Сумма объявленной ценности в копейках
-              'from' => 109012 // Почтовый индекс места отправления
-              ];
+    $objectId = 23030; // Посылка онлайн обыкновенная
+    // Минимальный набор параметров для расчета стоимости отправления c доставкой
+    $params = [
+                'weight' => 600, // Вес в граммах
+                'sumoc' => 10000, // Сумма объявленной ценности в копейках
+                'from' => 109012, // Почтовый индекс места отправления
+                'to' => 115551
+                ];
 
-  // Список ID дополнительных услуг
-  // 2 - Заказное уведомление о вручении
-  // 21 - СМС-уведомление о вручении
-  $services = [2,21];
+    // Список ID дополнительных услуг
+    // 2 - Заказное уведомление о вручении
+    // 21 - СМС-уведомление о вручении
+    // 42 - Пакет СМС уведомлений получателю при единичном приеме
+    $services = [42];
 
-  $TariffCalculation = new \LapayGroup\RussianPost\TariffCalculation();
-  $calcInfo = $TariffCalculation->calculate($objectId, $params, $services);
+    $TariffCalculation = new \LapayGroup\RussianPost\TariffCalculation();
+    // Расчет с сроками доставки
+    $calcInfo = $TariffCalculation->calculate($objectId, $params, true, $services);
+
+    // Расчет без сроков доставки
+    $calcInfo = $TariffCalculation->calculate($objectId, $params, false, $services);
+    /*
+    LapayGroup\RussianPost\CalculateInfo Object
+    (
+        [version:LapayGroup\RussianPost\CalculateInfo:private] => 2.16.11.700
+        [categoryItemId:LapayGroup\RussianPost\CalculateInfo:private] => 23030
+        [categoryItemName:LapayGroup\RussianPost\CalculateInfo:private] => Посылка онлайн обыкновенная
+        [weight:LapayGroup\RussianPost\CalculateInfo:private] => 600
+        [transportationID:LapayGroup\RussianPost\CalculateInfo:private] =>
+        [transportationName:LapayGroup\RussianPost\CalculateInfo:private] => Наземно
+        [pay:LapayGroup\RussianPost\CalculateInfo:private] => 118.00
+        [payNds:LapayGroup\RussianPost\CalculateInfo:private] => 141.60
+        [payMark:LapayGroup\RussianPost\CalculateInfo:private] => 0
+        [ground:LapayGroup\RussianPost\CalculateInfo:private] => 118.00
+        [groundNds:LapayGroup\RussianPost\CalculateInfo:private] => 141.60
+        [cover:LapayGroup\RussianPost\CalculateInfo:private] => 0
+        [coverNds:LapayGroup\RussianPost\CalculateInfo:private] => 0
+        [service:LapayGroup\RussianPost\CalculateInfo:private] => 0
+        [serviceNds:LapayGroup\RussianPost\CalculateInfo:private] => 0
+        [deliveryPeriodMin:LapayGroup\RussianPost\CalculateInfo:private] => 1
+        [deliveryPeriodMax:LapayGroup\RussianPost\CalculateInfo:private] => 1
+        [deliveryDeadLine:LapayGroup\RussianPost\CalculateInfo:private] => DateTime Object
+            (
+                [date] => 2024-02-19 20:00:00.000000
+                [timezone_type] => 3
+                [timezone] => UTC
+            )
+
+        [tariffList:LapayGroup\RussianPost\CalculateInfo:private] => Array
+            (
+                [0] => LapayGroup\RussianPost\Tariff Object
+                    (
+                        [id:LapayGroup\RussianPost\Tariff:private] => 3062
+                        [name:LapayGroup\RussianPost\Tariff:private] => Плата за доставку посылки онлайн
+                        [value:LapayGroup\RussianPost\Tariff:private] => 118.00
+                        [valueNds:LapayGroup\RussianPost\Tariff:private] => 141.60
+                        [valueMark:LapayGroup\RussianPost\Tariff:private] => 0.00
+                    )
+
+            )
+
+    )
+    */
 }
 
 catch (\LapayGroup\RussianPost\Exceptions\RussianPostTarrificatorException $e) {
@@ -706,54 +754,6 @@ $list = $OtpravkaApi->shippingPoints();
 ?>
 ```
 
-<a name="calc_delivery_period"><h3>Расчет сроков доставки</h3></a>
-
-Расчитывает сроки доставки по типам отправлений используя [API доставки Почты России](https://delivery.pochta.ru/)
-
-**Пример вызова:**
-```php
-<?php
-  use Symfony\Component\Yaml\Yaml;
-  use LapayGroup\RussianPost\Providers\OtpravkaApi;
-
-  try {
-      $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
-      $res = $otpravkaApi->getDeliveryPeriod(\LapayGroup\RussianPost\PostType::EMS, 115551, 115551);
-
-      /*
-       Array
-       (
-           [version] => 1.2.10.28
-           [date] => 20190621
-           [datefirst] => 20190411
-           [posttype] => 7
-           [posttypename] => EMS
-           [from] => 115551
-           [fromname] => МОСКВА 551
-           [to] => 115551
-           [toname] => МОСКВА 551
-           [route] => 43-45000000-45000000
-           [routename] => МОСКВА 551-МОСКВА 551
-           [delivery] => Array
-               (
-                   [min] => 1
-                   [max] => 1
-               )
-
-       )
-       */
-  }
-
-  catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
-      // Обработка ошибочного ответа от API ПРФ
-  }
-
-  catch (\Exception $e) {
-      // Обработка нештатной ситуации
-  }
-?>
-```
-
 <a name="show_balance"><h3>Отображение баланса</h3></a>
 
 Отображает баланс расчетного счета. Возвращаемые значения указываются в копейках.
@@ -870,120 +870,6 @@ $list = $OtpravkaApi->shippingPoints();
 
 В случае возникновеня ошибок при обмене выбрасывает исключение *\LapayGroup\RussianPost\Exceptions\RussianPostException*
 в котором будет текст и код ошибки от API Почты России и дамп сырого ответа с HTTP-кодом.
-
-<a name="get_pvz_list"><h3>Получение списка ПВЗ</h3></a>
-Возвращает список ПВЗ для заказов ЕКОМ.
-
-```php
-<?php
-use Symfony\Component\Yaml\Yaml;
-use LapayGroup\RussianPost\Providers\OtpravkaApi;
-
-try {
-    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
-    $pvz_list = $otpravkaApi->getPvzList();
-    /*
-    Array
-    (
-        [0] => Array
-            (
-                [address] => Array
-                    (
-                        [addressType] => DEFAULT
-                        [house] => 186
-                        [index] => 656067
-                        [manualInput] =>
-                        [place] => г. Барнаул
-                        [region] => край Алтайский
-                        [street] => ул. Попова
-                    )
-
-                [brand-name] => Почта России
-                [card-payment] =>
-                [cash-payment] =>
-                [closed] =>
-                [contents-checking] => 1
-                [delivery-point-index] => 656067
-                [delivery-point-type] => DELIVERY_POINT
-                [functionality-checking] =>
-                [id] => 33815
-                [latitude] => 53.341753
-                [legal-name] => УФПС Алтайского края - филиал ФГУП "Почта России", Барнаульский почтамт, Отделение почтовой связи Барнаул  656067
-                [legal-short-name] => БАРНАУЛ 67
-                [longitude] => 83.667594
-                [partial-redemption] =>
-                [temporary-closed] =>
-                [with-fitting] =>
-                [work-time] => Array
-                    (
-                        [0] => пн, открыто: 08:00 - 20:00
-                        [1] => вт, открыто: 08:00 - 20:00
-                        [2] => ср, открыто: 08:00 - 20:00
-                        [3] => чт, открыто: 08:00 - 20:00
-                        [4] => пт, открыто: 08:00 - 20:00
-                        [5] => сб, открыто: 09:00 - 18:00
-                        [6] => вс, выходной
-                    )
-
-            )
-
-        [1] => Array
-            (
-                [address] => Array
-                    (
-                        [addressType] => DEFAULT
-                        [corpus] => 2
-                        [house] => 8
-                        [index] => 119526
-                        [manualInput] =>
-                        [place] => г. Москва
-                        [region] => г. Москва
-                        [street] => ул. 26-ти Бакинских Комиссаров
-                    )
-
-                [brand-name] => Почта России
-                [card-payment] =>
-                [cash-payment] =>
-                [closed] =>
-                [contents-checking] => 1
-                [delivery-point-index] => 119526
-                [delivery-point-type] => DELIVERY_POINT
-                [functionality-checking] =>
-                [id] => 35009
-                [latitude] => 55.659170
-                [legal-name] => УФПС г. Москвы-филиал ФГУП Почта России ММП 6 ОПС 526
-                [legal-short-name] => МОСКВА 526
-                [longitude] => 37.491359
-                [partial-redemption] =>
-                [temporary-closed] =>
-                [with-fitting] =>
-                [work-time] => Array
-                    (
-                        [0] => пн, открыто: 08:00 - 20:00
-                        [1] => вт, открыто: 08:00 - 20:00
-                        [2] => ср, открыто: 08:00 - 20:00
-                        [3] => чт, открыто: 08:00 - 20:00
-                        [4] => пт, открыто: 08:00 - 20:00
-                        [5] => сб, открыто: 09:00 - 18:00
-                        [6] => вс, открыто: 09:00 - 14:00
-                    )
-
-            )
-    */
-}
-
-catch (\InvalidArgumentException $e) {
-  // Обработка ошибки заполнения параметров
-}
-
-catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
-  // Обработка ошибочного ответа от API ПРФ
-}
-
-catch (\Exception $e) {
-  // Обработка нештатной ситуации
-}
-```
 
 <a name="create_orders"><h3>Создание заказа</h3></a>
 Создает новый заказ. Автоматически рассчитывает и проставляет плату за пересылку.
