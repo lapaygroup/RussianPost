@@ -262,7 +262,7 @@ class OtpravkaApi implements LoggerAwareInterface
      */
     public function clearAddress($addressList)
     {
-        return $this->callApi('POST', 'clean/address',  $addressList->get());
+        return $this->callApi('POST', 'clean/address',  iterator_to_array($addressList->getIterator()));
     }
 
     /**
@@ -274,7 +274,7 @@ class OtpravkaApi implements LoggerAwareInterface
      */
     public function clearFio($fioList)
     {
-        return $this->callApi('POST', 'clean/physical',  $fioList->get());
+        return $this->callApi('POST', 'clean/physical',  iterator_to_array($fioList->getIterator()));
     }
 
     /**
@@ -286,7 +286,7 @@ class OtpravkaApi implements LoggerAwareInterface
      */
     public function clearPhone(PhoneList $phoneList)
     {
-        return $this->callApi('POST', 'clean/phone',  $phoneList->get());
+        return $this->callApi('POST', 'clean/phone',  iterator_to_array($phoneList->getIterator()));
     }
 
     /**
