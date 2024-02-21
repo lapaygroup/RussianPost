@@ -77,6 +77,7 @@
   - [x] [Текущие настройки пользователя](#get_settings)
 
 <a name="links"><h1>Changelog</h1></a>
+- 1.0.1 - Исправлена работа clean функций после обновления;
 - 1.0.0 - Описание можно посмотреть [тут](https://github.com/lapaygroup/RussianPost/releases/tag/1.0.0);
 - 0.9.23 - Добавлена поддержка Guzzle 7.*;
 - 0.9.22 - Добавлена поддержка Guzzle 7.8 в зависимостях Composer;
