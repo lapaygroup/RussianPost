@@ -263,7 +263,7 @@ class OtpravkaApi implements LoggerAwareInterface
     public function clearAddress($addressList)
     {
         return $this->callApi('POST', 'clean/address',  iterator_to_array($addressList->getIterator()));
-    }
+    }l
 
     /**
      * Нормализация ФИО
@@ -473,7 +473,7 @@ class OtpravkaApi implements LoggerAwareInterface
      * @return array
      * @throws RussianPostException
      */
-    public function createBatch($id_list, $sending_date = nul, $use_online_balance = false)
+    public function createBatch($id_list, $sending_date = null, $use_online_balance = false)
     {
         $method = 'user/shipment';
         if ($sending_date)
