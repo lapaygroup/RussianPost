@@ -263,7 +263,7 @@ class OtpravkaApi implements LoggerAwareInterface
     public function clearAddress($addressList)
     {
         return $this->callApi('POST', 'clean/address',  iterator_to_array($addressList->getIterator()));
-    }l
+    }
 
     /**
      * Нормализация ФИО
