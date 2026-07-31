@@ -1,5 +1,4 @@
 <a href="https://lapaygroup.ru/"><img align="left" width="200" src="https://lapaygroup.ru/img/lapaygroup.svg"></a>
-<a href="https://www.pochta.ru/support/business/api"><img align="right" width="200" src="https://lapaygroup.ru/prflogo.svg"></a>
 
 <br /><br /><br />
 [![Latest Stable Version](https://poser.pugx.org/lapaygroup/russianpost/v/stable)](https://packagist.org/packages/lapaygroup/russianpost)
@@ -8,6 +7,22 @@
 [![Telegram Chat](https://img.shields.io/badge/telegram-chat-blue.svg?logo=telegram)](https://t.me/phppochtarusdk)
 
 # SDK для интеграции с программным комплексом [Почты России](https://www.pochta.ru/support/business/api).
+
+> [!IMPORTANT]
+> **Неофициальный независимый проект**
+>
+> Этот проект не является официальным SDK Почты России, не связан с Почтой
+> России, не поддерживается, не одобрен и не спонсируется правообладателем.
+>
+> Обозначение «Почта России» используется исключительно для указания
+> совместимости SDK с API соответствующего сервиса. Все права на товарный знак
+> «Почта России» принадлежат его правообладателю.
+>
+> **Unofficial independent project**
+>
+> This is not an official Russian Post SDK. The project is not affiliated with,
+> maintained, endorsed, or sponsored by Russian Post or the trademark owner.
+> The “Russian Post” name is used solely to identify API compatibility.
 
 Посмотреть все проекты или подарить автору кофе можно [тут](https://lapaygroup.ru/opensource).
 
