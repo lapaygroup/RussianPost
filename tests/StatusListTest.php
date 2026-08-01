@@ -1,20 +1,16 @@
 <?php
+declare(strict_types=1);
+namespace LapayGroup\RussianPost\Tests;
 
-require_once __DIR__."/../src/StatusList.php";
+use LapayGroup\RussianPost\StatusList;
+use PHPUnit\Framework\TestCase;
 
-
-class StatusListTest extends \PHPUnit_Framework_TestCase
+final class StatusListTest extends TestCase
 {
+    public function testIsFinal()
+    {
+        $statusList = new StatusList();
 
-
-	public function testIsFinal()
-	{
-		$statusList = new \LapayGroup\RussianPost\StatusList();
-		
-		$this->assertEquals(
-			true,
-			$statusList->isFinal(5,2)
-		);
-	}
+        $this->assertTrue($statusList->isFinal(5, 2));
+    }
 }
-

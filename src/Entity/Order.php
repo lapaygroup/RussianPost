@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 namespace LapayGroup\RussianPost\Entity;
 
 use LapayGroup\RussianPost\Entity\Item;
@@ -309,8 +310,8 @@ Class Order
                 if (!is_null($item->getCode()))
                     $order_item['code'] = $item->getCode();
 
-                if (!is_null($item->getСountryCode()))
-                    $order_item['country-code'] = $item->getСountryCode();
+                if (!is_null($item->getCountryCode()))
+                    $order_item['country-code'] = $item->getCountryCode();
 
                 if (!is_null($item->getLineAttr()))
                     $order_item['lineattr'] = (int)$item->getLineAttr();
@@ -342,8 +343,8 @@ Class Order
                 if (!is_null($item->getVatRate()))
                     $order_item['vat-rate'] = (int)$item->getVatRate();
 
-                if (!is_null($item->getСustomsDeclarationNumber()))
-                    $order_item['customs-declaration-number'] = (string)$item->getСustomsDeclarationNumber();
+                if (!is_null($item->getCustomsDeclarationNumber()))
+                    $order_item['customs-declaration-number'] = $item->getCustomsDeclarationNumber();
 
                 if (!is_null($item->getExcise()))
                     $order_item['excise'] = (string)$item->getExcise();

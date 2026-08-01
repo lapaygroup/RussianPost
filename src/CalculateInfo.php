@@ -1,32 +1,34 @@
 <?php
+declare(strict_types=1);
 namespace LapayGroup\RussianPost;
 
 class CalculateInfo
 {
-    private $version='2.16.11.700'; // Версия тарификатора
-    private $categoryItemId = 0; // ID категории
-    private $categoryItemName = 0; // Название категории
-    private $weight = 0.00; // Вес отправления в граммах
-    private $transportationID = 0; // ID способа пересылки
-    private $transportationName = 'Наземно'; // Способ пересылки
-    private $pay = 0.00; // Итого стоимоть без НДС
-    private $payNds = 0.00; // Итого стоимость с НДС
-    private $payMark = 0.00; // Итого стоимость при оплате марками
-    private $ground = 0.00; // Почтовый сбор
-    private $groundNds = 0.00; // Почтовый сбор c НДС
-    private $cover = 0.00; // Страхование
-    private $coverNds = 0.00; // Страхование с НДС
-    private $service = 0.00; // Дополнительные услуги
-    private $serviceNds = 0.00; // Дополнительные услуги с НДС
-    private $deliveryPeriodMin = null; // Минимальный период доставки
-    private $deliveryPeriodMax = null; // Максимальный период доставки
-    private $deliveryDeadLine = null; // Срок внутренней доставки с учетом расписания работы и обмена
-    private $tariffList = []; // Список тарифов
+    private string $version = '';
+    private int $categoryItemId = 0;
+    private ?string $categoryItemName = null;
+    private ?int $weight = null;
+    private ?int $transportationID = null;
+    private ?string $transportationName = null;
+    private int $pay = 0;
+    private int $payNds = 0;
+    private int $ground = 0;
+    private int $groundNds = 0;
+    private int $cover = 0;
+    private int $coverNds = 0;
+    private int $service = 0;
+    private int $serviceNds = 0;
+    private ?int $deliveryPeriodMin = null;
+    private ?int $deliveryPeriodMax = null;
+    private ?\DateTimeImmutable $deliveryDeadLine = null;
+
+    /** @var list<Tariff> */
+    private array $tariffList = [];
 
     /**
      * @return string
      */
-    public function getVersion()
+    public function getVersion(): string
     {
         return $this->version;
     }
@@ -34,7 +36,7 @@ class CalculateInfo
     /**
      * @param string $version
      */
-    public function setVersion($version)
+    public function setVersion(string $version): void
     {
         $this->version = $version;
     }
@@ -42,7 +44,7 @@ class CalculateInfo
     /**
      * @return int
      */
-    public function getCategoryItemId()
+    public function getCategoryItemId(): int
     {
         return $this->categoryItemId;
     }
@@ -50,39 +52,39 @@ class CalculateInfo
     /**
      * @param int $categoryItemId
      */
-    public function setCategoryItemId($categoryItemId)
+    public function setCategoryItemId(int $categoryItemId): void
     {
         $this->categoryItemId = $categoryItemId;
     }
 
     /**
-     * @return int
+     * @return string|null
      */
-    public function getCategoryItemName()
+    public function getCategoryItemName(): ?string
     {
         return $this->categoryItemName;
     }
 
     /**
-     * @param int $categoryItemName
+     * @param string|null $categoryItemName
      */
-    public function setCategoryItemName($categoryItemName)
+    public function setCategoryItemName(?string $categoryItemName): void
     {
         $this->categoryItemName = $categoryItemName;
     }
 
     /**
-     * @return float
+     * @return int|null
      */
-    public function getWeight()
+    public function getWeight(): ?int
     {
         return $this->weight;
     }
 
     /**
-     * @param float $weight
+     * @param int|null $weight
      */
-    public function setWeight($weight)
+    public function setWeight(?int $weight): void
     {
         $this->weight = $weight;
     }
@@ -90,7 +92,7 @@ class CalculateInfo
     /**
      * @return int
      */
-    public function getTransportationID()
+    public function getTransportationID(): ?int
     {
         return $this->transportationID;
     }
@@ -98,7 +100,7 @@ class CalculateInfo
     /**
      * @param int $transportationID
      */
-    public function setTransportationID($transportationID)
+    public function setTransportationID(?int $transportationID): void
     {
         $this->transportationID = $transportationID;
     }
@@ -106,7 +108,7 @@ class CalculateInfo
     /**
      * @return string
      */
-    public function getTransportationName()
+    public function getTransportationName(): ?string
     {
         return $this->transportationName;
     }
@@ -114,15 +116,20 @@ class CalculateInfo
     /**
      * @param string $transportationName
      */
-    public function setTransportationName($transportationName)
+    public function setTransportationName(?string $transportationName): void
     {
         $this->transportationName = self::mb_ucfirst($transportationName);
     }
 
     /**
-     * @return float
+     * Денежная сумма в рублях.
      */
-    public function getPay()
+    public function getPay(): float
+    {
+        return $this->pay / 100;
+    }
+
+    public function getPayKopecks(): int
     {
         return $this->pay;
     }
@@ -130,15 +137,20 @@ class CalculateInfo
     /**
      * @param int $pay
      */
-    public function setPay($pay)
+    public function setPay(int|float|string|null $pay): void
     {
-        $this->pay =  number_format($pay / 100, 2, '.', '');
+        $this->pay = self::normalizeKopecks($pay);
     }
 
     /**
-     * @return float
+     * Денежная сумма в рублях.
      */
-    public function getPayNds()
+    public function getPayNds(): float
+    {
+        return $this->payNds / 100;
+    }
+
+    public function getPayNdsKopecks(): int
     {
         return $this->payNds;
     }
@@ -146,15 +158,15 @@ class CalculateInfo
     /**
      * @param int $payNds
      */
-    public function setPayNds($payNds)
+    public function setPayNds(int|float|string|null $payNds): void
     {
-        $this->payNds = number_format($payNds / 100, 2, '.', '');
+        $this->payNds = self::normalizeKopecks($payNds);
     }
 
     /**
      * @return array
      */
-    public function getTariffList()
+    public function getTariffList(): array
     {
         return $this->tariffList;
     }
@@ -162,15 +174,20 @@ class CalculateInfo
     /**
      * @param Tariff $tariff
      */
-    public function addTariff(Tariff $tariff)
+    public function addTariff(Tariff $tariff): void
     {
         $this->tariffList[] = $tariff;
     }
 
     /**
-     * @return float
+     * Денежная сумма в рублях.
      */
-    public function getGround()
+    public function getGround(): float
+    {
+        return $this->ground / 100;
+    }
+
+    public function getGroundKopecks(): int
     {
         return $this->ground;
     }
@@ -178,15 +195,20 @@ class CalculateInfo
     /**
      * @param float $ground
      */
-    public function setGround($ground)
+    public function setGround(int|float|string|null $ground): void
     {
-        $this->ground = number_format($ground / 100, 2, '.', '');
+        $this->ground = self::normalizeKopecks($ground);
     }
 
     /**
-     * @return float
+     * Денежная сумма в рублях.
      */
-    public function getGroundNds()
+    public function getGroundNds(): float
+    {
+        return $this->groundNds / 100;
+    }
+
+    public function getGroundNdsKopecks(): int
     {
         return $this->groundNds;
     }
@@ -194,15 +216,20 @@ class CalculateInfo
     /**
      * @param float $groundNds
      */
-    public function setGroundNds($groundNds)
+    public function setGroundNds(int|float|string|null $groundNds): void
     {
-        $this->groundNds = number_format($groundNds / 100, 2, '.', '');
+        $this->groundNds = self::normalizeKopecks($groundNds);
     }
 
     /**
-     * @return float
+     * Денежная сумма в рублях.
      */
-    public function getCover()
+    public function getCover(): float
+    {
+        return $this->cover / 100;
+    }
+
+    public function getCoverKopecks(): int
     {
         return $this->cover;
     }
@@ -210,15 +237,20 @@ class CalculateInfo
     /**
      * @param float $cover
      */
-    public function setCover($cover)
+    public function setCover(int|float|string|null $cover): void
     {
-        $this->cover = number_format($cover / 100, 2, '.', '');
+        $this->cover = self::normalizeKopecks($cover);
     }
 
     /**
-     * @return float
+     * Денежная сумма в рублях.
      */
-    public function getCoverNds()
+    public function getCoverNds(): float
+    {
+        return $this->coverNds / 100;
+    }
+
+    public function getCoverNdsKopecks(): int
     {
         return $this->coverNds;
     }
@@ -226,15 +258,20 @@ class CalculateInfo
     /**
      * @param float $coverNds
      */
-    public function setCoverNds($coverNds)
+    public function setCoverNds(int|float|string|null $coverNds): void
     {
-        $this->coverNds = number_format($coverNds / 100, 2, '.', '');
+        $this->coverNds = self::normalizeKopecks($coverNds);
     }
 
     /**
-     * @return float
+     * Денежная сумма в рублях.
      */
-    public function getService()
+    public function getService(): float
+    {
+        return $this->service / 100;
+    }
+
+    public function getServiceKopecks(): int
     {
         return $this->service;
     }
@@ -242,15 +279,20 @@ class CalculateInfo
     /**
      * @param float $service
      */
-    public function setService($service)
+    public function setService(int|float|string|null $service): void
     {
-        $this->service = number_format($service / 100, 2, '.', '');
+        $this->service = self::normalizeKopecks($service);
     }
 
     /**
-     * @return float
+     * Денежная сумма в рублях.
      */
-    public function getServiceNds()
+    public function getServiceNds(): float
+    {
+        return $this->serviceNds / 100;
+    }
+
+    public function getServiceNdsKopecks(): int
     {
         return $this->serviceNds;
     }
@@ -258,15 +300,15 @@ class CalculateInfo
     /**
      * @param float $serviceNds
      */
-    public function setServiceNds($serviceNds)
+    public function setServiceNds(int|float|string|null $serviceNds): void
     {
-        $this->serviceNds = number_format($serviceNds / 100, 2, '.', '');
+        $this->serviceNds = self::normalizeKopecks($serviceNds);
     }
 
     /**
      * @return int
      */
-    public function getDeliveryPeriodMin()
+    public function getDeliveryPeriodMin(): ?int
     {
         return $this->deliveryPeriodMin;
     }
@@ -274,7 +316,7 @@ class CalculateInfo
     /**
      * @param int $deliveryPeriodMin
      */
-    public function setDeliveryPeriodMin($deliveryPeriodMin)
+    public function setDeliveryPeriodMin(?int $deliveryPeriodMin): void
     {
         $this->deliveryPeriodMin = $deliveryPeriodMin;
     }
@@ -282,7 +324,7 @@ class CalculateInfo
     /**
      * @return int
      */
-    public function getDeliveryPeriodMax()
+    public function getDeliveryPeriodMax(): ?int
     {
         return $this->deliveryPeriodMax;
     }
@@ -290,15 +332,15 @@ class CalculateInfo
     /**
      * @param int $deliveryPeriodMax
      */
-    public function setDeliveryPeriodMax($deliveryPeriodMax)
+    public function setDeliveryPeriodMax(?int $deliveryPeriodMax): void
     {
         $this->deliveryPeriodMax = $deliveryPeriodMax;
     }
 
     /**
-     * @return \DateTime
+     * @return \DateTimeImmutable|null
      */
-    public function getDeliveryDeadLine()
+    public function getDeliveryDeadLine(): ?\DateTimeImmutable
     {
         return $this->deliveryDeadLine;
     }
@@ -306,13 +348,26 @@ class CalculateInfo
     /**
      * @param string $deliveryDeadLine
      */
-    public function setDeliveryDeadLine($deliveryDeadLine)
+    public function setDeliveryDeadLine(?string $deliveryDeadLine): void
     {
-        $this->deliveryDeadLine = new \DateTime($deliveryDeadLine);
+        $this->deliveryDeadLine = $deliveryDeadLine === null ? null : new \DateTimeImmutable($deliveryDeadLine);
     }
 
-    public static function mb_ucfirst($string)
+    public static function mb_ucfirst(?string $string): ?string
     {
-        return mb_strtoupper(mb_substr($string, 0, 1)).mb_strtolower(mb_substr($string, 1));
+        if ($string === null || $string === '') {
+            return $string;
+        }
+
+        return mb_strtoupper(mb_substr($string, 0, 1)) . mb_strtolower(mb_substr($string, 1));
+    }
+
+    private static function normalizeKopecks(int|float|string|null $value): int
+    {
+        if ($value === null || !is_numeric($value)) {
+            return 0;
+        }
+
+        return (int) round((float) $value);
     }
 }

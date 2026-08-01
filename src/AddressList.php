@@ -1,12 +1,13 @@
 <?php
+declare(strict_types=1);
 namespace LapayGroup\RussianPost;
 
-class AddressList implements \IteratorAggregate
+class AddressList implements \IteratorAggregate, \Countable
 {
-    private $stack = []; // Список адресов для нормализации
-    private $idList = []; // Список id, которые уже есть в стэке
+    private array $stack = []; // Список адресов для нормализации
+    private array $idList = []; // Список id, которые уже есть в стэке
 
-    public function add($address, $id = false)
+    public function add(string $address, int|string|false $id = false): void
     {
         if ($id === false) {
             $id = count($this->stack);
@@ -21,11 +22,15 @@ class AddressList implements \IteratorAggregate
         $this->idList[$id] = true;
     }
 
+    #[\Override]
     public function getIterator(): \Traversable
     {
-        if (empty($this->stack))
-            throw new \InvalidArgumentException('Список адресов пуст');
-
         return new \ArrayIterator($this->stack);
+    }
+
+    #[\Override]
+    public function count(): int
+    {
+        return count($this->stack);
     }
 }

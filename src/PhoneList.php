@@ -1,12 +1,13 @@
 <?php
+declare(strict_types=1);
 namespace LapayGroup\RussianPost;
 
-class PhoneList implements \IteratorAggregate
+class PhoneList implements \IteratorAggregate, \Countable
 {
-    private $stack = []; // Список телефонных номеров для нормализации
-    private $idList = []; // Список id, которые уже есть в стэке
+    private array $stack = []; // Список телефонных номеров для нормализации
+    private array $idList = []; // Список id, которые уже есть в стэке
 
-    public function add($phone, $id = false)
+    public function add(string $phone, int|string|false $id = false): void
     {
         if ($id === false) {
             $id = count($this->stack);
@@ -21,11 +22,15 @@ class PhoneList implements \IteratorAggregate
         $this->idList[$id] = true;
     }
 
+    #[\Override]
     public function getIterator(): \Traversable
     {
-        if (empty($this->stack))
-            throw new \InvalidArgumentException('Список телефонных номеров пуст');
-
         return new \ArrayIterator($this->stack);
+    }
+
+    #[\Override]
+    public function count(): int
+    {
+        return count($this->stack);
     }
 }

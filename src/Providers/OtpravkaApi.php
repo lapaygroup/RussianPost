@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 namespace LapayGroup\RussianPost\Providers;
 
 use LapayGroup\RussianPost\AddressList;
@@ -8,11 +9,12 @@ use LapayGroup\RussianPost\Entity\ReturnShipment;
 use LapayGroup\RussianPost\Enum\OpsObjectType;
 use LapayGroup\RussianPost\Exceptions\RussianPostException;
 use LapayGroup\RussianPost\FioList;
+use LapayGroup\RussianPost\Http\Psr18Transport;
 use LapayGroup\RussianPost\PhoneList;
 use LapayGroup\RussianPost\TariffInfo;
 use LapayGroup\RussianPost\ParcelInfo;
-use GuzzleHttp\Psr7\UploadedFile;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\UploadedFileInterface;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 
@@ -27,86 +29,24 @@ class OtpravkaApi implements LoggerAwareInterface
     const PRINT_TYPE_THERMO = 'THERMO';
     const PRINT_ONE_SIDED   = 'ONE_SIDED';
     const PRINT_TWO_SIDED   = 'TWO_SIDED';
+    /** @deprecated Начиная с 2.0.0 SDK всегда возвращает UploadedFileInterface. */
     const DOWNLOAD_FILE     = 1;
     const PRINT_FILE        = 2;
     const OTPRAVKA          = 1; // Endpoint отправки
     const DELIVERY          = 2; // Endpoint сроков доставки
     const POSTOFFICE        = 3; // Endpoint работы с ОПС
 
-    /** @var string */
-    private $token = null;
+    private readonly string $token;
+    private readonly string $key;
 
-    /** @var string */
-    private $key = null;
-
-    /** @var int  */
-    private $timeout = 60;
-
-    /** @var \GuzzleHttp\Client  */
-    private $otpravkaClient = null;
-
-    /** @var \GuzzleHttp\Client  */
-    private $deliveryClient = null;
-
-    /** @var \GuzzleHttp\Client */
-    private $postOfficeClient = null;
-
-    /** @var array */
-    private $config = null;
-
-    function __construct($config, $timeout = 60)
+    public function __construct(array $config, private readonly Psr18Transport $httpTransport)
     {
-        $this->config = $config;
-        $this->timeout = $timeout;
-        $this->token = $config['auth']['otpravka']['token'];
-        $this->key = $config['auth']['otpravka']['key'];
-    }
-
-    private function checkApiClient($endpoint = self::OTPRAVKA)
-    {
-        if (empty($endpoint)) $endpoint = self::OTPRAVKA;
-
-        switch ($endpoint) {
-            case self::OTPRAVKA:
-                if (!$this->otpravkaClient) {
-                    $this->otpravkaClient = new \GuzzleHttp\Client([
-                        'base_uri' => 'https://otpravka-api.pochta.ru/',
-                        'headers' => ['Authorization' => 'AccessToken ' . $this->token,
-                            'X-User-Authorization' => 'Basic ' . $this->key,
-                            'Content-Type' => 'application/json',
-                            // 'Accept' => 'application/json;charset=UTF-8'
-                        ],
-                        'timeout' => $this->timeout,
-                        'http_errors' => false
-                    ]);
-                }
-                break;
-
-            case self::DELIVERY:
-                if (!$this->deliveryClient) {
-                    $this->deliveryClient = new \GuzzleHttp\Client([
-                        'base_uri' => 'https://delivery.pochta.ru/delivery/',
-                        'timeout' => $this->timeout,
-                        'http_errors' => false
-                    ]);
-                }
-                break;
-
-            case self::POSTOFFICE:
-                if (!$this->postOfficeClient) {
-                    $this->postOfficeClient = new \GuzzleHttp\Client([
-                        'base_uri' => 'https://otpravka-api.pochta.ru/postoffice/',
-                        'headers' => ['Authorization' => 'AccessToken ' . $this->token,
-                            'X-User-Authorization' => 'Basic ' . $this->key,
-                            'Content-Type' => 'application/json',
-                            'Accept' => 'application/json;charset=UTF-8'
-                        ],
-                        'timeout' => $this->timeout,
-                        'http_errors' => false
-                    ]);
-                }
-                break;
+        if (!isset($config['auth']['otpravka']['token'], $config['auth']['otpravka']['key'])) {
+            throw new \InvalidArgumentException('Не заданы данные авторизации Otpravka API');
         }
+
+        $this->token = (string) $config['auth']['otpravka']['token'];
+        $this->key = (string) $config['auth']['otpravka']['key'];
     }
 
     /**
@@ -114,130 +54,182 @@ class OtpravkaApi implements LoggerAwareInterface
      *
      * @param string $method - метод API
      * @param array $params - параметры запроса
-     * @param null|string $endpoint - наименование адреса API
-     * @return array | string | UploadedFile
+     * @param int|null $endpoint - идентификатор адреса API
+     * @return array|string|UploadedFileInterface
      * @throws RussianPostException
+     * @throws \Psr\Http\Client\ClientExceptionInterface
      */
-    private function callApi($type, $method, $params = [], $version = self::V1, $endpoint = null)
+    private function callApi(
+        string $type,
+        string $method,
+        array $params = [],
+        string $version = self::V1,
+        ?int $endpoint = null
+    ): array|string|UploadedFileInterface
     {
-        $is_file = false;
-        $this->checkApiClient($endpoint);
+        if (empty($endpoint)) $endpoint = self::OTPRAVKA;
 
         switch ($endpoint) {
             case self::OTPRAVKA:
-                $client = $this->otpravkaClient;
+                $baseUri = 'https://otpravka-api.pochta.ru/';
+                $headers = [
+                    'Authorization' => 'AccessToken ' . $this->token,
+                    'X-User-Authorization' => 'Basic ' . $this->key,
+                    'Content-Type' => 'application/json'
+                ];
                 break;
 
             case self::DELIVERY:
                 $version = self::DELIVERY_VERSION;
-                $client = $this->deliveryClient;
+                $baseUri = 'https://delivery.pochta.ru/delivery/';
+                $headers = ['Content-Type' => 'application/json'];
                 break;
 
             case self::POSTOFFICE:
                 $version = self::V1;
-                $client = $this->postOfficeClient;
+                $baseUri = 'https://otpravka-api.pochta.ru/postoffice/';
+                $headers = [
+                    'Authorization' => 'AccessToken ' . $this->token,
+                    'X-User-Authorization' => 'Basic ' . $this->key,
+                    'Content-Type' => 'application/json',
+                    'Accept' => 'application/json;charset=UTF-8'
+                ];
                 break;
 
             default:
-                $client = $this->otpravkaClient;
+                throw new \InvalidArgumentException('Неизвестный endpoint API Почты России');
         }
+
+        $uri = $baseUri . $version . '/' . $method;
 
         switch ($type) {
             case 'GET':
                 $request = http_build_query($params);
-                if ($this->logger) {
-                    $this->logger->info("Russian Post Otpravka API {$type} request /".$version."/{$method}: ".$request);
-                }
-                $response = $client->get($version.'/'.$method, ['query' => $params]);
+                $this->logRequest($type, $uri);
+                $response = $this->httpTransport->send($type, $uri, $headers, $params);
                 break;
             case 'POST':
             case 'PUT':
             case 'DELETE':
-                $request = json_encode($params);
-                if ($this->logger) {
-                    $this->logger->info("Russian Post Otpravka API {$type} request /".$version."/{$method}: ".$request);
+                try {
+                    $request = json_encode($params, JSON_THROW_ON_ERROR);
+                } catch (\JsonException $exception) {
+                    throw new RussianPostException(
+                        'Не удалось сериализовать параметры запроса: ' . $exception->getMessage(),
+                        0,
+                        null,
+                        var_export($params, true),
+                        $exception
+                    );
                 }
+                $this->logRequest($type, $uri);
 
                 /** @var ResponseInterface $response */
-                $response = $client->{strtolower($type)}($version.'/'.$method, ['json' => $params]);
+                $response = $this->httpTransport->send($type, $uri, $headers, [], $request);
                 break;
+            default:
+                throw new \InvalidArgumentException('Неподдерживаемый HTTP-метод: ' . $type);
         }
 
-        $headers = $response->getHeaders();
-        $headers['http_status'] = $response->getStatusCode();
         $content_type = $response->getHeaderLine('Content-Type');
-        $response_contents = $response->getBody()->getContents();
 
-        if (preg_match('~^application/(pdf|zip|octet-stream)~', $content_type, $matches_type)) {
-            $is_file = true;
-            if ($this->logger) {
-                $this->logger->info("Russian Post Otpravka API {$type} response /".$version."/{$method}: получен файл с расширением ".$matches_type[1], $headers);
-            }
-        } else {
-            if ($this->logger) {
-                $this->logger->info("Russian Post Otpravka API {$type} response /".$version."/{$method}: " . $response_contents, $headers);
-            }
-        }
+        if ($response->getStatusCode() >= 200 && $response->getStatusCode() < 300
+            && preg_match('~^application/(pdf|zip|octet-stream)~', $content_type, $matches_type)) {
+            $this->logResponse($type, $uri, $response->getStatusCode(), $content_type);
 
-        if (!in_array($response->getStatusCode(), [200,400,404,406,407]))
-            throw new RussianPostException('Неверный код ответа от сервера Почты России при вызове метода '.$method.': ' . $response->getStatusCode(), $response->getStatusCode(), $response_contents, $request);
+            $body = $response->getBody();
+            if ($body->isSeekable()) $body->rewind();
 
-        if (empty($response_contents))
-            throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' пришел пустой ответ', $response->getStatusCode(), $response_contents, $request);
-
-        if ($is_file) {
-            $response->getBody()->rewind();
             preg_match('~=(.+)~', $response->getHeaderLine('Content-Disposition'), $matches_name);
-            return new UploadedFile(
-                $response->getBody(),
-                $response->getBody()->getSize(),
-                UPLOAD_ERR_OK,
-                "{$matches_name[1]}.{$matches_type[1]}",
+            $fileName = !empty($matches_name[1]) ? trim($matches_name[1], "\"' ") : 'document';
+
+            return $this->httpTransport->createUploadedFile(
+                $body,
+                $body->getSize(),
+                "{$fileName}.{$matches_type[1]}",
                 $response->getHeaderLine('Content-Type')
             );
         }
 
-        $resp = json_decode($response_contents, true);
+        $response_contents = $response->getBody()->getContents();
 
-        if (empty($resp) && $endpoint == self::DELIVERY && json_last_error() == JSON_ERROR_SYNTAX) {
-            return $response_contents;
+        $this->logResponse($type, $uri, $response->getStatusCode(), $content_type);
+
+        if ($response_contents === '') {
+            throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' пришел пустой ответ', $response->getStatusCode(), $response_contents, $request);
         }
 
-        if ($response->getStatusCode() != 200 && !empty($resp['code'])) {
-            $desc = !empty($resp['sub-code']) ? $resp['sub-code'] : '';
-            if (empty($desc) && !empty($resp['desc'])) $desc = $resp['desc'];
-            throw new RussianPostException('От сервера Почты России при вызове метода ' . $method . ' получена ошибка: ' . $desc . " (" . $resp['code'] . ")", $response->getStatusCode(), $response_contents, $request);
+        try {
+            $resp = json_decode($response_contents, true, 512, JSON_THROW_ON_ERROR);
+        } catch (\JsonException $exception) {
+            if ($endpoint === self::DELIVERY && $response->getStatusCode() >= 200 && $response->getStatusCode() < 300) {
+                return $response_contents;
+            }
+
+            throw new RussianPostException(
+                'От сервера Почты России при вызове метода ' . $method . ' получен некорректный JSON',
+                $response->getStatusCode(),
+                $response_contents,
+                $request,
+                $exception
+            );
         }
 
-        if ($response->getStatusCode() == 406 && !empty($resp['status']) && !empty($resp['message']))
-            throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' получена ошибка: '.$resp['message'] . " (".$resp['status'].")", $response->getStatusCode(), $response_contents, $request);
+        if (!is_array($resp)) {
+            throw new RussianPostException(
+                'От сервера Почты России при вызове метода ' . $method . ' получен ответ неожиданного формата',
+                $response->getStatusCode(),
+                $response_contents,
+                $request
+            );
+        }
 
-        if ($response->getStatusCode() == 407 && !empty($resp['status']) && $resp['status'] == 'ERROR')
-            throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' получена ошибка: '.$resp['message'] . " (".$resp['status'].")", $response->getStatusCode(), $response_contents, $request);
-
-        if ($response->getStatusCode() == 400 && !empty($resp['error']))
-            throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' получена ошибка: '.$resp['error'] . " (".$resp['status'].")", $response->getStatusCode(), $response_contents, $request);
+        if ($response->getStatusCode() < 200 || $response->getStatusCode() >= 300) {
+            $description = $resp['sub-code'] ?? $resp['desc'] ?? $resp['message'] ?? $resp['error'] ?? 'HTTP ' . $response->getStatusCode();
+            $errorCode = $resp['code'] ?? $resp['status'] ?? $response->getStatusCode();
+            throw new RussianPostException(
+                'От сервера Почты России при вызове метода ' . $method . ' получена ошибка: ' . $description . ' (' . $errorCode . ')',
+                $response->getStatusCode(),
+                $response_contents,
+                $request
+            );
+        }
 
         return $resp;
+    }
+
+    private function logRequest(string $method, string $uri): void
+    {
+        $this->logger?->info('Russian Post Otpravka API request', [
+            'method' => $method,
+            'uri' => $uri,
+        ]);
+    }
+
+    private function logResponse(string $method, string $uri, int $statusCode, string $contentType): void
+    {
+        $this->logger?->info('Russian Post Otpravka API response', [
+            'method' => $method,
+            'uri' => $uri,
+            'http_status' => $statusCode,
+            'content_type' => $contentType,
+        ]);
     }
 
     /**
      * Действие с файлом
      *
-     * @param UploadedFile $file
+     * @param UploadedFileInterface $file
      * @param int $action
-     * @return mixed
+     * @return UploadedFileInterface
      */
-    private function fileAction($file, $action)
+    private function fileAction(UploadedFileInterface $file, int $action): UploadedFileInterface
     {
-        if ($action == self::DOWNLOAD_FILE) {
-            header("Content-type:".$file->getClientMediaType());
-            header("Content-Disposition:inline;filename='".$file->getClientFilename()."'");
-            echo $file->getStream()->getContents();
-            exit;
-        } else {
-            return $file;
+        if (!in_array($action, [self::DOWNLOAD_FILE, self::PRINT_FILE], true)) {
+            throw new \InvalidArgumentException('Неизвестное действие с файлом');
         }
+
+        return $file;
     }
 
     /**
@@ -384,7 +376,7 @@ class OtpravkaApi implements LoggerAwareInterface
      *
      * @param Order $order - данные заказа
      * @param $id - id заказа в системе Почты России
-     * @return array|string
+     * @return array|string|UploadedFileInterface
      * @throws RussianPostException
      */
     public function editOrder($order, $id)
@@ -583,11 +575,11 @@ class OtpravkaApi implements LoggerAwareInterface
      *
      * @param string $batch_name - наименование партии
      * @param \DateTimeImmutable $date - дата отправки
-     * @return array|string
+     * @return bool
      * @throws RussianPostException
      * @throws \InvalidArgumentException
      */
-    public function changeBatchSendingDay($batch_name, $date)
+    public function changeBatchSendingDay(string $batch_name, \DateTimeImmutable $date): bool
     {
         $year = $date->format('Y');
         $month = $date->format('m');
@@ -595,7 +587,8 @@ class OtpravkaApi implements LoggerAwareInterface
         $result = $this->callApi('POST', 'batch/'.$batch_name.'/sending/'.$year.'/'.$month.'/'.$day);
         if (empty($result)) return true;
 
-        throw new \InvalidArgumentException($result['error-code']);
+        $errorCode = is_array($result) ? ($result['error-code'] ?? 'UNKNOWN_ERROR') : 'UNEXPECTED_RESPONSE';
+        throw new \InvalidArgumentException((string) $errorCode);
     }
 
     /**
@@ -640,7 +633,7 @@ class OtpravkaApi implements LoggerAwareInterface
      * @param int $action - действие с файлом (Печать или сохранение)
      * @param string $print_type - тип печати (термо или на бумаге)
      * @param string $print_type_form - тип печати уведомления (двусторонняя или односторонняя)
-     * @return string|UploadedFile
+     * @return string|UploadedFileInterface
      * @throws RussianPostException
      */
     public function generateDocPackage($batch_name, $action = self::PRINT_FILE, $print_type = self::PRINT_TYPE_PAPER, $print_type_form = self::PRINT_ONE_SIDED)
@@ -659,7 +652,7 @@ class OtpravkaApi implements LoggerAwareInterface
      * @param int $action - действие с файлом
      * @param \DateTimeImmutable $sending_date
      * @param string $print_type
-     * @return string|UploadedFile
+     * @return string|UploadedFileInterface
      * @throws RussianPostException
      */
     public function generateDocF7p($order_id, $action, $sending_date = null, $print_type = self::PRINT_TYPE_PAPER)
@@ -676,7 +669,7 @@ class OtpravkaApi implements LoggerAwareInterface
      *
      * @param int $order_id - уникальный идентификатор заказа
      * @param int $action - действие с файлом
-     * @return string|UploadedFile
+     * @return string|UploadedFileInterface
      * @throws RussianPostException
      */
     public function generateDocF112ek($order_id, $action = self::PRINT_FILE)
@@ -693,7 +686,7 @@ class OtpravkaApi implements LoggerAwareInterface
      * @param bool $batch - false (до формирования партии), true (после формирования партии)
      * @param \DateTimeImmutable $sending_date
      * @param string $print_type - тип печати (термопечать или на бумаге)
-     * @return string|UploadedFile
+     * @return string|UploadedFileInterface
      * @throws RussianPostException
      */
     public function generateDocOrderPrintForm($order_id, $action, $batch = true, $sending_date = null, $print_type = null)
@@ -715,7 +708,7 @@ class OtpravkaApi implements LoggerAwareInterface
      *
      * @param string $batch_name - наименование партии
      * @param int $action - действие с файлом
-     * @return string|UploadedFile
+     * @return string|UploadedFileInterface
      * @throws RussianPostException
      */
     public function generateDocF103($batch_name,  $action = self::PRINT_FILE)
@@ -729,7 +722,7 @@ class OtpravkaApi implements LoggerAwareInterface
      *
      * @param string $batch_name - наименование партии
      * @param int $action - действие с файлом
-     * @return string|UploadedFile
+     * @return string|UploadedFileInterface
      * @throws RussianPostException
      */
     public function generateDocCheckingAct($batch_name,  $action = self::PRINT_FILE)
@@ -746,7 +739,7 @@ class OtpravkaApi implements LoggerAwareInterface
      * @return boolean
      * @throws RussianPostException
      */
-    public function sendingF103form($batch_name, $online_balance = false)
+    public function sendingF103form(string $batch_name, bool $online_balance = false): bool
     {
         $method = 'batch/'.$batch_name.'/checkin';
         if ($online_balance)
@@ -755,8 +748,11 @@ class OtpravkaApi implements LoggerAwareInterface
         $response = $this->callApi('POST', $method);
         if (!empty($response['f103-sent'])) return true;
 
-        if (!empty($response['error-code']))
+        if (!empty($response['error-code'])) {
             throw new RussianPostException('От сервера Почты России при вызове метода '.$method.' получена ошибка: '.$response['error-code'].' (см. https://otpravka.pochta.ru/specification#/enums-errors)');
+        }
+
+        throw new RussianPostException('От сервера Почты России при вызове метода ' . $method . ' получен ответ неожиданного формата');
     }
 
     /**
@@ -765,7 +761,7 @@ class OtpravkaApi implements LoggerAwareInterface
      * @param string $rpo - ШПИ отправления
      * @param int $action - действие с файлом
      * @param string $print_type - тип печати (термо или на бумаге)
-     * @return string|UploadedFile
+     * @return string|UploadedFileInterface
      * @throws RussianPostException
      */
     public function generateReturnLabel($rpo, $action = self::PRINT_FILE, $print_type = self::PRINT_TYPE_PAPER)
@@ -850,12 +846,12 @@ class OtpravkaApi implements LoggerAwareInterface
      * Поиск почтовых индексов в населённом пункте
      *
      * @param string $locality - Название населённого пункта (например Екатеринбург)
-     * @param string string $region - Область/край/республика, где расположен населённый пункт (например Свердловская)
-     * @param string string $district - Район, где расположен населённый пункт (для деревень, посёлков и т. д. - например Сухоложский)
+     * @param string $region - Область/край/республика, где расположен населённый пункт (например Свердловская)
+     * @param string $district - Район, где расположен населённый пункт (для деревень, посёлков и т. д. - например Сухоложский)
      * @return array
      * @throws RussianPostException
      */
-    public function getPostalCodesInLocality($locality, $region = '', $district = '')
+    public function getPostalCodesInLocality(string $locality, string $region = '', string $district = ''): array
     {
         return $this->callApi('GET', 'settlement.offices.codes', [
             'settlement' => $locality,
@@ -871,7 +867,7 @@ class OtpravkaApi implements LoggerAwareInterface
      * dd_MMMM_yyyy - время создания архива
      *
      * @param string $type - Тип объекта
-     * @return UploadedFile
+     * @return UploadedFileInterface
      * @throws RussianPostException
      */
     public function getPostOfficeFromPassport($type = OpsObjectType::ALL)

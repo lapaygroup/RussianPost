@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace LapayGroup\RussianPost\Entity;
 
@@ -112,7 +113,7 @@ class Item
     /**
      * @return int|null
      */
-    public function getСountryCode()
+    public function getCountryCode(): ?int
     {
         return $this->country_code;
     }
@@ -120,24 +121,48 @@ class Item
     /**
      * @param int|null $country_code
      */
-    public function setСountryCode($country_code)
+    public function setCountryCode(?int $country_code): void
     {
         $this->country_code = $country_code;
+    }
+
+    /** @deprecated Используйте getCountryCode(). */
+    public function getСountryCode(): ?int
+    {
+        return $this->getCountryCode();
+    }
+
+    /** @deprecated Используйте setCountryCode(). */
+    public function setСountryCode(?int $country_code): void
+    {
+        $this->setCountryCode($country_code);
     }
 
     /**
      * @return string|null
      */
-    public function getСustomsDeclarationNumber()
+    public function getCustomsDeclarationNumber(): ?string
     {
         return $this->customs_declaration_number;
     }
     /**
      * @param string|null $customs_declaration_number
      */
-    public function setСustomsDeclarationNumber($customs_declaration_number)
+    public function setCustomsDeclarationNumber(?string $customs_declaration_number): void
     {
         $this->customs_declaration_number = $customs_declaration_number;
+    }
+
+    /** @deprecated Используйте getCustomsDeclarationNumber(). */
+    public function getСustomsDeclarationNumber(): ?string
+    {
+        return $this->getCustomsDeclarationNumber();
+    }
+
+    /** @deprecated Используйте setCustomsDeclarationNumber(). */
+    public function setСustomsDeclarationNumber(?string $customs_declaration_number): void
+    {
+        $this->setCustomsDeclarationNumber($customs_declaration_number);
     }
     /**
      * @return int|null

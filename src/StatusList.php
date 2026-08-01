@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 namespace LapayGroup\RussianPost;
 
 use LapayGroup\RussianPost\Exceptions\StatusValidationException;

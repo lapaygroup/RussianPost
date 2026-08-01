@@ -92,6 +92,7 @@
   - [x] [Текущие настройки пользователя](#get_settings)
 
 <a name="links"><h1>Changelog</h1></a>
+- 2.0.0 - Минимальная версия PHP повышена до 8.3. Удалена обязательная зависимость от Guzzle, добавлен транспорт PSR-18/PSR-17, строгая типизация ядра, безопасное логирование и единообразная обработка HTTP/JSON-ошибок. Обновлены конструкторы `OtpravkaApi`, `CategoryList` и `TariffCalculation`;
 - 1.0.2 - Исправлен Null в методе createBatch(). За внимательность спасибо [petrovich24](https://github.com/petrovich24);  
 - 1.0.1 - Исправлена работа clean функций после обновления;
 - 1.0.0 - Описание можно посмотреть [тут](https://github.com/lapaygroup/RussianPost/releases/tag/1.0.0);
@@ -152,9 +153,47 @@
 
 
 # Установка
-Для установки можно использовать менеджер пакетов Composer
+Для версии 2.0.0 требуется PHP 8.3 или новее. Для установки можно использовать менеджер пакетов Composer:
 
     composer require lapaygroup/russianpost
+
+Начиная с версии 2.0.0 библиотека не устанавливает конкретный HTTP-клиент. В приложении должны быть реализации [PSR-18](https://www.php-fig.org/psr/psr-18/) и [PSR-17](https://www.php-fig.org/psr/psr-17/). Например:
+
+    composer require symfony/http-client nyholm/psr7
+
+Создайте HTTP-транспорт один раз и передавайте его в классы SDK:
+
+```php
+<?php
+use LapayGroup\RussianPost\Http\Psr18Transport;
+use Nyholm\Psr7\Factory\Psr17Factory;
+use Symfony\Component\HttpClient\Psr18Client;
+
+$httpClient = new Psr18Client();
+$psr17Factory = new Psr17Factory();
+
+$httpTransport = new Psr18Transport(
+    $httpClient,
+    $psr17Factory,
+    $psr17Factory,
+    $psr17Factory
+);
+```
+
+Можно использовать любые совместимые реализации PSR-18 и PSR-17. Таймаут и другие сетевые настройки задаются в выбранном HTTP-клиенте, так как PSR-18 их не стандартизирует.
+
+### Переход с версии 1.x
+
+В версии 2.0.0:
+
+- транспорт стал обязательным аргументом конструкторов `OtpravkaApi`, `CategoryList` и `TariffCalculation`;
+- методы документов возвращают `Psr\Http\Message\UploadedFileInterface` и больше не вызывают `header()`, `echo` или `exit`;
+- вывод файла в HTTP-ответ выполняется на уровне приложения или фреймворка; параметр `action` временно сохранён для упрощения миграции;
+- таймаут HTTP настраивается в выбранном PSR-18-клиенте, а timeout Tracking API — в конструкторе `Tracking`;
+- денежные getters `CalculateInfo` и `Tariff` возвращают `float` в рублях; для точных расчётов добавлены getters с суффиксом `Kopecks`, возвращающие `int` в копейках;
+- добавлено исправленное исключение `RussianPostTarifficatorException`; старое имя `RussianPostTarrificatorException` сохранено как родитель для совместимости;
+- пустые списки нормализации являются корректными пустыми коллекциями;
+- полные тела запросов/ответов и SOAP credentials больше не записываются в лог.
 
 <a name="tariffs"><h1>Тарификатор Почты России</h1></a>
 
@@ -162,7 +201,7 @@
 Для получения списка категорий нужно вызвать метод **parseToArray** класса **\LapayGroup\RussianPost\CategoryList**
 ```php
 <?php
-  $CategoryList = new \LapayGroup\RussianPost\CategoryList();
+  $CategoryList = new \LapayGroup\RussianPost\CategoryList($httpTransport);
   $categoryList = $CategoryList->parseToArray();
 ?>
 ```
@@ -171,7 +210,7 @@
 Если нужно исключить категории из выборки, то перед вызовом **parseToArray** вызываем метод **setCategoryDelete** и передаем ему массий ID категорий, которые нужно исключить.
 ```php
 <?php
-  $CategoryList = new \LapayGroup\RussianPost\CategoryList();
+  $CategoryList = new \LapayGroup\RussianPost\CategoryList($httpTransport);
   $CategoryList->setCategoryDelete([100,200,300]);
   $categoryList = $CategoryList->parseToArray();
 ?>
@@ -196,7 +235,7 @@ try {
     // 42 - Пакет СМС уведомлений получателю при единичном приеме
     $services = [42];
 
-    $TariffCalculation = new \LapayGroup\RussianPost\TariffCalculation();
+    $TariffCalculation = new \LapayGroup\RussianPost\TariffCalculation($httpTransport);
     // Расчет с сроками доставки
     $calcInfo = $TariffCalculation->calculate($objectId, $params, true, $services);
 
@@ -267,16 +306,20 @@ catch (\Exception $e) {
  - *getCategoryItemName()* - название вида отправления
  - *getWeight()* - вес отправления в граммах
  - *getTransportationName()* - способ пересылки
- - *getPay()* - итого стоимоть без НДС
- - *getPayNds()* - итого стоимоть c НДС
- - *getPayMark()* - итого стоимость при оплате марками
+ - *getPay()* - итоговая стоимость без НДС
+ - *getPayNds()* - итоговая стоимость с НДС
  - *getGround()* - почтовый сбор без НДС
  - *getGroundNds()* - почтовый сбор с НДС
  - *getCover()* - страхование без НДС
  - *getCoverNds()* - страхование с НДС
  - *getService()* - дополнительные услуги без НДС
- - *getServiceNds()* - ополнительные услуги с НДС
+ - *getServiceNds()* - дополнительные услуги с НДС
  - *getTariffList()* - массив тарифов из которых складывается итоговая стоимость доставки
+
+Денежные методы возвращают `float` в рублях. Для точных вычислений доступны соответствующие методы
+`getPayKopecks()`, `getPayNdsKopecks()`, `getGroundKopecks()`, `getGroundNdsKopecks()`,
+`getCoverKopecks()`, `getCoverNdsKopecks()`, `getServiceKopecks()` и `getServiceNdsKopecks()`,
+возвращающие `int` в копейках.
 
 Массив тарифов состоит из объектов класса *LapayGroup\RussianPost\Tariff*
 Доступные методы:
@@ -285,6 +328,9 @@ catch (\Exception $e) {
  - *getValue()* - стоимость без НДС
  - *getValueNds()* - стоимость с НДС
  - *getValueMark()* - стоимость при оплате марками
+
+Для точных вычислений предусмотрены `getValueKopecks()`, `getValueNdsKopecks()` и
+`getValueMarkKopecks()`, возвращающие `int` в копейках.
 
 ***Полученная информация может быть отображена так:***
 
@@ -327,14 +373,14 @@ catch (\Exception $e) {
     $log->pushHandler(new StreamHandler('log.txt', Logger::INFO));
 
     // Логирование расчета тарифа
-    $tariffCalculation = new \LapayGroup\RussianPost\TariffCalculation();
+    $tariffCalculation = new \LapayGroup\RussianPost\TariffCalculation($httpTransport);
     $tariffCalculation->setLogger($log);
 
     $res = $tariffCalculation->calculate(23030, ['from' => 101000, 'to' => 101000, 'weight' => 100, 'sumoc' => 0]);
 
 
     // Логирования API отправки
-    $otpravkaApi = new \LapayGroup\RussianPost\Providers\OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $otpravkaApi = new \LapayGroup\RussianPost\Providers\OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')), $httpTransport);
     $otpravkaApi->setLogger($log);
 
     $addressList = new \LapayGroup\RussianPost\AddressList();
@@ -508,7 +554,7 @@ Array
   use LapayGroup\RussianPost\Providers\OtpravkaApi;
 
   try {
-      $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+      $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')), $httpTransport);
 
       $addressList = new \LapayGroup\RussianPost\AddressList();
       $addressList->add('115551 Кширское шоссе 94-1, 1');
@@ -562,7 +608,7 @@ Array
   use LapayGroup\RussianPost\Providers\OtpravkaApi;
 
   try {
-      $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+      $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')), $httpTransport);
 
       $fioList = new \LapayGroup\RussianPost\FioList();
       $fioList->add('Иванов Петр игоревич');
@@ -611,7 +657,7 @@ Array
   use LapayGroup\RussianPost\Providers\OtpravkaApi;
 
   try {
-      $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+      $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')), $httpTransport);
 
       $phoneList = new \LapayGroup\RussianPost\PhoneList();
       $phoneList->add('9260120935');
@@ -659,7 +705,7 @@ Array
 use Symfony\Component\Yaml\Yaml;
 use LapayGroup\RussianPost\Providers\OtpravkaApi;
 
-$OtpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+$OtpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')), $httpTransport);
 $list = $OtpravkaApi->shippingPoints();
 ```
 
@@ -671,7 +717,7 @@ $list = $OtpravkaApi->shippingPoints();
   use LapayGroup\RussianPost\ParcelInfo;
 
   try {
-      $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+      $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')), $httpTransport);
 
       $parcelInfo = new ParcelInfo();
       $parcelInfo->setIndexFrom($list[0]['operator-postcode']); // Индекс пункта сдачи из функции $OtpravkaApi->shippingPoints()
@@ -731,7 +777,7 @@ $list = $OtpravkaApi->shippingPoints();
   use LapayGroup\RussianPost\ParcelInfo;
 
   try {
-      $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+      $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')), $httpTransport);
 
       $parcelInfo = new ParcelInfo();
       $parcelInfo->setIndexFrom($list[0]['operator-postcode']); // Индекс пункта сдачи из функции $OtpravkaApi->shippingPoints()
@@ -782,7 +828,7 @@ $list = $OtpravkaApi->shippingPoints();
   use Symfony\Component\Yaml\Yaml;
   use LapayGroup\RussianPost\Providers\OtpravkaApi;
   try {
-      $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+      $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')), $httpTransport);
       $result = $otpravkaApi->getBalance();
 
       /*
@@ -815,7 +861,7 @@ $list = $OtpravkaApi->shippingPoints();
   use Symfony\Component\Yaml\Yaml;
   use LapayGroup\RussianPost\Providers\OtpravkaApi;
 
-  $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+  $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')), $httpTransport);
 
   $recepient = new \LapayGroup\RussianPost\Entity\Recipient();
   $recepient->setAddress('650905 ЯГУНОВСКИЙ, КЕМЕРОВСКАЯ ОБЛАСТЬ, УЛ БЕЛОЗЕРНАЯ, ДОМ 21,КВ 1');
@@ -905,7 +951,7 @@ use LapayGroup\RussianPost\Providers\OtpravkaApi;
 use LapayGroup\RussianPost\Entity\Order;
 
 try {
-    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')), $httpTransport);
 
     $orders = [];
     $order = new Order();
@@ -994,7 +1040,7 @@ use LapayGroup\RussianPost\Providers\OtpravkaApi;
 use LapayGroup\RussianPost\Entity\Order;
 
 try {
-    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')), $httpTransport);
 
     $orders = [];
     $order = new Order();
@@ -1076,7 +1122,7 @@ use LapayGroup\RussianPost\Providers\OtpravkaApi;
 use LapayGroup\RussianPost\Entity\Order;
 
 try {
-    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')), $httpTransport);
 
     $order = new Order();
     $order->setIndexTo(115551);
@@ -1145,7 +1191,7 @@ use Symfony\Component\Yaml\Yaml;
 use LapayGroup\RussianPost\Providers\OtpravkaApi;
 
 try {
-    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')), $httpTransport);
     $result = $otpravkaApi->deleteOrders([115322331]);
     /*
     Array Успешный ответ
@@ -1189,7 +1235,7 @@ use Symfony\Component\Yaml\Yaml;
 use LapayGroup\RussianPost\Providers\OtpravkaApi;
 
 try {
-    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')), $httpTransport);
     $result = $otpravkaApi->findOrderByShopId(1);
     /*
     Array
@@ -1263,7 +1309,7 @@ use Symfony\Component\Yaml\Yaml;
 use LapayGroup\RussianPost\Providers\OtpravkaApi;
 
 try {
-    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')), $httpTransport);
     $result = $otpravkaApi->findOrderById(115322331);
     /*
     Array
@@ -1333,7 +1379,7 @@ use Symfony\Component\Yaml\Yaml;
 use LapayGroup\RussianPost\Providers\OtpravkaApi;
 
 try {
-    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')), $httpTransport);
     $result = $otpravkaApi->returnToNew([115527611]);
     /*
     Array Успешный ответ
@@ -1387,7 +1433,7 @@ use Symfony\Component\Yaml\Yaml;
 use LapayGroup\RussianPost\Providers\OtpravkaApi;
 
 try {
-    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')), $httpTransport);
     $result = $otpravkaApi->createBatch([115527611], new DateTimeImmutable('2019-09-20'));
     /*
      Array Успешный ответ
@@ -1489,7 +1535,7 @@ use Symfony\Component\Yaml\Yaml;
 use LapayGroup\RussianPost\Providers\OtpravkaApi;
 
 try {
-    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')), $httpTransport);
     $result = $otpravkaApi->changeBatchSendingDay(25, new DateTimeImmutable('2019-09-08'));
 
 }
@@ -1518,7 +1564,7 @@ use Symfony\Component\Yaml\Yaml;
 use LapayGroup\RussianPost\Providers\OtpravkaApi;
 
 try {
-    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')), $httpTransport);
     $result = $otpravkaApi->moveOrdersToBatch('24', [115685148]);
     /*Array
     (
@@ -1548,7 +1594,7 @@ use Symfony\Component\Yaml\Yaml;
 use LapayGroup\RussianPost\Providers\OtpravkaApi;
 
 try {
-    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')), $httpTransport);
     $result = $otpravkaApi->findBatchByName('24');
     /*
     Array
@@ -1626,7 +1672,7 @@ use Symfony\Component\Yaml\Yaml;
 use LapayGroup\RussianPost\Providers\OtpravkaApi;
 
 try {
-    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')), $httpTransport);
     $result = $otpravkaApi->findOrderByRpo(80083740712514);
     /*
     Array
@@ -1707,7 +1753,7 @@ use Symfony\Component\Yaml\Yaml;
 use LapayGroup\RussianPost\Providers\OtpravkaApi;
 
 try {
-    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')), $httpTransport);
     $orders = []; // Массив заказов
     $result = $otpravkaApi->addOrdersToBatch('24', $orders); // Ответ аналогичен созданию заказов
 }
@@ -1734,7 +1780,7 @@ use Symfony\Component\Yaml\Yaml;
 use LapayGroup\RussianPost\Providers\OtpravkaApi;
 
 try {
-    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')), $httpTransport);
     $result = $otpravkaApi->deleteOrdersInBatch([115527611]);
     /*
      Array Успешный ответ
@@ -1777,7 +1823,7 @@ use Symfony\Component\Yaml\Yaml;
 use LapayGroup\RussianPost\Providers\OtpravkaApi;
 
 try {
-    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')), $httpTransport);
     $result = $otpravkaApi->getOrdersInBatch(25);
     /*
     Array
@@ -1859,7 +1905,7 @@ use Symfony\Component\Yaml\Yaml;
 use LapayGroup\RussianPost\Providers\OtpravkaApi;
 
 try {
-    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')), $httpTransport);
     $result = $otpravkaApi->getAllBatches(); // Может вызываться с фильтрами
     /*
     Array
@@ -1941,7 +1987,7 @@ use Symfony\Component\Yaml\Yaml;
 use LapayGroup\RussianPost\Providers\OtpravkaApi;
 
 try {
-    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')), $httpTransport);
     $result = $otpravkaApi->findOrderInBatch(115689758);
     /*
     Array
@@ -2018,9 +2064,7 @@ catch (\Exception $e) {
 В случае возникновеня ошибок при обмене выбрасывает исключение *\LapayGroup\RussianPost\Exceptions\RussianPostException*
 в котором будет текст и код ошибки от API Почты России и дамп сырого ответа с HTTP-кодом.
 
-Все функции работы с документами принимают параметр action, который принимает два значения:
- - OtpravkaApi::DOWNLOAD_FILE - выводит соответствующие header для скачивания файла в браузере;
- - OtpravkaApi::PRINT_FILE - возврат объекта GuzzleHttp\Psr7\UploadedFile с данными о файле.
+Все функции работы с документами возвращают объект `Psr\Http\Message\UploadedFileInterface`. Параметр `action` и константы `DOWNLOAD_FILE`/`PRINT_FILE` сохранены для миграции со старых версий, но SDK больше не отправляет HTTP-заголовки и не завершает выполнение приложения.
 
 
 **Важно!** Перед печатью любого документа нужно зафиксировать изменения в партии вызовом функции *sendingF103form()*:
@@ -2030,7 +2074,7 @@ use Symfony\Component\Yaml\Yaml;
 use LapayGroup\RussianPost\Providers\OtpravkaApi;
 
 try {
-    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')), $httpTransport);
     $otpravkaApi->sendingF103form(28);
     $otpravkaApi->sendingF103form(28, true); // С онлайн балансом
 
@@ -2057,32 +2101,9 @@ use Symfony\Component\Yaml\Yaml;
 use LapayGroup\RussianPost\Providers\OtpravkaApi;
 
 try {
-    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')), $httpTransport);
     $result = $otpravkaApi->generateDocPackage(28, OtpravkaApi::PRINT_FILE);
-    /*
-    GuzzleHttp\Psr7\UploadedFile Object
-    (
-        [clientFilename:GuzzleHttp\Psr7\UploadedFile:private] => all-pdf.zip
-        [clientMediaType:GuzzleHttp\Psr7\UploadedFile:private] => application/zip; charset=UTF-8
-        [error:GuzzleHttp\Psr7\UploadedFile:private] => 0
-        [file:GuzzleHttp\Psr7\UploadedFile:private] =>
-        [moved:GuzzleHttp\Psr7\UploadedFile:private] =>
-        [size:GuzzleHttp\Psr7\UploadedFile:private] => 290398
-        [stream:GuzzleHttp\Psr7\UploadedFile:private] => GuzzleHttp\Psr7\Stream Object
-            (
-                [stream:GuzzleHttp\Psr7\Stream:private] => Resource id #56
-                [size:GuzzleHttp\Psr7\Stream:private] => 290398
-                [seekable:GuzzleHttp\Psr7\Stream:private] => 1
-                [readable:GuzzleHttp\Psr7\Stream:private] => 1
-                [writable:GuzzleHttp\Psr7\Stream:private] => 1
-                [uri:GuzzleHttp\Psr7\Stream:private] => php://temp
-                [customMetadata:GuzzleHttp\Psr7\Stream:private] => Array
-                    (
-                    )
-
-            )
-
-    )*/
+    // $result implements Psr\Http\Message\UploadedFileInterface
 }
 
 catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
@@ -2104,32 +2125,9 @@ use Symfony\Component\Yaml\Yaml;
 use LapayGroup\RussianPost\Providers\OtpravkaApi;
 
 try {
-    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')), $httpTransport);
     $result = $otpravkaApi->generateDocF7p(123645924, OtpravkaApi::PRINT_FILE, new DateTimeImmutable('now'));
-    /*
-    GuzzleHttp\Psr7\UploadedFile Object
-    (
-        [clientFilename:GuzzleHttp\Psr7\UploadedFile:private] => f7p.pdf
-        [clientMediaType:GuzzleHttp\Psr7\UploadedFile:private] => application/pdf; charset=UTF-8
-        [error:GuzzleHttp\Psr7\UploadedFile:private] => 0
-        [file:GuzzleHttp\Psr7\UploadedFile:private] =>
-        [moved:GuzzleHttp\Psr7\UploadedFile:private] =>
-        [size:GuzzleHttp\Psr7\UploadedFile:private] => 99776
-        [stream:GuzzleHttp\Psr7\UploadedFile:private] => GuzzleHttp\Psr7\Stream Object
-            (
-                [stream:GuzzleHttp\Psr7\Stream:private] => Resource id #56
-                [size:GuzzleHttp\Psr7\Stream:private] => 99776
-                [seekable:GuzzleHttp\Psr7\Stream:private] => 1
-                [readable:GuzzleHttp\Psr7\Stream:private] => 1
-                [writable:GuzzleHttp\Psr7\Stream:private] => 1
-                [uri:GuzzleHttp\Psr7\Stream:private] => php://temp
-                [customMetadata:GuzzleHttp\Psr7\Stream:private] => Array
-                    (
-                    )
-
-            )
-
-    )*/
+    // $result implements Psr\Http\Message\UploadedFileInterface
 }
 
 catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
@@ -2151,31 +2149,9 @@ use Symfony\Component\Yaml\Yaml;
 use LapayGroup\RussianPost\Providers\OtpravkaApi;
 
 try {
-    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')), $httpTransport);
     $result = $otpravkaApi->generateDocF112ek(123645924, OtpravkaApi::PRINT_FILE);
-    /*
-    GuzzleHttp\Psr7\UploadedFile Object
-    (
-        [clientFilename:GuzzleHttp\Psr7\UploadedFile:private] => f112.pdf
-        [clientMediaType:GuzzleHttp\Psr7\UploadedFile:private] => application/pdf; charset=UTF-8
-        [error:GuzzleHttp\Psr7\UploadedFile:private] => 0
-        [file:GuzzleHttp\Psr7\UploadedFile:private] =>
-        [moved:GuzzleHttp\Psr7\UploadedFile:private] =>
-        [size:GuzzleHttp\Psr7\UploadedFile:private] => 149702
-        [stream:GuzzleHttp\Psr7\UploadedFile:private] => GuzzleHttp\Psr7\Stream Object
-            (
-                [stream:GuzzleHttp\Psr7\Stream:private] => Resource id #56
-                [size:GuzzleHttp\Psr7\Stream:private] => 149702
-                [seekable:GuzzleHttp\Psr7\Stream:private] => 1
-                [readable:GuzzleHttp\Psr7\Stream:private] => 1
-                [writable:GuzzleHttp\Psr7\Stream:private] => 1
-                [uri:GuzzleHttp\Psr7\Stream:private] => php://temp
-                [customMetadata:GuzzleHttp\Psr7\Stream:private] => Array
-                    (
-                    )
-
-            )
-    )*/
+    // $result implements Psr\Http\Message\UploadedFileInterface
 }
 
 catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
@@ -2202,36 +2178,13 @@ use Symfony\Component\Yaml\Yaml;
 use LapayGroup\RussianPost\Providers\OtpravkaApi;
 
 try {
-    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')), $httpTransport);
     // Генерация печатных форм до формирования партии
     $result = $otpravkaApi->generateDocOrderPrintForm(123645924, OtpravkaApi::PRINT_FILE, false, new DateTimeImmutable('now'));
     // Генерация печатных форм после формирования партии
     $result = $otpravkaApi->generateDocOrderPrintForm(123645924, OtpravkaApi::PRINT_FILE, true, new DateTimeImmutable('now'));
 
-    /*
-    GuzzleHttp\Psr7\UploadedFile Object
-    (
-        [clientFilename:GuzzleHttp\Psr7\UploadedFile:private] => form.pdf
-        [clientMediaType:GuzzleHttp\Psr7\UploadedFile:private] => application/pdf; charset=UTF-8
-        [error:GuzzleHttp\Psr7\UploadedFile:private] => 0
-        [file:GuzzleHttp\Psr7\UploadedFile:private] =>
-        [moved:GuzzleHttp\Psr7\UploadedFile:private] =>
-        [size:GuzzleHttp\Psr7\UploadedFile:private] => 251338
-        [stream:GuzzleHttp\Psr7\UploadedFile:private] => GuzzleHttp\Psr7\Stream Object
-            (
-                [stream:GuzzleHttp\Psr7\Stream:private] => Resource id #70
-                [size:GuzzleHttp\Psr7\Stream:private] => 251338
-                [seekable:GuzzleHttp\Psr7\Stream:private] => 1
-                [readable:GuzzleHttp\Psr7\Stream:private] => 1
-                [writable:GuzzleHttp\Psr7\Stream:private] => 1
-                [uri:GuzzleHttp\Psr7\Stream:private] => php://temp
-                [customMetadata:GuzzleHttp\Psr7\Stream:private] => Array
-                    (
-                    )
-
-            )
-
-    )*/
+    // $result implements Psr\Http\Message\UploadedFileInterface
 }
 
 catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
@@ -2252,32 +2205,9 @@ use Symfony\Component\Yaml\Yaml;
 use LapayGroup\RussianPost\Providers\OtpravkaApi;
 
 try {
-    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')), $httpTransport);
     $result = $otpravkaApi->generateDocF103(28, OtpravkaApi::PRINT_FILE);
-    /*
-    GuzzleHttp\Psr7\UploadedFile Object
-    (
-        [clientFilename:GuzzleHttp\Psr7\UploadedFile:private] => f103.pdf
-        [clientMediaType:GuzzleHttp\Psr7\UploadedFile:private] => application/pdf; charset=UTF-8
-        [error:GuzzleHttp\Psr7\UploadedFile:private] => 0
-        [file:GuzzleHttp\Psr7\UploadedFile:private] =>
-        [moved:GuzzleHttp\Psr7\UploadedFile:private] =>
-        [size:GuzzleHttp\Psr7\UploadedFile:private] => 131856
-        [stream:GuzzleHttp\Psr7\UploadedFile:private] => GuzzleHttp\Psr7\Stream Object
-            (
-                [stream:GuzzleHttp\Psr7\Stream:private] => Resource id #74
-                [size:GuzzleHttp\Psr7\Stream:private] => 131856
-                [seekable:GuzzleHttp\Psr7\Stream:private] => 1
-                [readable:GuzzleHttp\Psr7\Stream:private] => 1
-                [writable:GuzzleHttp\Psr7\Stream:private] => 1
-                [uri:GuzzleHttp\Psr7\Stream:private] => php://temp
-                [customMetadata:GuzzleHttp\Psr7\Stream:private] => Array
-                    (
-                    )
-
-            )
-
-    )*/
+    // $result implements Psr\Http\Message\UploadedFileInterface
 }
 
 catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
@@ -2299,7 +2229,7 @@ use Symfony\Component\Yaml\Yaml;
 use LapayGroup\RussianPost\Providers\OtpravkaApi;
 
 try {
-    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')), $httpTransport);
     $result = $otpravkaApi->sendingF103form(28); // return boolean
 }
 
@@ -2323,7 +2253,7 @@ use Symfony\Component\Yaml\Yaml;
 use LapayGroup\RussianPost\Providers\OtpravkaApi;
 
 try {
-    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')), $httpTransport);
     $result = $otpravkaApi->generateDocCheckingAct(28, OtpravkaApi::PRINT_FILE);
     // TODO если у Вас есть пример ответа, просьба приложить его через pull request :)
 }
@@ -2347,7 +2277,7 @@ use Symfony\Component\Yaml\Yaml;
 use LapayGroup\RussianPost\Providers\OtpravkaApi;
 
 try {
-    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')), $httpTransport);
     $result = $otpravkaApi->generateReturnLabel(123456, OtpravkaApi::PRINT_FILE, OtpravkaApi::PRINT_TYPE_PAPER);
     // TODO если у Вас есть пример ответа, просьба приложить его через pull request :)
 }
@@ -2379,7 +2309,7 @@ use Symfony\Component\Yaml\Yaml;
 use LapayGroup\RussianPost\Providers\OtpravkaApi;
 
 try {
-    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')), $httpTransport);
     $result = $otpravkaApi->archivingBatch([25]);
     /*
     Array    (
@@ -2410,7 +2340,7 @@ use Symfony\Component\Yaml\Yaml;
 use LapayGroup\RussianPost\Providers\OtpravkaApi;
 
 try {
-    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')), $httpTransport);
     $result = $otpravkaApi->unarchivingBatch([25]);
     /*
     Array Успешный ответ
@@ -2451,7 +2381,7 @@ use Symfony\Component\Yaml\Yaml;
 use LapayGroup\RussianPost\Providers\OtpravkaApi;
 
 try {
-    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')), $httpTransport);
     $result = $otpravkaApi->getArchivedBatches();
     /*
     Array
@@ -2542,7 +2472,7 @@ use Symfony\Component\Yaml\Yaml;
 use LapayGroup\RussianPost\Providers\OtpravkaApi;
 
 try {
-    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')), $httpTransport);
     $result = $otpravkaApi->searchPostOfficeByIndex(115551, 0, 0);
     /*
     Array
@@ -2701,7 +2631,7 @@ use Symfony\Component\Yaml\Yaml;
 use LapayGroup\RussianPost\Providers\OtpravkaApi;
 
 try {
-    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')), $httpTransport);
     $result = $otpravkaApi->searchPostOfficeByAddress('Санкт-Петербург, улица Победы, 15к1');
     /*
     Array
@@ -2734,7 +2664,7 @@ use Symfony\Component\Yaml\Yaml;
 use LapayGroup\RussianPost\Providers\OtpravkaApi;
 
 try {
-    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')), $httpTransport);
     $result = $otpravkaApi->getPostOfficeServices(196070);
     $result = $otpravkaApi->getPostOfficeServices(196070, 2101); // С фильтром по группе
     /*
@@ -2781,7 +2711,7 @@ use Symfony\Component\Yaml\Yaml;
 use LapayGroup\RussianPost\Providers\OtpravkaApi;
 
 try {
-    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')), $httpTransport);
     $result = $otpravkaApi->searchPostOfficeByCoordinates($params); // $params - массив параметров поиска
     /*
         Ответ аналогичен функции searchPostOfficeByIndex только список.
@@ -2807,7 +2737,7 @@ use Symfony\Component\Yaml\Yaml;
 use LapayGroup\RussianPost\Providers\OtpravkaApi;
 
 try {
-    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')), $httpTransport);
     $result = $otpravkaApi->getPostalCodesInLocality('Екатеринбург');
     /*
     Array
@@ -2845,31 +2775,9 @@ use Symfony\Component\Yaml\Yaml;
 use LapayGroup\RussianPost\Providers\OtpravkaApi;
 
 try {
-    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')), $httpTransport);
     $result = $otpravkaApi->getPostOfficeFromPassport(\LapayGroup\RussianPost\Enum\OpsObjectType::OPS);
-    /*
-    GuzzleHttp\Psr7\UploadedFile Object
-    (
-        [clientFilename:GuzzleHttp\Psr7\UploadedFile:private] => OPS02_May_2020.zip.octet-stream
-        [clientMediaType:GuzzleHttp\Psr7\UploadedFile:private] => application/octet-stream; charset=UTF-8
-        [error:GuzzleHttp\Psr7\UploadedFile:private] => 0
-        [file:GuzzleHttp\Psr7\UploadedFile:private] =>
-        [moved:GuzzleHttp\Psr7\UploadedFile:private] =>
-        [size:GuzzleHttp\Psr7\UploadedFile:private] => 4203382
-        [stream:GuzzleHttp\Psr7\UploadedFile:private] => GuzzleHttp\Psr7\Stream Object
-            (
-                [stream:GuzzleHttp\Psr7\Stream:private] => Resource id #56
-                [size:GuzzleHttp\Psr7\Stream:private] => 4203382
-                [seekable:GuzzleHttp\Psr7\Stream:private] => 1
-                [readable:GuzzleHttp\Psr7\Stream:private] => 1
-                [writable:GuzzleHttp\Psr7\Stream:private] => 1
-                [uri:GuzzleHttp\Psr7\Stream:private] => php://temp
-                [customMetadata:GuzzleHttp\Psr7\Stream:private] => Array
-                    (
-                    )
-
-            )
-    )*/
+    // $result implements Psr\Http\Message\UploadedFileInterface
 }
 
 catch (\LapayGroup\RussianPost\Exceptions\RussianPostException $e) {
@@ -2916,7 +2824,7 @@ catch (\Exception $e) {
 use Symfony\Component\Yaml\Yaml;
 use LapayGroup\RussianPost\Providers\OtpravkaApi;
 
-$otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+$otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')), $httpTransport);
 $result = $otpravkaApi->returnShipment(123456, \LapayGroup\RussianPost\Enum\MailType::UNDEFINED);
 
 // Успешный ответ
@@ -2953,7 +2861,7 @@ use Symfony\Component\Yaml\Yaml;
 use LapayGroup\RussianPost\Providers\OtpravkaApi;
 
 try {
-    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')), $httpTransport);
 
     $addressFrom = new \LapayGroup\RussianPost\Entity\AddressReturn();
     $addressFrom->setAddressType(\LapayGroup\RussianPost\Enum\AddressType::DEFAULT);
@@ -3030,7 +2938,7 @@ catch (\Exception $e) {
 use Symfony\Component\Yaml\Yaml;
 use LapayGroup\RussianPost\Providers\OtpravkaApi;
 
-$otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+$otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')), $httpTransport);
 $result = $otpravkaApi->deleteReturnShipment(123456);
 
 /*Array
@@ -3051,7 +2959,7 @@ use Symfony\Component\Yaml\Yaml;
 use LapayGroup\RussianPost\Providers\OtpravkaApi;
 
 try {
-    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+    $otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')), $httpTransport);
 
     $addressFrom = new \LapayGroup\RussianPost\Entity\AddressReturn();
     $addressFrom->setAddressType(\LapayGroup\RussianPost\Enum\AddressType::DEFAULT);
@@ -3124,7 +3032,7 @@ catch (\Exception $e) {
 use Symfony\Component\Yaml\Yaml;
 use LapayGroup\RussianPost\Providers\OtpravkaApi;
 
-$otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+$otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')), $httpTransport);
 $list = $otpravkaApi->shippingPoints();
 ```
 
@@ -3137,6 +3045,6 @@ $list = $otpravkaApi->shippingPoints();
 use Symfony\Component\Yaml\Yaml;
 use LapayGroup\RussianPost\Providers\OtpravkaApi;
 
-$otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')));
+$otpravkaApi = new OtpravkaApi(Yaml::parse(file_get_contents('path_to_config.yaml')), $httpTransport);
 $info = $otpravkaApi->settings();
 ```

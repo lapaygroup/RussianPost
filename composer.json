@@ -14,15 +14,33 @@
     }
   ],
   "require": {
-    "php": ">=7.0",
-    "guzzlehttp/guzzle": "^6.3 || ^7.0",
+    "php": "^8.3",
+    "psr/http-client": "^1.0",
+    "psr/http-factory": "^1.0",
+    "psr/http-message": "^1.0 || ^2.0",
     "psr/log": "^1.1 || ^2.0 || ^3.0",
-    "ext-soap": "*",
-    "ext-json": "*"
+    "ext-mbstring": "*",
+    "ext-soap": "*"
+  },
+  "require-dev": {
+    "monolog/monolog": "^3.0",
+    "nyholm/psr7": "^1.0",
+    "phpstan/phpstan": "^2.1",
+    "phpunit/phpunit": "^10.5 || ^11.0 || ^12.0",
+    "symfony/http-client": "^7.4"
   },
   "autoload": {
     "psr-4": {
       "LapayGroup\\RussianPost\\": "src/"
     }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "LapayGroup\\RussianPost\\Tests\\": "tests/"
+    }
+  },
+  "scripts": {
+    "test": "phpunit",
+    "analyse": "phpstan analyse --memory-limit=512M"
   }
 }

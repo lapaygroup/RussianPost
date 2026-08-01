@@ -1,0 +1,10 @@
+parameters:
+    level: 5
+    paths:
+        - src/Http
+        - src/Providers
+        - src/Exceptions
+        - src/CalculateInfo.php
+        - src/CategoryList.php
+        - src/Tariff.php
+        - src/TariffCalculation.php

@@ -1,7 +1,9 @@
 <?php
+declare(strict_types=1);
 namespace LapayGroup\RussianPost\Providers;
 
 use LapayGroup\RussianPost\Exceptions\RussianPostException;
+use LapayGroup\RussianPost\Http\Psr18Transport;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 
@@ -9,17 +11,9 @@ class Calculation implements LoggerAwareInterface
 {
     use LoggerAwareTrait;
 
-    private $httpClient;
-    const VERSION = 'v2';
+    private const VERSION = 'v2';
 
-    function __construct($timeout = 60)
-    {
-        $this->httpClient = new \GuzzleHttp\Client([
-            'base_uri' => 'https://delivery.pochta.ru/' . self::VERSION . '/',
-            'timeout' => $timeout,
-            'http_errors' => false
-        ]);
-    }
+    public function __construct(private readonly Psr18Transport $httpTransport) {}
 
     /**
      * Инициализирует вызов к API
@@ -28,51 +22,96 @@ class Calculation implements LoggerAwareInterface
      * @param $params
      * @return array
      * @throws RussianPostException
+     * @throws \Psr\Http\Client\ClientExceptionInterface
      */
-    private function callApi($type, $method, $params = [])
+    private function callApi(string $type, string $method, array $params = []): array
     {
         $params['json'] = true; // указываем, что ждем ответ в JSON
 
         switch ($type) {
             case 'GET':
                 $request = http_build_query($params);
-                if ($this->logger) {
-                    $this->logger->info("Russian Post Tariff API {$type} request /" . self::VERSION . "/{$method}: " . $request);
-                }
-                $response = $this->httpClient->get($method, ['query' => $params]);
+                $this->logRequest($type, $method);
+                $response = $this->httpTransport->send(
+                    $type,
+                    'https://delivery.pochta.ru/' . self::VERSION . '/' . $method,
+                    [],
+                    $params
+                );
                 break;
             case 'POST':
-                $request = json_encode($params);
-                if ($this->logger) {
-                    $this->logger->info("Russian Post Tariff API {$type} request /" . self::VERSION . "/{$method}: " . $request);
+                try {
+                    $request = json_encode($params, JSON_THROW_ON_ERROR);
+                } catch (\JsonException $exception) {
+                    throw new RussianPostException(
+                        'Не удалось сериализовать параметры запроса: ' . $exception->getMessage(),
+                        0,
+                        null,
+                        var_export($params, true),
+                        $exception
+                    );
                 }
-                $response = $this->httpClient->post($method, ['json' => $params]);
+                $this->logRequest($type, $method);
+                $response = $this->httpTransport->send(
+                    $type,
+                    'https://delivery.pochta.ru/' . self::VERSION . '/' . $method,
+                    ['Content-Type' => 'application/json'],
+                    [],
+                    $request
+                );
                 break;
+            default:
+                throw new \InvalidArgumentException('Неподдерживаемый HTTP-метод: ' . $type);
         }
-
-        if (!in_array($response->getStatusCode(), [200, 400, 404]))
-            throw new RussianPostException('Неверный код ответа от сервера Почты России при вызове метода ' . $method . ': ' . $response->getStatusCode(), $response->getStatusCode(), $response->getBody()->getContents(), $request);
 
         $json = $response->getBody()->getContents();
 
-        if ($this->logger) {
-            $headers = $response->getHeaders();
-            $headers['http_status'] = $response->getStatusCode();
-            $this->logger->info("Russian Post Tariff API {$type} response /" . self::VERSION . "/{$method}: " . $json, $headers);
+        $this->logger?->info('Russian Post Tariff API response', [
+            'method' => $type,
+            'path' => '/' . self::VERSION . '/' . $method,
+            'http_status' => $response->getStatusCode(),
+        ]);
+
+        if ($json === '') {
+            throw new RussianPostException('От сервера Почты России при вызове метода ' . $method . ' пришел пустой ответ', $response->getStatusCode(), $json, $request);
         }
 
-        $resp = json_decode($json, true);
+        try {
+            $resp = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
+        } catch (\JsonException $exception) {
+            throw new RussianPostException(
+                'От сервера Почты России при вызове метода ' . $method . ' получен некорректный JSON',
+                $response->getStatusCode(),
+                $json,
+                $request,
+                $exception
+            );
+        }
 
-        if (empty($resp))
-            throw new RussianPostException('От сервера Почты России при вызове метода ' . $method . ' пришел пустой ответ', $response->getStatusCode(), $response->getBody()->getContents(), $request);
+        if (!is_array($resp)) {
+            throw new RussianPostException('От сервера Почты России при вызове метода ' . $method . ' получен ответ неожиданного формата', $response->getStatusCode(), $json, $request);
+        }
 
-        if ($response->getStatusCode() == 404 && !empty($resp['code']))
-            throw new RussianPostException('От сервера Почты России при вызове метода ' . $method . ' получена ошибка: ' . $resp['sub-code'] . " (" . $resp['code'] . ")", $response->getStatusCode(), $response->getBody()->getContents(), $request);
-
-        if ($response->getStatusCode() == 400 && !empty($resp['error']))
-            throw new RussianPostException('От сервера Почты России при вызове метода ' . $method . ' получена ошибка: ' . $resp['error'] . " (" . $resp['status'] . ")", $response->getStatusCode(), $response->getBody()->getContents(), $request);
+        if ($response->getStatusCode() < 200 || $response->getStatusCode() >= 300) {
+            $description = $resp['sub-code'] ?? $resp['error'] ?? $resp['message'] ?? 'HTTP ' . $response->getStatusCode();
+            $errorCode = $resp['code'] ?? $resp['status'] ?? $response->getStatusCode();
+            throw new RussianPostException(
+                'От сервера Почты России при вызове метода ' . $method . ' получена ошибка: ' . $description . ' (' . $errorCode . ')',
+                $response->getStatusCode(),
+                $json,
+                $request
+            );
+        }
 
         return $resp;
+    }
+
+    private function logRequest(string $method, string $path): void
+    {
+        $this->logger?->info('Russian Post Tariff API request', [
+            'method' => $method,
+            'path' => '/' . self::VERSION . '/' . $path,
+        ]);
     }
 
     /**
@@ -85,7 +124,7 @@ class Calculation implements LoggerAwareInterface
      * @return array
      * @throws RussianPostException
      */
-    private function tariffRequest($method, $object_id, $params, $services)
+    private function tariffRequest(string $method, int $object_id, array $params, array $services): array
     {
         $params['object'] = $object_id;
         if (!empty($services))
@@ -97,11 +136,11 @@ class Calculation implements LoggerAwareInterface
     /**
      * Получение списка категорий
      *
-     * @return mixed
+     * @return array
      * @throws RussianPostException
-     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @throws \Psr\Http\Client\ClientExceptionInterface
      */
-    public function getCategoryList()
+    public function getCategoryList(): array
     {
         return $this->callApi('GET', 'dictionary/tariff/delivery', ['category' => 'all']);
     }
@@ -110,11 +149,11 @@ class Calculation implements LoggerAwareInterface
      * Описание категории
      *
      * @param $category_id
-     * @return mixed
+     * @return array
      * @throws RussianPostException
-     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @throws \Psr\Http\Client\ClientExceptionInterface
      */
-    public function getCategoryDescription($category_id)
+    public function getCategoryDescription(int $category_id): array
     {
         return $this->callApi('GET', 'dictionary/tariff/delivery', ['category' => $category_id]);
     }
@@ -125,11 +164,11 @@ class Calculation implements LoggerAwareInterface
      * @param $object_id
      * @param $params
      * @param $services
-     * @return mixed
+     * @return array
      * @throws RussianPostException
-     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @throws \Psr\Http\Client\ClientExceptionInterface
      */
-    public function getTariff($object_id, $params, $services)
+    public function getTariff(int $object_id, array $params, array $services): array
     {
         return $this->tariffRequest('calculate/tariff', $object_id, $params, $services);
     }
@@ -140,11 +179,11 @@ class Calculation implements LoggerAwareInterface
      * @param $object_id
      * @param $params
      * @param $services
-     * @return mixed
+     * @return array
      * @throws RussianPostException
-     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @throws \Psr\Http\Client\ClientExceptionInterface
      */
-    public function getTariffAndDeliveryPeriod($object_id, $params, $services)
+    public function getTariffAndDeliveryPeriod(int $object_id, array $params, array $services): array
     {
         return $this->tariffRequest('calculate/tariff/delivery', $object_id, $params, $services);
     }
@@ -153,11 +192,11 @@ class Calculation implements LoggerAwareInterface
      * Описание объекта
      *
      * @param $object_id
-     * @return mixed
+     * @return array
      * @throws RussianPostException
-     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @throws \Psr\Http\Client\ClientExceptionInterface
      */
-    public function getObjectInfo($object_id)
+    public function getObjectInfo(int $object_id): array
     {
         return $this->callApi('GET', 'dictionary/tariff/delivery', ['object' => $object_id]);
     }
@@ -168,7 +207,7 @@ class Calculation implements LoggerAwareInterface
      * @return array
      * @throws RussianPostException
      */
-    public function getCountryList()
+    public function getCountryList(): array
     {
         $result = $this->callApi('GET', 'dictionary/tariff/delivery', ['country' => false]);
         return !empty($result['country']) ? $result['country'] : [];

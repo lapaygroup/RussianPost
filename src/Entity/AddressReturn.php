@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 namespace LapayGroup\RussianPost\Entity;
 
 use LapayGroup\RussianPost\Enum\AddressType;
@@ -76,9 +77,6 @@ Class AddressReturn
 
         if (!is_null($this->hotel))
             $params['hotel'] = $this->hotel;
-
-        if (!is_null($this->house))
-            $params['house'] = $this->house;
 
         $params['index'] = $this->index;
 

@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 namespace LapayGroup\RussianPost\Providers;
 
 use LapayGroup\RussianPost\Exceptions\StatusValidationException;
@@ -11,17 +12,19 @@ class Tracking implements LoggerAwareInterface
 {
     use LoggerAwareTrait;
 
-    private $wsdl = 'https://tracking.pochta.ru';
-    const NAMESPACE_HISTORY = 'http://russianpost.org/operationhistory';
-    const NAMESPACE_DATA = 'http://russianpost.org/operationhistory/data';
-    const NAMESPACE_DATA1 = 'http://www.russianpost.org/RTM/DataExchangeESPP/Data';
-    private $login = '';
-    private $password = '';
-    private $service = '';
-    private $timeout = 60;
+    private const WSDL_BASE_URI = 'https://tracking.pochta.ru';
+    private const SERVICE_SINGLE = 'single';
+    private const SERVICE_PACK = 'pack';
+    private const NAMESPACE_DATA = 'http://russianpost.org/operationhistory/data';
+    private const NAMESPACE_DATA1 = 'http://www.russianpost.org/RTM/DataExchangeESPP/Data';
 
-    /** @var \SoapClient */
-    public $client = false;
+    private string $login;
+    private string $password;
+    private string $service;
+    private int $timeout;
+    private \Closure $soapClientFactory;
+
+    public \SoapClient $client;
 
     /**
      * Tracking constructor.
@@ -31,39 +34,66 @@ class Tracking implements LoggerAwareInterface
      * @param int $timeout
      * @throws \SoapFault
      */
-    function __construct($service, $config, $timeout = 60)
+    public function __construct(
+        string $service,
+        array $config,
+        int $timeout = 60,
+        ?callable $soapClientFactory = null
+    )
     {
-        $this->createClient($service);
-        $this->login = $config['auth']['tracking']['login'];
-        $this->password = $config['auth']['tracking']['password'];
-        $this->service = $service;
+        if ($timeout <= 0) {
+            throw new \InvalidArgumentException('Таймаут должен быть больше нуля');
+        }
+
+        if (!isset($config['auth']['tracking']['login'], $config['auth']['tracking']['password'])) {
+            throw new \InvalidArgumentException('Не заданы данные авторизации Tracking API');
+        }
+
+        $this->login = (string) $config['auth']['tracking']['login'];
+        $this->password = (string) $config['auth']['tracking']['password'];
         $this->timeout = $timeout;
+        $this->soapClientFactory = $soapClientFactory === null
+            ? static fn (string $wsdl, array $options): \SoapClient => new \SoapClient($wsdl, $options)
+            : \Closure::fromCallable($soapClientFactory);
+
+        $this->createClient($service);
     }
 
     /**
      * @param $service
      * @throws \SoapFault
      */
-    private function createClient($service)
+    private function createClient(string $service): void
     {
         $this->service = $service;
 
-        if($service != 'pack') {
-            $wsdl = $this->wsdl . '/tracking-web-static/rtm34_wsdl.xml';
-            $soapVersion = SOAP_1_2;
-        } else {
-            $wsdl = $this->wsdl . '/tracking-web-static/fc_wsdl.xml';
-            $soapVersion = SOAP_1_1;
+        [$wsdlPath, $soapVersion] = match ($service) {
+            self::SERVICE_SINGLE => ['/tracking-web-static/rtm34_wsdl.xml', SOAP_1_2],
+            self::SERVICE_PACK => ['/tracking-web-static/fc_wsdl.xml', SOAP_1_1],
+            default => throw new \InvalidArgumentException('Неизвестный режим Tracking API: ' . $service),
+        };
+
+        $client = ($this->soapClientFactory)(self::WSDL_BASE_URI . $wsdlPath, [
+            'trace' => false,
+            'soap_version' => $soapVersion,
+            'use' => SOAP_LITERAL,
+            'style' => SOAP_DOCUMENT,
+            'connection_timeout' => $this->timeout,
+        ]);
+
+        if (!$client instanceof \SoapClient) {
+            throw new \UnexpectedValueException('Фабрика SOAP-клиента должна вернуть экземпляр SoapClient');
         }
 
-        $this->client = new \SoapClient($wsdl, array(
-                'trace' => 1,
-                'soap_version' => $soapVersion,
-                'use' => SOAP_LITERAL,
-                'style' => SOAP_DOCUMENT,
-                'connection_timeout'=>$this->timeout
-            )
-        );
+        $this->client = $client;
+    }
+
+    private function logExchange(string $operation): void
+    {
+        $this->logger?->info('Russian Post Tracking API request completed', [
+            'operation' => $operation,
+            'service' => $this->service,
+        ]);
     }
 
     /**
@@ -73,11 +103,11 @@ class Tracking implements LoggerAwareInterface
      * @return \stdClass[]
      * @throws \SoapFault
      */
-    public function getOperationsByRpo($rpo, $lang = 'RUS')
+    public function getOperationsByRpo(string $rpo, string $lang = 'RUS'): array
     {
         // Если пакетный клиент, меняем на штучный
-        if ($this->service == 'pack') {
-            $this->createClient('single');
+        if ($this->service === self::SERVICE_PACK) {
+            $this->createClient(self::SERVICE_SINGLE);
         }
 
         $requestParams = new \SoapVar([
@@ -94,10 +124,7 @@ class Tracking implements LoggerAwareInterface
 
         $response = $this->client->getOperationHistory($requestParams);
 
-        if ($this->logger) {
-            $this->logger->info("Russian Post Tracking API request: \n\r".$this->client->__getLastRequest());
-            $this->logger->info("Russian Post Tracking API response: \n\r".$this->client->__getLastResponse());
-        }
+        $this->logExchange('getOperationHistory');
 
         $result = $response->OperationHistoryData;
 
@@ -113,14 +140,14 @@ class Tracking implements LoggerAwareInterface
      * Получение информации об операциях с наложенным платежом, который связан с почтовым отправлением.
      * @param $rpo - ШК отправления
      * @param string $lang - Язык названия операций (RUS, ENG)
-     * @return \stdClass
+     * @return array
      * @throws \SoapFault
      */
-    public function getNpayInfo($rpo, $lang = 'RUS')
+    public function getNpayInfo(string $rpo, string $lang = 'RUS'): array
     {
         // Если пакетный клиент, меняем на штучный
-        if ($this->service == 'pack') {
-            $this->createClient('single');
+        if ($this->service === self::SERVICE_PACK) {
+            $this->createClient(self::SERVICE_SINGLE);
         }
 
         $requestParams = new \SoapVar([
@@ -136,10 +163,7 @@ class Tracking implements LoggerAwareInterface
 
         $response = $this->client->PostalOrderEventsForMail($requestParams);
 
-        if ($this->logger) {
-            $this->logger->info("Russian Post Tracking API request: \n\r".$this->client->__getLastRequest());
-            $this->logger->info("Russian Post Tracking API response: \n\r".$this->client->__getLastResponse());
-        }
+        $this->logExchange('PostalOrderEventsForMail');
 
         $result = $response->PostalOrderEventsForMaiOutput;
 
@@ -156,11 +180,11 @@ class Tracking implements LoggerAwareInterface
      * @return array
      * @throws \SoapFault
      */
-    public function getTickets($rpoList, $lang = 'RUS')
+    public function getTickets(array $rpoList, string $lang = 'RUS'): array
     {
         // Если штучный клиент, меняем на пакетный
-        if ($this->service == 'single') {
-            $this->createClient('pack');
+        if ($this->service === self::SERVICE_SINGLE) {
+            $this->createClient(self::SERVICE_PACK);
         }
 
         // Бьем по 500, если больше, то ловис HTTP Exception так как слишком большой размер ответа от ПРФ
@@ -184,10 +208,7 @@ class Tracking implements LoggerAwareInterface
 
             $response = $this->client->getTicket($requestParams);
 
-            if ($this->logger) {
-                $this->logger->info("Russian Post Tracking API request: \n\r".$this->client->__getLastRequest());
-                $this->logger->info("Russian Post Tracking API response: \n\r".$this->client->__getLastResponse());
-            }
+            $this->logExchange('getTicket');
 
             if (!empty($response) && !empty($response->value)) {
                 $result['tickets'][] = $response->value;
@@ -202,15 +223,15 @@ class Tracking implements LoggerAwareInterface
     /**
      * Получение подробной информации обо всех операциях, совершенных над переданными отправлениями в тикете
      * @param $ticket
-     * @return array|\stdClass
+     * @return array
      * @throws TrackingException
      * @throws \SoapFault
      */
-    public function getOperationsByTicket($ticket)
+    public function getOperationsByTicket(string $ticket): array
     {
         // Если штучный клиент, меняем на пакетный
-        if ($this->service == 'single') {
-            $this->createClient('pack');
+        if ($this->service === self::SERVICE_SINGLE) {
+            $this->createClient(self::SERVICE_PACK);
         }
 
         $statusList = new StatusList();
@@ -222,15 +243,11 @@ class Tracking implements LoggerAwareInterface
 
         $response = $this->client->getResponseByTicket($requestParams);
 
-        if ($this->logger) {
-            $this->logger->info("Russian Post Tracking API request: \n\r".$this->client->__getLastRequest());
-            $this->logger->info("Russian Post Tracking API response: \n\r".$this->client->__getLastResponse());
-        }
+        $this->logExchange('getResponseByTicket');
 
         if (!empty($response->error) || empty($response->value))
             throw new TrackingException('Ответ по тикету '.$ticket.' еще не готов.');
 
-        /** @var \stdClass $result */
         $result = !is_array($response->value->Item) ? [$response->value->Item] : $response->value->Item;
 
         // Проставляем название подстатуса из справочника

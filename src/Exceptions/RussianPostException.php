@@ -1,32 +1,33 @@
 <?php
+declare(strict_types=1);
 namespace LapayGroup\RussianPost\Exceptions;
 
 class RussianPostException extends \Exception
 {
-    /**
-     * @var string
-     */
-    private $raw_response = null;
+    private ?string $rawResponse;
+    private array $response = [];
+    private ?string $rawRequest;
 
-    /**
-     * @var array
-     */
-    private $response = [];
-
-    /**
-     * @var string
-     */
-    private $raw_request = null;
-
-    public function __construct($message = "", $code = 0, $raw_response = null, $raw_request = null, $previous = null)
+    public function __construct(
+        string $message = '',
+        int $code = 0,
+        ?string $rawResponse = null,
+        ?string $rawRequest = null,
+        ?\Throwable $previous = null
+    )
     {
-        $this->raw_request = $raw_request;
-        $this->raw_response = $raw_response;
+        $this->rawRequest = $rawRequest;
+        $this->rawResponse = $rawResponse;
 
-        $response = json_decode($this->getRawResponse(), true);
-        if ($response !== null && json_last_error() === JSON_ERROR_NONE)
-        {
-            $this->response = $response;
+        if ($rawResponse !== null && $rawResponse !== '') {
+            try {
+                $response = json_decode($rawResponse, true, 512, JSON_THROW_ON_ERROR);
+                if (is_array($response)) {
+                    $this->response = $response;
+                }
+            } catch (\JsonException) {
+                // Сырой ответ доступен через getRawResponse().
+            }
         }
 
         parent::__construct($message, $code, $previous);
@@ -35,56 +36,56 @@ class RussianPostException extends \Exception
     /**
      * @return string
      */
-    public function getRawResponse()
+    public function getRawResponse(): ?string
     {
-        return $this->raw_response;
+        return $this->rawResponse;
     }
 
     /**
-     * @param string $raw_response
+     * @param string|null $rawResponse
      */
-    public function setRawResponse($raw_response)
+    public function setRawResponse(?string $rawResponse): void
     {
-        $this->raw_response = $raw_response;
-    }
-
-    /**
-     * @return string
-     */
-    public function getRawRequest()
-    {
-        return $this->raw_request;
-    }
-
-    /**
-     * @param string $raw_request
-     */
-    public function setRawRequest($raw_request)
-    {
-        $this->raw_request = $raw_request;
+        $this->rawResponse = $rawResponse;
     }
 
     /**
      * @return string
      */
-    public function getErrorCode()
+    public function getRawRequest(): ?string
     {
-        return !empty($this->response['code']) ? $this->response['code'] : '';
+        return $this->rawRequest;
+    }
+
+    /**
+     * @param string|null $rawRequest
+     */
+    public function setRawRequest(?string $rawRequest): void
+    {
+        $this->rawRequest = $rawRequest;
     }
 
     /**
      * @return string
      */
-    public function getErrorDescription()
+    public function getErrorCode(): string
     {
-        return !empty($this->response['desc']) ? $this->response['desc'] : '';
+        return isset($this->response['code']) ? (string) $this->response['code'] : '';
     }
 
     /**
      * @return string
      */
-    public function getErrorSubCode()
+    public function getErrorDescription(): string
     {
-        return !empty($this->response['sub-code']) ? $this->response['sub-code'] : '';
+        return isset($this->response['desc']) ? (string) $this->response['desc'] : '';
+    }
+
+    /**
+     * @return string
+     */
+    public function getErrorSubCode(): string
+    {
+        return isset($this->response['sub-code']) ? (string) $this->response['sub-code'] : '';
     }
 }

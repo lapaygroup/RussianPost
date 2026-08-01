@@ -1,12 +1,13 @@
 <?php
+declare(strict_types=1);
 namespace LapayGroup\RussianPost;
 
-class FioList implements \IteratorAggregate
+class FioList implements \IteratorAggregate, \Countable
 {
-    private $stack = []; // Список адресов для нормализации
-    private $idList = []; // Список id, которые уже есть в стэке
+    private array $stack = []; // Список ФИО для нормализации
+    private array $idList = []; // Список id, которые уже есть в стэке
 
-    public function add($fio, $id = false)
+    public function add(string $fio, int|string|false $id = false): void
     {
         if ($id === false) {
             $id = count($this->stack);
@@ -21,11 +22,15 @@ class FioList implements \IteratorAggregate
         $this->idList[$id] = true;
     }
 
+    #[\Override]
     public function getIterator(): \Traversable
     {
-        if (empty($this->stack))
-            throw new \InvalidArgumentException('Список ФИО пуст');
-
         return new \ArrayIterator($this->stack);
+    }
+
+    #[\Override]
+    public function count(): int
+    {
+        return count($this->stack);
     }
 }
