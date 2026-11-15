@@ -57,7 +57,7 @@ $tracking = new TrackingApi([
 ], $transport);
 ```
 
-Для основной ветки можно использовать `Symfony\Component\HttpClient\Psr18Client` с настроенными `timeout`, `max_duration` и `max_redirects => 0`. Для PHP 7.4 допустим Guzzle 7 (`GuzzleHttp\Client`); существующий Guzzle 6 / HTTPlug 1 подключается через optional `Http\HttplugClient` без обновления Mailgun 2. [Проверенный состав и пример интеграции PHP 7.4](https://github.com/lapaygroup/RussianPost/blob/feature/php74-new-tracking-api/docs/lc-php74.md). PSR-18 не определяет API таймаутов, поэтому `timeout`, `connect_timeout` и `allow_redirects => false` настраиваются в клиенте. Транспорт должен сохранять заголовок ApiKey только для целевого endpoint; редиректы отключаются на стороне клиента.
+Для основной ветки можно использовать `Symfony\Component\HttpClient\Psr18Client` с настроенными `timeout`, `max_duration` и `max_redirects => 0`. Для PHP 7.4 допустим Guzzle 7 (`GuzzleHttp\Client`); существующий Guzzle 6 / HTTPlug 1 подключается через optional `Http\HttplugClient` без обновления Mailgun 2. [Проверенный состав и пример интеграции PHP 7.4](https://github.com/lapaygroup/RussianPost/blob/1.1.0/docs/lc-php74.md). PSR-18 не определяет API таймаутов, поэтому `timeout`, `connect_timeout` и `allow_redirects => false` настраиваются в клиенте. Транспорт должен сохранять заголовок ApiKey только для целевого endpoint; редиректы отключаются на стороне клиента.
 
 Для тестов разрешён HTTP только на loopback. URL не должен содержать userinfo, query или fragment. По умолчанию batch использует канонический `/fc/` из примеров, чтобы не редиректить POST с `/fc`.
 
