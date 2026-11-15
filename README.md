@@ -30,10 +30,11 @@
 
 # Содержание
 - [Changelog](#changelog)
+- [Переход на новый Tracking API: версии, ключ, DTO](#tracking-api-migration)
 - [Тарификатор Почты России](#tariffs)
 - [Конфигурация](#configfile)
 - [Отладка](#debugging)
-- [Трекинг почтовых отправлений (РПО)](#tracking)
+- [Прежний SOAP-трекинг РПО (`Tracking`)](#tracking)
 - [Данные](#data)
   - [x] [Нормализация адреса](#clean_address)
   - [x] [Нормализация ФИО](#clean_fio)
@@ -197,6 +198,25 @@ $httpTransport = new Psr18Transport(
 - добавлено исправленное исключение `RussianPostTarifficatorException`; старое имя `RussianPostTarrificatorException` сохранено как родитель для совместимости;
 - пустые списки нормализации являются корректными пустыми коллекциями;
 - полные тела запросов/ответов и SOAP credentials больше не записываются в лог.
+
+<a name="tracking-api-migration"></a>
+
+# Переход на новый Tracking API
+
+Новый REST single доступен через отдельный `Providers\TrackingApi` в обеих линиях SDK:
+
+| Версия SDK | PHP | Контракт остальных провайдеров | Установка |
+| --- | --- | --- | --- |
+| 1.1.x | 7.4+ (`^7.4` или `^8.0`) | Сохранён API 1.x с прежними Guzzle-конструкторами | `composer require lapaygroup/russianpost:^1.1` |
+| 3.x | 8.3+ (`^8.3`) | PSR-18/PSR-17 архитектура | `composer require lapaygroup/russianpost:^3.0` |
+
+1. **Выберите линию SDK по PHP и существующему коду.** В 1.1.0 минимальная версия PHP поднята с 7.0 до 7.4; конструкторы API 1.x сохранены. Переход с 1.x на 3.x также требует адаптации остальных провайдеров к PSR-18.
+2. **Получите отдельный Tracking ApiKey** в [настройках интеграции Отправки](https://otpravka.pochta.ru/new/settings/integrations/tracking-api). Передайте сырой ключ без префикса `ApiKey` через внешнюю конфигурацию `auth.tracking.api_key`. Старые SOAP login/password и токен API Отправки этот ключ не заменяют.
+3. **Создайте `TrackingApi` с `Psr18Transport`.** В обеих линиях новый провайдер использует PSR-18/PSR-17: [пример подключения](docs/tracking-api.md#подключение). Для существующего Guzzle 6 / HTTPlug 1 доступен [проверенный мост PHP 7.4](https://github.com/lapaygroup/RussianPost/blob/1.1.0/docs/lc-php74.md). В HTTP-клиенте задайте таймауты и отключите редиректы.
+4. **Адаптируйте чтение результата.** `getTrackingInfo($barcode, 'RU')` возвращает новый `TrackingResult`: `getData()` — исходные данные, `getOperations()` — фактические операции без групп `future=true`. Это не прежний `OperationHistoryData/historyRecord`; [описание DTO и ошибок](docs/tracking-api.md#single-результат-и-миграция). Явный `trackingItemOperationGroupStatuses: null` означает пустую историю. `cashOnDelivery` — сумма наложенного платежа, а не подтверждение оплаты или выплаты.
+5. **Оставьте новый batch выключенным:** `tracking.batch_enabled => false` (значение по умолчанию). Новый SOAP batch экспериментальный: WSDL и успешная работа на нашей учётной записи пока не подтверждены. Его включение требует отдельной проверки доступа и контракта; [границы проверки](docs/tracking-api.md#источники-и-граница-проверки).
+
+**Существующий `Providers\Tracking` не переключается на новый API автоматически.** Он сохраняет прежние single/batch SOAP-методы; `TrackingApi` подключается явно, без автоматического fallback. Ошибки авторизации batch нашей учётной записи не означают глобального отключения старого SOAP.
 
 <a name="tariffs"><h1>Тарификатор Почты России</h1></a>
 
@@ -412,9 +432,9 @@ catch (\Exception $e) {
 [2019-07-19 12:14:10] name.INFO: Russian Post Tracking API request:   <?xml version="1.0" encoding="UTF-8"?> <env:Envelope xmlns:env="http://www.w3.org/2003/05/soap-envelope" xmlns:ns1="http://russianpost.org/operationhistory/data" xmlns:ns2="http://russianpost.org/operationhistory"><env:Body><ns2:getOperationHistory><ns1:OperationHistoryRequest><ns1:Barcode>10944022440321</ns1:Barcode><ns1:MessageType>0</ns1:MessageType><ns1:Language>RUS</ns1:Language></ns1:OperationHistoryRequest><ns1:AuthorizationHeader><ns1:login>login</ns1:login><ns1:password>password</ns1:password></ns1:AuthorizationHeader></ns2:getOperationHistory></env:Body></env:Envelope>  [] []
 ```
 
-<a name="tracking"><h1>Трекинг почтовых отправлений (РПО)</h1></a>
+<a name="tracking"><h1>Прежний SOAP-трекинг РПО (Tracking)</h1></a>
 
-Этот раздел описывает прежний SOAP `Tracking`. Новый провайдер с ApiKey: [TrackingApi и миграция](docs/tracking-api.md). Доступность прежнего сервиса не гарантируется.
+Для нового API с ApiKey используйте [инструкцию перехода на TrackingApi](#tracking-api-migration). Ниже описан сохранённый legacy SOAP-провайдер; доступность сервиса зависит от учётной записи.
 
 
 Реализует функции [API]( https://tracking.pochta.ru/specification) Почты России для работы с отправлениями.
