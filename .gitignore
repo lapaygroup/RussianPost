@@ -4,3 +4,5 @@ index.php
 composer.lock
 composer
 config.yaml
+.phpunit.result.cache
+.phpunit.cache/

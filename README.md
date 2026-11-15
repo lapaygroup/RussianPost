@@ -1,3 +1,5 @@
+> Tracking API 3.0.0 с ApiKey подготовлен в отдельной ветке; см. [миграцию, PHP 7.4 и ограничения batch](docs/tracking-api.md). Существующий tag 2.0.0 не изменяется.
+
 <a href="https://lapaygroup.ru/"><img align="left" width="200" src="https://lapaygroup.ru/img/lapaygroup.svg"></a>
 <a href="https://www.pochta.ru/support/business/api"><img align="right" width="200" src="https://lapaygroup.ru/prflogo.svg"></a>
 
@@ -78,6 +80,7 @@
   - [x] [Текущие настройки пользователя](#get_settings)
 
 <a name="links"><h1>Changelog</h1></a>
+- Unreleased — отдельный `TrackingApi` с REST single и opt-in SOAP batch, новый ApiKey, DTO/ошибки, синтетические контрактные тесты; [миграция и PHP 7.4](docs/tracking-api.md). Целевая версия — 3.0.0, новый контракт не требует совместимости с прежним SOAP; существующие tags не меняются, live batch требует подтверждения.
 - 0.9.23 - Добавлена поддержка Guzzle 7.*;
 - 0.9.22 - Добавлена поддержка Guzzle 7.8 в зависимостях Composer;
 - 0.9.21 - Обновлены зависимости [psr/log](https://github.com/lapaygroup/RussianPost/pull/47), решение [issue #46](https://github.com/lapaygroup/RussianPost/issues/46), актуализирован список статусов отправлений, добавлены новые конечные статусы Почты России;
@@ -299,6 +302,9 @@ catch (\Exception $e) {
 ```
 
 <a name="tracking"><h1>Трекинг почтовых отправлений (РПО)</h1></a>
+
+Этот раздел описывает прежний SOAP `Tracking`. Новый провайдер с ApiKey: [TrackingApi и миграция](docs/tracking-api.md). Доступность прежнего сервиса не гарантируется.
+
 
 Реализует функции [API]( https://tracking.pochta.ru/specification) Почты России для работы с отправлениями.
 Для работы данных функций необходим [конфигурационный файл](config.yaml.example) с логином и паролем от сервиса Почты России.

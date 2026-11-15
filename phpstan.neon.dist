@@ -1,0 +1,9 @@
+parameters:
+    level: 5
+    phpVersion: 70433
+    paths:
+        - src/Http
+        - src/Providers/TrackingApi.php
+        - src/Tracking
+        - src/Exceptions/TrackingApiException.php
+        - src/Exceptions/TicketSubmissionException.php

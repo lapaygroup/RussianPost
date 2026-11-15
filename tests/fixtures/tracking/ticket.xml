@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"><s:Body>
+<p:ticketResponse xmlns:p="http://fclient.russianpost.org/postserver"><value>synthetic-ticket</value></p:ticketResponse>
+</s:Body></s:Envelope>
