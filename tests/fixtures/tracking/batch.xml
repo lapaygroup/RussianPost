@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" xmlns:p="http://fclient.russianpost.org/postserver" xmlns:f="http://fclient.russianpost.org"><s:Body>
+<p:answerByTicketResponse><value DatePreparation="15.11.2026 12:00:00">
+<f:Item Barcode="00000000000001"><f:Operation OperTypeID="2" OperCtgID="1" OperName="Вручение" DateOper="14.11.2026 12:30:00" IndexOper="000001"/><f:Operation OperTypeID="999" OperCtgID="888" DateOper="15.11.2026 12:30:00"/></f:Item>
+<f:Item Barcode="AA000000000RU"><f:Error ErrorTypeID="12" ErrorName="Synthetic not found"/></f:Item>
+<f:Item Barcode="00000000000002"/>
+</value></p:answerByTicketResponse>
+</s:Body></s:Envelope>
