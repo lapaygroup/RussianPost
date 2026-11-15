@@ -77,9 +77,19 @@ final class TrackingApiTest extends TestCase
         self::assertSame([], $api->getTrackingInfo('AA000000000RU')->getOperations());
     }
 
+    public function testExplicitNullHistoryIsEmptyAndRawPayloadRemainsUnchanged(): void
+    {
+        [$api] = $this->client([new Response(200, [], $this->fixture('single-empty.json'))]);
+        $result = $api->getTrackingInfo('00000000000000');
+        self::assertSame([], $result->getOperations());
+        self::assertArrayHasKey('trackingItemOperationGroupStatuses', $result->getData());
+        self::assertNull($result->getData()['trackingItemOperationGroupStatuses']);
+        self::assertSame('00000000000000', $result->getData()['barcode']);
+    }
+
     public function testMalformedOrUnexpectedSinglePayloadsAreRejected(): void
     {
-        foreach (['{broken', 'null', '[]', '{}', '{"barcode":"wrong","trackingItemOperationGroupStatuses":[]}', '{"trackingItemOperationGroupStatuses":[{"future":false,"originTrackingHistoryItems":[{}]}]}'] as $body) {
+        foreach (['{broken', 'null', '[]', '{}', '{"barcode":"00000000000001"}', '{"barcode":"wrong","trackingItemOperationGroupStatuses":[]}', '{"barcode":"wrong","trackingItemOperationGroupStatuses":null}', '{"trackingItemOperationGroupStatuses":false}', '{"trackingItemOperationGroupStatuses":0}', '{"trackingItemOperationGroupStatuses":""}', '{"trackingItemOperationGroupStatuses":{"unexpected":true}}', '{"trackingItemOperationGroupStatuses":[{"future":null}]}', '{"trackingItemOperationGroupStatuses":[{"future":false,"originTrackingHistoryItems":[{}]}]}'] as $body) {
             [$api] = $this->client([new Response(200, [], $body)]);
             try { $api->getTrackingInfo('00000000000001'); self::fail('Expected invalid response'); }
             catch (TrackingApiException $error) { self::assertSame(TrackingApiException::INVALID_RESPONSE, $error->getCategory()); }
