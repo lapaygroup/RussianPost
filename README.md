@@ -1,4 +1,4 @@
-> Новый Tracking API с ApiKey подготовлен в отдельной ветке; см. [миграцию, PHP 7.4 и ограничения batch](docs/tracking-api.md). Существующий tag 2.0.0 не изменяется.
+> Tracking API 3.0.0 с ApiKey подготовлен в отдельной ветке; см. [миграцию, PHP 7.4 и ограничения batch](docs/tracking-api.md). Существующий tag 2.0.0 не изменяется.
 
 <a href="https://lapaygroup.ru/"><img align="left" width="200" src="https://lapaygroup.ru/img/lapaygroup.svg"></a>
 
@@ -94,7 +94,7 @@
   - [x] [Текущие настройки пользователя](#get_settings)
 
 <a name="links"><h1>Changelog</h1></a>
-- Unreleased — отдельный `TrackingApi` с REST single и opt-in SOAP batch, новый ApiKey, DTO/ошибки, синтетические контрактные тесты; [миграция и PHP 7.4](docs/tracking-api.md). Существующие tags не меняются; live batch требует подтверждения контракта.
+- Unreleased — отдельный `TrackingApi` с REST single и opt-in SOAP batch, новый ApiKey, DTO/ошибки, синтетические контрактные тесты; [миграция и PHP 7.4](docs/tracking-api.md). Целевая версия — 3.0.0, новый контракт не требует совместимости с прежним SOAP; существующие tags не меняются, live batch требует подтверждения.
 - 2.0.0 - Минимальная версия PHP повышена до 8.3. Удалена обязательная зависимость от Guzzle, добавлен транспорт PSR-18/PSR-17, строгая типизация ядра, безопасное логирование и единообразная обработка HTTP/JSON-ошибок. Обновлены конструкторы `OtpravkaApi`, `CategoryList` и `TariffCalculation`;
 - 1.0.2 - Исправлен Null в методе createBatch(). За внимательность спасибо [petrovich24](https://github.com/petrovich24);  
 - 1.0.1 - Исправлена работа clean функций после обновления;
