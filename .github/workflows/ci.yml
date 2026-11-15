@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version: ['7.4', '8.1', '8.4', '8.5']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          extensions: dom, mbstring, soap
+          coverage: none
+
+      - name: Validate Composer configuration
+        run: composer validate --strict
+
+      - name: Install the LC PHP 7.4 transport stack
+        # Test the explicitly supported legacy stack despite its existing advisories.
+        # This exception is local to test dependency resolution, not application policy.
+        env:
+          COMPOSER_NO_SECURITY_BLOCKING: '1'
+        run: >-
+          composer update --with guzzlehttp/guzzle:6.5.8
+          --with php-http/guzzle6-adapter:1.1.1 --with php-http/httplug:1.1.0
+          --with guzzlehttp/psr7:1.9.1 --with guzzlehttp/promises:1.5.3
+          --with psr/http-message:1.0.1 --with psr/http-factory:1.0.2
+          --prefer-dist --no-plugins --no-scripts --no-interaction --no-progress
+
+      - name: Run tests
+        run: composer test
+
+      - name: Run static analysis
+        run: composer analyse -- --no-progress

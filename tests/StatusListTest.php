@@ -3,7 +3,7 @@
 require_once __DIR__."/../src/StatusList.php";
 
 
-class StatusListTest extends \PHPUnit_Framework_TestCase
+class StatusListTest extends \PHPUnit\Framework\TestCase
 {
 
 

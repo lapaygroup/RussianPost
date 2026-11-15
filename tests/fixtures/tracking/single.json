@@ -1,0 +1,53 @@
+{
+  "barcode": "00000000000001",
+  "cashOnDelivery": 1000,
+  "recipient": null,
+  "trackingItemOperationGroupStatuses": [
+    {
+      "code": "DELIVERY",
+      "title": "Доставка",
+      "direction": "TO_RECIPIENT",
+      "future": false,
+      "originTrackingHistoryItems": [
+        {
+          "date": "2026-11-01T10:15:00+03:00",
+          "operationType": 2,
+          "operationAttr": 1,
+          "humanStatus": "Вручение",
+          "humanOperationStatus": null,
+          "index": "000001"
+        }
+      ]
+    },
+    {
+      "code": "UNKNOWN",
+      "direction": "TO_SENDER",
+      "future": false,
+      "originTrackingHistoryItems": [
+        {
+          "date": "2026-11-02T12:00:00+07:00",
+          "operationType": 999,
+          "operationAttr": 888,
+          "humanStatus": null
+        }
+      ]
+    },
+    {
+      "code": "FUTURE",
+      "direction": "TO_SENDER",
+      "future": true,
+      "originTrackingHistoryItems": [
+        {
+          "date": "2026-12-01T12:00:00+07:00",
+          "operationType": 2,
+          "operationAttr": 3
+        }
+      ]
+    },
+    {
+      "code": "EMPTY",
+      "future": false,
+      "originTrackingHistoryItems": null
+    }
+  ]
+}

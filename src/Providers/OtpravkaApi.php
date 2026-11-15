@@ -262,7 +262,7 @@ class OtpravkaApi implements LoggerAwareInterface
      */
     public function clearAddress($addressList)
     {
-        return $this->callApi('POST', 'clean/address',  $addressList->get());
+        return $this->callApi('POST', 'clean/address',  iterator_to_array($addressList->getIterator()));
     }
 
     /**
@@ -274,7 +274,7 @@ class OtpravkaApi implements LoggerAwareInterface
      */
     public function clearFio($fioList)
     {
-        return $this->callApi('POST', 'clean/physical',  $fioList->get());
+        return $this->callApi('POST', 'clean/physical',  iterator_to_array($fioList->getIterator()));
     }
 
     /**
@@ -286,7 +286,7 @@ class OtpravkaApi implements LoggerAwareInterface
      */
     public function clearPhone(PhoneList $phoneList)
     {
-        return $this->callApi('POST', 'clean/phone',  $phoneList->get());
+        return $this->callApi('POST', 'clean/phone',  iterator_to_array($phoneList->getIterator()));
     }
 
     /**
@@ -323,30 +323,6 @@ class OtpravkaApi implements LoggerAwareInterface
     }
 
     /**
-     * Расчет периода доставки
-     *
-     * @param $post_type
-     * @param $index_prom
-     * @param $index_to
-     * @return array
-     * @throws RussianPostException
-     */
-    public function getDeliveryPeriod($post_type, $index_from, $index_to, $as_html = false)
-    {
-        $params = [];
-        if (!$as_html)
-            $params['jsontext'] = true;
-        else
-            $params['html'] = true;
-
-        $params['posttype'] = $post_type;
-        $params['from'] = $index_from;
-        $params['to'] = $index_to;
-
-        return $this->callApi('GET', 'calculate', $params, self::DELIVERY_VERSION, self::DELIVERY);
-    }
-
-    /**
      * Взвращает информацию о благонадежности получателя
      *
      * @param Recipient $recipient
@@ -376,17 +352,6 @@ class OtpravkaApi implements LoggerAwareInterface
         }
 
         return $this->callApi('POST', 'unreliable-recipient', $params);
-    }
-
-    /**
-     * Получение списка ПВЗ для ЕКОМ
-     *
-     * @return array
-     * @throws RussianPostException
-     */
-    public function getPvzList()
-    {
-        return $this->callApi('GET', 'delivery-point/findAll');
     }
 
     /**
@@ -503,15 +468,16 @@ class OtpravkaApi implements LoggerAwareInterface
      * Создание партии из N заказов
      *
      * @param array $id_list - массив id заказов
-     * @param \DateTimeImmutable $sending_date - дата отправки
+     * @param \DateTimeImmutable $sending_date - Дата отправки
+     * @param boolean $use_online_balance - Признак использования онлайн баланса
      * @return array
      * @throws RussianPostException
      */
-    public function createBatch($id_list, $sending_date = null)
+    public function createBatch($id_list, $sending_date = null, $use_online_balance = false)
     {
         $method = 'user/shipment';
         if ($sending_date)
-            $method .= '?sending-date='.$sending_date->format('Y-m-d');
+            $method .= '?sending-date='.$sending_date->format('Y-m-d').'&use-online-balance='.$use_online_balance;
 
         return $this->callApi('POST', $method, $id_list);
     }
