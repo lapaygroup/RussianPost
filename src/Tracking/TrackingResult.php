@@ -12,7 +12,12 @@ final class TrackingResult
 
     public function __construct(array $data)
     {
-        $groups = $data['trackingItemOperationGroupStatuses'] ?? null;
+        if (!array_key_exists('trackingItemOperationGroupStatuses', $data)) {
+            throw new TrackingApiException(TrackingApiException::INVALID_RESPONSE);
+        }
+        // An explicit null is the carrier's empty-history representation.
+        // Preserve it in getData(), while exposing an empty operations list.
+        $groups = $data['trackingItemOperationGroupStatuses'] ?? [];
         if (!is_array($groups) || array_values($groups) !== $groups) {
             throw new TrackingApiException(TrackingApiException::INVALID_RESPONSE);
         }
