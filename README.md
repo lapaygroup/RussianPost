@@ -1,4 +1,4 @@
-> Tracking API 3.0.0 с ApiKey подготовлен в отдельной ветке; см. [миграцию, PHP 7.4 и ограничения batch](docs/tracking-api.md). Существующий tag 2.0.0 не изменяется.
+> SDK 3.0.0: новый REST TrackingApi с ApiKey; PHP ^8.3. Новый batch экспериментальный и выключен по умолчанию. См. [миграцию и проверенные ограничения](docs/tracking-api.md).
 
 <a href="https://lapaygroup.ru/"><img align="left" width="200" src="https://lapaygroup.ru/img/lapaygroup.svg"></a>
 
@@ -94,7 +94,7 @@
   - [x] [Текущие настройки пользователя](#get_settings)
 
 <a name="links"><h1>Changelog</h1></a>
-- Unreleased — отдельный `TrackingApi` с REST single и opt-in SOAP batch, новый ApiKey, DTO/ошибки, синтетические контрактные тесты; [миграция и PHP 7.4](docs/tracking-api.md). Целевая версия — 3.0.0, новый контракт не требует совместимости с прежним SOAP; существующие tags не меняются, live batch требует подтверждения.
+- 3.0.0 — новый `TrackingApi` с REST single, ApiKey, nullable/unknown DTO, безопасными ошибками и экспериментальным opt-in batch; [release notes](docs/releases/3.0.0.md), [миграция](docs/tracking-api.md). Legacy `Tracking` сохранён; доступность batch проверяется отдельно для учётной записи.
 - 2.0.0 - Минимальная версия PHP повышена до 8.3. Удалена обязательная зависимость от Guzzle, добавлен транспорт PSR-18/PSR-17, строгая типизация ядра, безопасное логирование и единообразная обработка HTTP/JSON-ошибок. Обновлены конструкторы `OtpravkaApi`, `CategoryList` и `TariffCalculation`;
 - 1.0.2 - Исправлен Null в методе createBatch(). За внимательность спасибо [petrovich24](https://github.com/petrovich24);  
 - 1.0.1 - Исправлена работа clean функций после обновления;
@@ -156,9 +156,9 @@
 
 
 # Установка
-Для версии 2.0.0 требуется PHP 8.3 или новее. Для установки можно использовать менеджер пакетов Composer:
+Для версии 3.0.0 требуется PHP 8.3 или новее. Для PHP 7.4 и прежних конструкторов API 1.x используйте отдельную линию 1.1.x. Для установки можно использовать менеджер пакетов Composer:
 
-    composer require lapaygroup/russianpost
+    composer require lapaygroup/russianpost:^3.0
 
 Начиная с версии 2.0.0 библиотека не устанавливает конкретный HTTP-клиент. В приложении должны быть реализации [PSR-18](https://www.php-fig.org/psr/psr-18/) и [PSR-17](https://www.php-fig.org/psr/psr-17/). Например:
 
