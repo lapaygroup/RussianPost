@@ -7,7 +7,7 @@
 | Ветка | База | PHP | Существующие потребители |
 | --- | --- | --- | --- |
 | `feature/new-tracking-api` → 3.0.0 | master / опубликованный 2.0.0 | ^8.3 | Новый TrackingApi/DTO; остальные провайдеры остаются на текущей PSR-18 архитектуре |
-| `feature/php74-new-tracking-api` | version_0_9 / 0.9.23 (`e12f0d0`) | ^7.4 или ^8.0 | Тот же новый TrackingApi/DTO; остальные провайдеры используют свою исходную Guzzle архитектуру |
+| `feature/php74-new-tracking-api` | git-база version_0_9; нетрекинговые классы сверены и восстановлены из SDK 1.0.1 (`4e5708b`) | ^7.4 или ^8.0 | Тот же новый TrackingApi/DTO; тарифы v2 и методы нормализации сохраняют контракт LC с SDK 1.0.1 |
 
 Новые `TrackingApi`, DTO, исключения и контрактные fixtures одинаковы в обеих ветках. PHP 7.4 получает добавленный PSR-18 транспорт без PHP 8 property promotion/readonly. Ветка не обещает PHP 5.5–7.3, несмотря на прежнее ограничение `>=5.5` в 0.9.23. Это отдельная ветка нового API 3.0 для PHP 7.4, а не обещание обратной совместимости старого Tracking. Она не публикуется под уже занятым тегом 0.9.23; отдельный номер пакета/тега определяется перед её выпуском.
 
@@ -49,7 +49,7 @@ $tracking = new TrackingApi([
 ], $transport);
 ```
 
-Для основной ветки можно использовать `Symfony\Component\HttpClient\Psr18Client` с настроенными `timeout`, `max_duration` и `max_redirects => 0`. Для PHP 7.4 — Guzzle 7 (`GuzzleHttp\Client`) с `timeout`, `connect_timeout` и `allow_redirects => false`. Guzzle 6 остаётся допустимым для старых методов 0.9; сам по себе он не реализует PSR-18, для нового провайдера нужен PSR-18 клиент/адаптер. PSR-18 не определяет API таймаутов, поэтому они настраиваются в клиенте, а не аргументом SDK. Транспорт должен сохранять заголовок ApiKey только для целевого endpoint; редиректы отключаются на стороне клиента.
+Для основной ветки можно использовать `Symfony\Component\HttpClient\Psr18Client` с настроенными `timeout`, `max_duration` и `max_redirects => 0`. Для PHP 7.4 допустим Guzzle 7 (`GuzzleHttp\Client`); существующий Guzzle 6 / HTTPlug 1 подключается через optional `Http\HttplugClient` без обновления Mailgun 2. [Проверенный состав и пример интеграции LC](lc-php74.md). PSR-18 не определяет API таймаутов, поэтому `timeout`, `connect_timeout` и `allow_redirects => false` настраиваются в клиенте. Транспорт должен сохранять заголовок ApiKey только для целевого endpoint; редиректы отключаются на стороне клиента.
 
 Для тестов разрешён HTTP только на loopback. URL не должен содержать userinfo, query или fragment. По умолчанию batch использует канонический `/fc/` из примеров, чтобы не редиректить POST с `/fc`.
 

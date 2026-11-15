@@ -3,7 +3,7 @@ namespace LapayGroup\RussianPost;
 
 class CalculateInfo
 {
-    private $version='1.6.4.206'; // Версия тарификатора
+    private $version='2.16.11.700'; // Версия тарификатора
     private $categoryItemId = 0; // ID категории
     private $categoryItemName = 0; // Название категории
     private $weight = 0.00; // Вес отправления в граммах
@@ -18,6 +18,9 @@ class CalculateInfo
     private $coverNds = 0.00; // Страхование с НДС
     private $service = 0.00; // Дополнительные услуги
     private $serviceNds = 0.00; // Дополнительные услуги с НДС
+    private $deliveryPeriodMin = null; // Минимальный период доставки
+    private $deliveryPeriodMax = null; // Максимальный период доставки
+    private $deliveryDeadLine = null; // Срок внутренней доставки с учетом расписания работы и обмена
     private $tariffList = []; // Список тарифов
 
     /**
@@ -149,22 +152,6 @@ class CalculateInfo
     }
 
     /**
-     * @return float
-     */
-    public function getPayMark()
-    {
-        return $this->payMark;
-    }
-
-    /**
-     * @param int $payMark
-     */
-    public function setPayMark($payMark)
-    {
-        $this->payMark = number_format($payMark / 100, 2, '.', '');
-    }
-
-    /**
      * @return array
      */
     public function getTariffList()
@@ -274,6 +261,54 @@ class CalculateInfo
     public function setServiceNds($serviceNds)
     {
         $this->serviceNds = number_format($serviceNds / 100, 2, '.', '');
+    }
+
+    /**
+     * @return int
+     */
+    public function getDeliveryPeriodMin()
+    {
+        return $this->deliveryPeriodMin;
+    }
+
+    /**
+     * @param int $deliveryPeriodMin
+     */
+    public function setDeliveryPeriodMin($deliveryPeriodMin)
+    {
+        $this->deliveryPeriodMin = $deliveryPeriodMin;
+    }
+
+    /**
+     * @return int
+     */
+    public function getDeliveryPeriodMax()
+    {
+        return $this->deliveryPeriodMax;
+    }
+
+    /**
+     * @param int $deliveryPeriodMax
+     */
+    public function setDeliveryPeriodMax($deliveryPeriodMax)
+    {
+        $this->deliveryPeriodMax = $deliveryPeriodMax;
+    }
+
+    /**
+     * @return \DateTime
+     */
+    public function getDeliveryDeadLine()
+    {
+        return $this->deliveryDeadLine;
+    }
+
+    /**
+     * @param string $deliveryDeadLine
+     */
+    public function setDeliveryDeadLine($deliveryDeadLine)
+    {
+        $this->deliveryDeadLine = new \DateTime($deliveryDeadLine);
     }
 
     public static function mb_ucfirst($string)
