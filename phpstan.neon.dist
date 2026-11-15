@@ -3,6 +3,7 @@ parameters:
     paths:
         - src/Http
         - src/Providers
+        - src/Tracking
         - src/Exceptions
         - src/CalculateInfo.php
         - src/CategoryList.php

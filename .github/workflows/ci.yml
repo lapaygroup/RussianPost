@@ -22,7 +22,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php-version }}
-          extensions: mbstring, soap
+          extensions: dom, mbstring, soap
           coverage: none
 
       - name: Validate Composer configuration

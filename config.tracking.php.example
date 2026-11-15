@@ -1,0 +1,11 @@
+<?php
+// Новый Tracking API; секрет передаёт приложение через окружение.
+return [
+    'auth' => ['tracking' => ['api_key' => getenv('POSTAL_TRACKING_API_KEY')]],
+    'tracking' => [
+        'single_url' => 'https://postapi.pochta.ru/tracking/api/external/v1/info',
+        'batch_url' => 'https://postapi.pochta.ru/fc/',
+        // Перед включением прочитайте ограничения WSDL/контракта в docs/tracking-api.md.
+        'batch_enabled' => false,
+    ],
+];

@@ -20,7 +20,9 @@
     "psr/http-message": "^1.0 || ^2.0",
     "psr/log": "^1.1 || ^2.0 || ^3.0",
     "ext-mbstring": "*",
-    "ext-soap": "*"
+    "ext-soap": "*",
+    "ext-dom": "*",
+    "ext-ctype": "*"
   },
   "require-dev": {
     "monolog/monolog": "^3.0",
