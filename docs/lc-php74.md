@@ -1,10 +1,10 @@
 # PHP 7.4 и существующий LC
 
-Проверка от 15.11.2026: baseline LC `174aaad`, установленный SDK `1.0.1` (`4e5708be53c6e46da67a0b071f7cba28304232d3`). Git-база этой ветки — `version_0_9`, однако возвращать LC к поведению 0.9.23 нельзя. Основной PR нового API для PHP ^8.3 остаётся отдельным; этот документ относится только к PHP 7.4-ветке. Новый Tracking API имеет новый контракт, прежний SOAP DTO не эмулируется. Номер отдельного PHP 7.4-релиза ещё не утверждён; тег/публикация не выполняются.
+Проверка от 15.11.2026: baseline LC `174aaad`, установленный SDK `1.0.1` (`4e5708be53c6e46da67a0b071f7cba28304232d3`). Git-база этой ветки — `version_0_9`, однако возвращать LC к поведению 0.9.23 нельзя. Основной PR нового API для PHP ^8.3 остаётся отдельным; этот документ относится только к PHP 7.4-ветке. Новый Tracking API имеет новый контракт, прежний SOAP DTO не эмулируется. Версия этой линии — **1.1.0**. Она сохраняет прежний API 1.x и добавляет TrackingApi отдельно. Минимальная версия PHP повышена с >=7.0 в 1.0.2 до 7.4; это явное ограничение обновления.
 
-## Сохранённые контракты SDK 1.0.1
+## Сохранённые контракты SDK 1.0.1 / 1.0.2
 
-Нетрекинговые изменения между 0.9.23 и 1.0.1 перенесены из опубликованного исходника 1.0.1: `Calculation`, `TariffCalculation`, `CalculateInfo`, `Tariff`, `OtpravkaApi`, `AddressList`, `FioList`, `PhoneList`, `StatusList`. Удалён уже отсутствующий в 1.0.1 deprecated `PostType` (актуальный класс — `Enum\PostType`). Исправлена опечатка `nul` → `null` в значении по умолчанию `OtpravkaApi::createBatch`.
+Нетрекинговые изменения между 0.9.23 и 1.0.1 перенесены из опубликованного исходника 1.0.1: `Calculation`, `TariffCalculation`, `CalculateInfo`, `Tariff`, `OtpravkaApi`, `AddressList`, `FioList`, `PhoneList`, `StatusList`. Удалён уже отсутствующий в 1.0.1 deprecated `PostType` (актуальный класс — `Enum\PostType`). Исправлена опечатка `nul` → `null` в значении по умолчанию `OtpravkaApi::createBatch`, как в опубликованной 1.0.2. Все прежние классы совпадают с 1.0.2, в том числе legacy `Tracking` с single и batch SOAP.
 
 - LC `index.php` передаёт `calculate($object, $params, false, $services, $date)`. Сохранены третий аргумент `delivery_period`, delivery API v2, `items`, поля сроков доставки и денежные значения DTO.
 - Нормализация LC использует `clearAddress`, `clearFio`, `clearPhone`, коллекции `add()`/`getIterator()` с сохранением ID.
@@ -26,7 +26,7 @@
 | mailgun/mailgun-php | 2.8.1 | 2.8.1 |
 | silex/silex | 2.2.4 | 2.2.4 |
 
-В изолированной копии `composer.lock` LC точечный update SDK + `http-interop/http-factory-guzzle:1.2.0` изменил **только эти два пакета и добавил psr/http-client:1.0.3**. Все остальные записи пакетов lock остались неизменны. Это проверка зависимостей, не развёртывание приложения. Для установки в потребителе следует закрепить утверждённый SDK commit и обновлять только эти пакеты, без общего `composer update`.
+В изолированной копии `composer.lock` LC точечный update SDK + `http-interop/http-factory-guzzle:1.2.0` изменил **только эти два пакета и добавил psr/http-client:1.0.3**. Все остальные записи пакетов lock остались неизменны. Это проверка зависимостей, не развёртывание приложения. До выпуска проверялся точный commit `a27c188`; публичные source/dist и полный consumer install на PHP 7.4.33 подтверждены без path-repositories и симлинков. После публикации используйте версию `1.1.0` и обновляйте только указанные пакеты, без общего `composer update`. Финальные изменения к этому commit — документация; runtime и зависимости сохранены.
 
 ```php
 use GuzzleHttp\Client;
@@ -64,6 +64,6 @@ CI закрепляет перечисленный Guzzle 6 / HTTPlug 1 stack и
 
 Composer 2.11 блокирует старый Guzzle 6/PSR-7 по существующим advisories. Для воспроизведения явно выбранного baseline применяется только локальное исключение при разрешении **тестовых** зависимостей (`COMPOSER_NO_SECURITY_BLOCKING=1` в CI, разовый `--no-blocking` локально). Оно не меняет политику приложения и не означает устранение этих advisories. Переход на новую HTTP/mail библиотеку не входит в этот scope.
 
-Batch WSDL и live-приёмка остаются открытыми, `batch_enabled` по умолчанию false. Реальные API-ключи/операции не использовались; финансовые события не выводятся из cashOnDelivery. Production и исходники LC этой SDK-работой не изменяются. См. [основной migration guide](tracking-api.md).
+Batch WSDL и live-приёмка остаются открытыми, `batch_enabled` по умолчанию false. Автоматические тесты не используют реальные ключи/операции. Отдельный single smoke нашей учётной записи получил HTTP 200 с пустой историей; новый batch — HTTP 403, прежний batch — SOAP ErrorTypeID=3. Это не подтверждает глобальное отключение legacy API. Финансовые события не выводятся из cashOnDelivery. Production и исходники LC этой SDK-работой не изменяются. См. [основной migration guide](tracking-api.md).
 
 Исходные интерфейсы: [HTTPlug Guzzle 6 adapter 1.1.1](https://github.com/php-http/guzzle6-adapter/blob/v1.1.1/src/Client.php), [Guzzle PSR-17 factory 1.2.0](https://github.com/http-interop/http-factory-guzzle/blob/1.2.0/composer.json).

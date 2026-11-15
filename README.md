@@ -1,4 +1,4 @@
-> Tracking API 3.0.0 с ApiKey подготовлен в отдельной ветке; см. [миграцию, PHP 7.4 и ограничения batch](docs/tracking-api.md). Существующий tag 2.0.0 не изменяется.
+> SDK 1.1.0: новый REST TrackingApi с ApiKey; PHP ^7.4 или ^8.0. Новый batch экспериментальный и выключен по умолчанию. См. [миграцию и проверенные ограничения](docs/tracking-api.md).
 
 <a href="https://lapaygroup.ru/"><img align="left" width="200" src="https://lapaygroup.ru/img/lapaygroup.svg"></a>
 <a href="https://www.pochta.ru/support/business/api"><img align="right" width="200" src="https://lapaygroup.ru/prflogo.svg"></a>
@@ -79,8 +79,8 @@
   - [x] [Текущие настройки пользователя](#get_settings)
 
 <a name="links"><h1>Changelog</h1></a>
-- Unreleased — отдельный `TrackingApi` с REST single и opt-in SOAP batch, новый ApiKey, DTO/ошибки, синтетические контрактные тесты; [миграция и PHP 7.4](docs/tracking-api.md). Целевая версия — 3.0.0, новый контракт не требует совместимости с прежним SOAP; существующие tags не меняются, live batch требует подтверждения.
-- PHP 7.4-ветка: нетрекинговый контракт SDK 1.0.1 и optional HTTPlug 1 → PSR-18 bridge; [интеграция LC без обновления Guzzle/Mailgun](docs/lc-php74.md).
+- 1.1.0 — новый `TrackingApi` с REST single, ApiKey, nullable/unknown DTO, безопасными ошибками и экспериментальным opt-in batch; [release notes](docs/releases/1.1.0.md), [миграция](docs/tracking-api.md). Legacy `Tracking` сохранён; доступность batch проверяется отдельно для учётной записи.
+- 1.0.2 — исправлено значение по умолчанию `null` в `createBatch()`; сохранено в 1.1.0.
 - 1.0.1 - Исправлена работа clean функций после обновления;
 - 1.0.0 - Описание можно посмотреть [тут](https://github.com/lapaygroup/RussianPost/releases/tag/1.0.0);
 - 0.9.23 - Добавлена поддержка Guzzle 7.*;
@@ -140,9 +140,9 @@
 
 
 # Установка
-Для установки можно использовать менеджер пакетов Composer
+Для линии 1.1 требуется PHP 7.4 или новее; минимум поднят с PHP 7.0 в 1.0.2. Сохранены прежние конструкторы API 1.x. Для основной PSR-18 архитектуры на PHP 8.3+ существует отдельная линия 3.x.
 
-    composer require lapaygroup/russianpost
+    composer require lapaygroup/russianpost:^1.1
 
 <a name="tariffs"><h1>Тарификатор Почты России</h1></a>
 
